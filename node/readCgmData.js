@@ -41,6 +41,7 @@ main().catch(error =>
     https://github.com/timoschlueter/nightscout-librelink-up
     https://github.com/DiaKEM/libre-link-up-api-client
     https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
+    https://github.com/creepymonster/GlucoseDirect
 
     https://httptoolkit.com/
 */
