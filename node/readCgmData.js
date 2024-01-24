@@ -1,11 +1,16 @@
+require('dotenv').config();
+
 const { LibreLinkUpClient } = require('@diakem/libre-link-up-api-client');
 
 async function main()
 {
+    console.log('Username', process.env.LIBRE_USERNAME);
+    console.log('Password', process.env.LIBRE_PASSWORD);
+
     const { readRaw } = LibreLinkUpClient(
         {
-            username: 'user@email.com', 
-            password: 'password'
+            username: process.env.LIBRE_USERNAME, 
+            password: process.env.LIBRE_PASSWORD
         });
 
     const response = await readRaw();
@@ -30,3 +35,12 @@ main().catch(error =>
     }
     console.error('Error Config:', error.config);
 });
+
+
+/* see also
+    https://github.com/timoschlueter/nightscout-librelink-up
+    https://github.com/DiaKEM/libre-link-up-api-client
+    https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
+
+    https://httptoolkit.com/
+*/
