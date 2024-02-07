@@ -21,9 +21,10 @@ npm i dotenv
 $ touch .env
 LIBRE_USERNAME=email
 LIBRE_PASSWORD=secret
+LIBRE_VERSION=4.9.0
 ```
 
-## Call LibreLinkUp Api Client
+## Call LibreLinkUp API Client
 
 ```
 node readCgmData.js

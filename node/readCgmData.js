@@ -7,14 +7,16 @@ async function main()
     //console.log('Username', process.env.LIBRE_USERNAME);
     //console.log('Password', process.env.LIBRE_PASSWORD);
 
-    //const { readRaw } = LibreLinkUpClient(
+    //const { readRaw } = LibreLinkUpClient();
+    //const response = await readRaw();
+
     const { read } = LibreLinkUpClient(
         {
             username: process.env.LIBRE_USERNAME, 
-            password: process.env.LIBRE_PASSWORD
+            password: process.env.LIBRE_PASSWORD,
+            version: process.env.LIBRE_VERSION
         });
 
-    //const response = await readRaw();
     const response = await read();
 
     console.log(response.current);
