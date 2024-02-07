@@ -4,18 +4,20 @@ const { LibreLinkUpClient } = require('@diakem/libre-link-up-api-client');
 
 async function main()
 {
-    console.log('Username', process.env.LIBRE_USERNAME);
-    console.log('Password', process.env.LIBRE_PASSWORD);
+    //console.log('Username', process.env.LIBRE_USERNAME);
+    //console.log('Password', process.env.LIBRE_PASSWORD);
 
-    const { readRaw } = LibreLinkUpClient(
+    //const { readRaw } = LibreLinkUpClient(
+    const { read } = LibreLinkUpClient(
         {
             username: process.env.LIBRE_USERNAME, 
             password: process.env.LIBRE_PASSWORD
         });
 
-    const response = await readRaw();
+    //const response = await readRaw();
+    const response = await read();
 
-    console.log(response);
+    console.log(response.current);
 }
 
 main().catch(error => 

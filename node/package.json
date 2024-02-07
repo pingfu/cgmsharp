@@ -1,7 +1,17 @@
 {
   "dependencies": {
-    "@babel/runtime": "^7.23.8",
+    "@babel/runtime": "^7.23.9",
     "@diakem/libre-link-up-api-client": "^0.6.1",
     "dotenv": "^16.4.1"
-  }
+  },
+  "name": "node",
+  "version": "1.0.0",
+  "main": "readCgmData.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
