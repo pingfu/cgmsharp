@@ -4,7 +4,6 @@
 
 ```
 npm install
-yarn install
 ```
 
 Or
