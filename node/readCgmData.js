@@ -2,7 +2,7 @@ require(`dotenv`).config();
 
 const cron = require(`node-cron`);
 const moment = require(`moment`);
-const pushover = require( 'pushover-notifications' );
+const pushover = require(`pushover-notifications`);
 
 const { LibreLinkUpClient } = require(`@diakem/libre-link-up-api-client`);
 

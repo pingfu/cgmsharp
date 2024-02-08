@@ -9,7 +9,7 @@ npm install
 Or
 
 ```
-npm i @diakem/libre-link-up-api-client
+npm i github:marcbarry/libre-link-up-api-client
 npm i @babel/runtime
 npm i dotenv
 ```
