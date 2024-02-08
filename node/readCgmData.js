@@ -7,9 +7,9 @@ const pushover = require(`pushover-notifications`);
 const { LibreLinkUpClient } = require(`@diakem/libre-link-up-api-client`);
 
 const CANARY = `0 9 * * *`; // cron expression governing how often canary notifications are dispatched
-const INTERVAL = 5; // interval between obtaining new glucose readings (minutes)
+const INTERVAL = 10; // interval between obtaining new glucose readings (minutes)
 const GLUCOSE_READINGS_WINDOW_SIZE = 10; // total number of glucose readings to hold in memory, size of sliding window (e.g. 10)
-const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 6; // number of glucose readings to examine when looking for extended period of high or low values
+const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 3; // number of glucose readings to examine when looking for extended period of high or low values
 const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
 const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
 
@@ -47,11 +47,11 @@ async function GetLibreLinkUpData()
 }
 
 function AlarmMin(currentReading) {
-    PushAlarm(`Extended Low Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+    PushAlarm(`Extended Low Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading} mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
 }
 
 function AlarmMax(currentReading) {
-    PushAlarm(`Extended High Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+    PushAlarm(`Extended High Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading} mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
 }
 
 function PushNotification(title, message) {
@@ -97,7 +97,7 @@ async function Tick()
     // store the latest glucose value
     values.push(reading);
 
-    log(`glucose reading received: ${reading}. latest readings: [${values}]`);
+    log(`glucose reading received: ${reading}. latest readings: [' + values.join(', ') + ']`);
 
     // check we've received enough glucose readings to examine for trends over time
     if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
