@@ -97,7 +97,7 @@ async function Tick()
     // store the latest glucose value
     values.push(reading);
 
-    log(`glucose reading received: ${reading}. latest readings: [' + values.join(', ') + ']`);
+    log(`glucose reading received: ${reading}. latest readings: [` + values.join(`, `) + `]`);
 
     // check we've received enough glucose readings to examine for trends over time
     if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
