@@ -10,7 +10,7 @@ const CANARY = `0 9 * * *`; // cron expression governing how often canary notifi
 const INTERVAL = 5; // interval between obtaining new glucose readings (minutes)
 const GLUCOSE_READINGS_WINDOW_SIZE = 10; // total number of glucose readings to hold in memory, size of sliding window (e.g. 10)
 const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 6; // number of glucose readings to examine when looking for extended period of high or low values
-const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
+const GLUCOSE_CRITICAL_LOW = 10; // Minimum threshold
 const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
 
 let values = []; // store received glucose values
@@ -37,10 +37,8 @@ async function GetLibreLinkUpData()
             });
 
         const response = await read();
-        //console.log(response);
 
-        return response.current.value;
-        //return Math.random() * 100;
+        return response.current.value; //return Math.random() * 100;
     }
     catch (error)
     {
@@ -49,15 +47,15 @@ async function GetLibreLinkUpData()
 }
 
 function AlarmMin(currentReading) {
-    PushAlarm(`Extended Low Glucose Alarm`, `${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+    PushAlarm(`Extended Low Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
 }
 
 function AlarmMax(currentReading) {
-    PushAlarm(`Extended High Glucose Alarm`, `${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+    PushAlarm(`Extended High Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
 }
 
 function PushNotification(title, message) {
-    log(`pushing notification '${title}': '${message}'`);
+    log(`pushing notification '${title}': '${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${message}'`);
 
     var msg = {
         title: title,
@@ -77,9 +75,9 @@ function PushAlarm(title, message) {
     var msg = {
         title: title,
         message: message,
-        priority: 2, // emergency priority (require acknowledgement)
-        retry: 300, // retry for acknowledgement every 300 seconds
-        expire: 360 // seconds to retry notification
+        priority: 2, // emergency priority code (require user acknowledgement)
+        retry: 30, // retry to get user acknowledgement every n (seconds)
+        expire: 300 // give up attempting to solicit user acknowledgment after n (seconds)
     };
 
     pusher.send(msg, function(error)
@@ -99,15 +97,15 @@ async function Tick()
     // store the latest glucose value
     values.push(reading);
 
-    //console.log(reading);
     log(`glucose reading received: ${reading}. latest readings: [${values}]`);
 
-    // check we`ve received enough glucose readings to examine for trends over time
+    // check we've received enough glucose readings to examine for trends over time
     if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
     {
-        // check the last [n] stored values (according to the defined NUMBER_OF_LAST_READINGS_TO_EXAMINE) against the critical glucose thresholds
+        // check the last n stored glucose values (by NUMBER_OF_LAST_READINGS_TO_EXAMINE) against the critical glucose thresholds
         const dataset = values.slice(-NUMBER_OF_LAST_READINGS_TO_EXAMINE);
-        
+
+        // determine if the values in the evaluated sliding window are either all above, or all below a critical threshold
         const allBelowMinimum = dataset.every(val => val < GLUCOSE_CRITICAL_LOW);
         const allAboveMaximum = dataset.every(val => val > GLUCOSE_CRITICAL_HIGH);
 

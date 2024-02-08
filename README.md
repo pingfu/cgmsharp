@@ -21,6 +21,8 @@ $ touch .env
 LIBRE_USERNAME=email
 LIBRE_PASSWORD=secret
 LIBRE_VERSION=4.9.0
+PUSHOVER_USER=secret
+PUSHOVER_TOKEN=secret
 ```
 
 ## Call LibreLinkUp API Client
