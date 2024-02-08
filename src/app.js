@@ -159,7 +159,10 @@ async function main()
     try
     {
         log(`scheduler started`);
+
         await Tick();
+        
+        PushNotification(`Heartbeat`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} scheduler started, current glucose reading ${values[0]} mmol/L 🐦`);
     }
     catch (error)
     {

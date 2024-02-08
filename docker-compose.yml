@@ -3,5 +3,7 @@ services:
   app:
     container_name: gcm-monitor
     build: .
+    env_file: 
+      - ./src/.env
     environment:
       - NODE_ENV=production
