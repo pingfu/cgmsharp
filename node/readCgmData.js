@@ -10,7 +10,7 @@ const CANARY = `0 9 * * *`; // cron expression governing how often canary notifi
 const INTERVAL = 5; // interval between obtaining new glucose readings (minutes)
 const GLUCOSE_READINGS_WINDOW_SIZE = 10; // total number of glucose readings to hold in memory, size of sliding window (e.g. 10)
 const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 6; // number of glucose readings to examine when looking for extended period of high or low values
-const GLUCOSE_CRITICAL_LOW = 10; // Minimum threshold
+const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
 const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
 
 let values = []; // store received glucose values
