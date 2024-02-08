@@ -146,7 +146,7 @@ async function main()
     {
         try 
         {
-            PushNotification(`Heartbeat`, `Daily Canary 🐦`);
+            PushNotification(`Heartbeat`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} Daily Canary 🐦`);
         }
         catch (error)
         {
