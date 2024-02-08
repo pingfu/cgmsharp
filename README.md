@@ -25,7 +25,7 @@ PUSHOVER_USER=secret
 PUSHOVER_TOKEN=secret
 ```
 
-## Call LibreLinkUp API Client
+## Run gcm-monitor
 
 ```
 node readCgmData.js
