@@ -1,51 +1,173 @@
-require('dotenv').config();
+require(`dotenv`).config();
 
-const { LibreLinkUpClient } = require('@diakem/libre-link-up-api-client');
+const cron = require(`node-cron`);
+const moment = require(`moment`);
+const pushover = require( 'pushover-notifications' );3
+
+const { LibreLinkUpClient } = require(`@diakem/libre-link-up-api-client`);
+
+const CANARY = `0 9 * * *`; // cron expression governing how often canary notifications are dispatched
+const INTERVAL = 5; // interval between obtaining new glucose readings (minutes)
+const GLUCOSE_READINGS_WINDOW_SIZE = 10; // total number of glucose readings to hold in memory, size of sliding window (e.g. 10)
+const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 6; // number of glucose readings to examine when looking for extended period of high or low values
+const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
+const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
+
+let values = []; // store received glucose values
+
+let pusher = new pushover({
+    user: process.env.PUSHOVER_USER,
+    token: process.env.PUSHOVER_TOKEN,
+});
+
+function log(message)
+{
+    console.log(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + message);
+}
+
+async function GetLibreLinkUpData()
+{
+    try
+    {
+        const { read } = LibreLinkUpClient(
+            {
+                username: process.env.LIBRE_USERNAME, 
+                password: process.env.LIBRE_PASSWORD,
+                version: process.env.LIBRE_VERSION
+            });
+
+        const response = await read();
+        //console.log(response);
+
+        return response.current.value;
+        //return Math.random() * 100;
+    }
+    catch (error)
+    {
+        throw new Error(`LibreLinkUpClient client error: ` + error);
+    }
+}
+
+function AlarmMin(currentReading) {
+    PushAlarm(`Extended Low Glucose Alarm`, `${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+}
+
+function AlarmMax(currentReading) {
+    PushAlarm(`Extended High Glucose Alarm`, `${currentReading}mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+}
+
+function PushNotification(title, message) {
+    log(`pushing notification '${title}': '${message}'`);
+
+    var msg = {
+        title: title,
+        message: message,
+        priority: -1, // low priority, no sounds or vibrations
+    };
+
+    pusher.send(msg, function(error)
+    {
+        if (error) { throw error; }
+    });
+}
+
+function PushAlarm(title, message) {
+    log(`pushing alarm '${title}': '${message}'`);
+
+    var msg = {
+        title: title,
+        message: message,
+        priority: 2, // emergency priority (require acknowledgement)
+        retry: 300, // retry for acknowledgement every 300 seconds
+        expire: 360 // seconds to retry notification
+    };
+
+    pusher.send(msg, function(error)
+    {
+        if (error) { throw error; }
+    });
+}
+
+async function Tick()
+{
+    // get the current glucose reading
+    const reading = await GetLibreLinkUpData();
+
+    // remove the oldest glucose reading
+    if (values.length >= GLUCOSE_READINGS_WINDOW_SIZE) values.shift(); 
+
+    // store the latest glucose value
+    values.push(reading);
+
+    //console.log(reading);
+    log(`glucose reading received: ${reading}. latest readings: [${values}]`);
+
+    // check we`ve received enough glucose readings to examine for trends over time
+    if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
+    {
+        // check the last [n] stored values (according to the defined NUMBER_OF_LAST_READINGS_TO_EXAMINE) against the critical glucose thresholds
+        const dataset = values.slice(-NUMBER_OF_LAST_READINGS_TO_EXAMINE);
+        
+        const allBelowMinimum = dataset.every(val => val < GLUCOSE_CRITICAL_LOW);
+        const allAboveMaximum = dataset.every(val => val > GLUCOSE_CRITICAL_HIGH);
+
+        if (allBelowMinimum)
+        {
+            AlarmMin(reading);
+        }
+        else if (allAboveMaximum)
+        {
+            AlarmMax(reading);
+        }
+    }
+}
 
 async function main()
 {
-    //console.log('Username', process.env.LIBRE_USERNAME);
-    //console.log('Password', process.env.LIBRE_PASSWORD);
+    log(`init`);
+    log(`using librelinkup username: ${process.env.LIBRE_USERNAME}`);
+    log(`using librelinkup password: ********* (${process.env.LIBRE_PASSWORD.length})`);
 
-    //const { readRaw } = LibreLinkUpClient();
-    //const response = await readRaw();
-
-    const { read } = LibreLinkUpClient(
+    // periodic schedule to collect blood glucose readings and dispatch alarms when extended high or low trends are detected
+    const monitor = cron.schedule(`*/${INTERVAL} * * * *`, async () => 
+    {
+        try
         {
-            username: process.env.LIBRE_USERNAME, 
-            password: process.env.LIBRE_PASSWORD,
-            version: process.env.LIBRE_VERSION
-        });
+            await Tick();
+        }
+        catch (error)
+        {
+            console.error(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + error.message);
+            monitor.stop();
+            process.exit(1);
+        }
+    });
 
-    const response = await read();
+    // canary notifications to show the monitor is running
+    const canary = cron.schedule(`${CANARY}`, function ()
+    {
+        try 
+        {
+            PushNotification(`Heartbeat`, `Daily Canary 🐦`);
+        }
+        catch (error)
+        {
+            console.error(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + error.message);
+            canary.stop();
+            process.exit(1);
+        }
+    });
 
-    console.log(response.current);
+    try
+    {
+        log(`scheduler started`);
+        await Tick();
+    }
+    catch (error)
+    {
+        console.error(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + error.message);
+        process.exit(1);
+    }
 }
 
-main().catch(error => 
-{
-    if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error Data:', error.response.data);
-        console.error('Error Status:', error.response.status);
-        console.error('Error Headers:', error.response.headers);
-    } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error Request:', error.request);
-    } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error Message:', error.message);
-    }
-    console.error('Error Config:', error.config);
-});
-
-
-/* see also
-    https://github.com/timoschlueter/nightscout-librelink-up
-    https://github.com/DiaKEM/libre-link-up-api-client
-    https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
-    https://github.com/creepymonster/GlucoseDirect
-
-    https://httptoolkit.com/
-*/
+main();
