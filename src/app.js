@@ -146,7 +146,7 @@ async function main()
     {
         try 
         {
-            PushNotification(`Heartbeat`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} Daily Canary 🐦`);
+            PushNotification(`Heartbeat`, `Daily Canary 🐦`);
         }
         catch (error)
         {
@@ -162,7 +162,7 @@ async function main()
 
         await Tick();
         
-        PushNotification(`Heartbeat`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} scheduler started, current glucose reading ${values[0]} mmol/L 🐦`);
+        PushNotification(`Heartbeat`, `Scheduler started, current glucose reading ${values[0]} mmol/L 🐦`);
     }
     catch (error)
     {
