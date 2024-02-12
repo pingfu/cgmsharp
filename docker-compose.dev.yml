@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   app:
-    container_name: gcm-monitor
+    container_name: cgmsharp
     build: .
     env_file: 
       - ./src/.env
