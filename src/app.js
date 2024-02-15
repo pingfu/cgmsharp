@@ -14,6 +14,8 @@ const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
 const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
 
 let values = []; // store received glucose values
+let libreLinkUpErrorCounter = 0;
+let libreLinkUpLatestError = "";
 
 let pusher = new pushover({
     user: process.env.PUSHOVER_USER,
@@ -38,11 +40,23 @@ async function GetLibreLinkUpData()
 
         const response = await read();
 
-        return response.current.value; //return Math.random() * 100;
+        // reset LibreLinkupError counter to zero after a successful read() operation
+        if (libreLinkUpErrorCounter > 0)
+        {
+            PushNotification(`GCM monitoring`, `Error state cleared, monitoring resumed`);
+
+            libreLinkUpErrorCounter = 0;
+            libreLinkUpLatestError = ``;
+        }
+
+        return response.current.value;
     }
     catch (error)
     {
-        throw new Error(`LibreLinkUpClient client error: ` + error);
+        var msg = `LibreLinkUpClient ` + error;
+        libreLinkUpErrorCounter = libreLinkUpErrorCounter++;
+        libreLinkUpLatestError = msg;
+        throw new Error(msg);
     }
 }
 
@@ -88,16 +102,31 @@ function PushAlarm(title, message) {
 
 async function Tick()
 {
-    // get the current glucose reading
-    const reading = await GetLibreLinkUpData();
+    try
+    {
+        // get the current glucose reading
+        const reading = await GetLibreLinkUpData();
 
-    // remove the oldest glucose reading
-    if (values.length >= GLUCOSE_READINGS_WINDOW_SIZE) values.shift(); 
+        log(`glucose reading received: ${reading} mmol/L. latest readings: [` + values.join(` mmol/L, `) + `]`);
 
-    // store the latest glucose value
-    values.push(reading);
+        // remove the oldest glucose reading
+        if (values.length >= GLUCOSE_READINGS_WINDOW_SIZE) values.shift(); 
 
-    log(`glucose reading received: ${reading} mmol/L. latest readings: [` + values.join(` mmol/L, `) + `]`);
+        // store the latest glucose value
+        values.push(reading);
+    }
+    catch (error)
+    {
+        log(error);
+
+        if (libreLinkUpErrorCounter === 6)
+        {
+            PushNotification(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + libreLinkUpLatestError);
+        }
+
+        // quietly fail this tick cycle
+        return;
+    }
 
     // check we've received enough glucose readings to examine for trends over time
     if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
