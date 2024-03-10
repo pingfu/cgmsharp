@@ -114,6 +114,26 @@ async function Tick()
 
         // store the latest glucose value
         values.push(reading);
+
+        // check we've received enough glucose readings to examine for trends over time
+        if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
+        {
+            // check the last n stored glucose values (by NUMBER_OF_LAST_READINGS_TO_EXAMINE) against the critical glucose thresholds
+            const dataset = values.slice(-NUMBER_OF_LAST_READINGS_TO_EXAMINE);
+
+            // determine if the values in the evaluated sliding window are either all above, or all below a critical threshold
+            const allBelowMinimum = dataset.every(val => val < GLUCOSE_CRITICAL_LOW);
+            const allAboveMaximum = dataset.every(val => val > GLUCOSE_CRITICAL_HIGH);
+
+            if (allBelowMinimum)
+            {
+                AlarmMin(reading);
+            }
+            else if (allAboveMaximum)
+            {
+                AlarmMax(reading);
+            }
+        }
     }
     catch (error)
     {
@@ -126,26 +146,6 @@ async function Tick()
 
         // quietly fail this tick cycle
         return;
-    }
-
-    // check we've received enough glucose readings to examine for trends over time
-    if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE)
-    {
-        // check the last n stored glucose values (by NUMBER_OF_LAST_READINGS_TO_EXAMINE) against the critical glucose thresholds
-        const dataset = values.slice(-NUMBER_OF_LAST_READINGS_TO_EXAMINE);
-
-        // determine if the values in the evaluated sliding window are either all above, or all below a critical threshold
-        const allBelowMinimum = dataset.every(val => val < GLUCOSE_CRITICAL_LOW);
-        const allAboveMaximum = dataset.every(val => val > GLUCOSE_CRITICAL_HIGH);
-
-        if (allBelowMinimum)
-        {
-            AlarmMin(reading);
-        }
-        else if (allAboveMaximum)
-        {
-            AlarmMax(reading);
-        }
     }
 }
 
