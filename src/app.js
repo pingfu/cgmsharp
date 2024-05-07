@@ -8,8 +8,7 @@ const { LibreLinkUpClient } = require(`@diakem/libre-link-up-api-client`);
 
 const CANARY = `0 9 * * *`; // cron expression governing how often canary notifications are dispatched
 const INTERVAL = 10; // interval between obtaining new glucose readings (minutes)
-const GLUCOSE_READINGS_WINDOW_SIZE = 10; // total number of glucose readings to hold in memory, size of sliding window (e.g. 10)
-const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 3; // number of glucose readings to examine when looking for extended period of high or low values
+const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 6; // number of glucose readings to hold in memory and examine for extended periods of high or low values
 const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
 const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
 
@@ -110,7 +109,7 @@ async function Tick()
         log(`glucose reading received: ${reading} mmol/L. latest readings: [` + values.join(` mmol/L, `) + `]`);
 
         // remove the oldest glucose reading
-        if (values.length >= GLUCOSE_READINGS_WINDOW_SIZE) values.shift(); 
+        if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE) values.shift();
 
         // store the latest glucose value
         values.push(reading);

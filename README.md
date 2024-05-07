@@ -1,7 +1,5 @@
 # cgmsharp
 
-
-
 ## Install dependencies
 
 ```
@@ -33,7 +31,8 @@ NODE_ENV=production
 ### Node.js
 
 ```
-node readCgmData.js
+$ cd ./src
+$ node app.js
 ```
 
 ### Docker Compose
