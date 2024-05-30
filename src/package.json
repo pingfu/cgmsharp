@@ -2,6 +2,7 @@
   "dependencies": {
     "@babel/runtime": "^7.23.9",
     "@diakem/libre-link-up-api-client": "github:marcbarry/libre-link-up-api-client",
+    "@influxdata/influxdb-client": "^1.33.2",
     "dotenv": "^16.4.1",
     "moment": "^2.30.1",
     "node-cron": "^3.0.3",

@@ -10,6 +10,7 @@ Or
 
 ```
 npm i github:marcbarry/libre-link-up-api-client
+npm i @influxdata/influxdb-client
 npm i @babel/runtime
 npm i dotenv
 ```
@@ -18,12 +19,19 @@ npm i dotenv
 
 ```
 $ touch .env
+NODE_ENV=production
+
 LIBRE_USERNAME=your_libre_username
 LIBRE_PASSWORD=your_libre_password
 LIBRE_VERSION=4.9.0
+
 PUSHOVER_USER=your_pushover_user
 PUSHOVER_TOKEN=your_pushover_token
-NODE_ENV=production
+
+INFLUX_DB_URL=your_INFLUX_DB_url
+INFLUX_DB_TOKEN=your_INFLUX_DB_token
+INFLUX_DB_ORG=your_INFLUX_DB_org
+INFLUX_DB_BUCKET=your_INFLUX_DB_bucket
 ```
 
 ## Run gcm-monitor
@@ -46,12 +54,16 @@ services:
     image: ghcr.io/pingfu/cgmsharp/cgmsharp:latest
     container_name: cgmsharp
     environment:
+      - NODE_ENV=production
       - LIBRE_USERNAME=your_libre_username
       - LIBRE_PASSWORD=your_libre_password
       - LIBRE_VERSION=4.9.0
       - PUSHOVER_USER=your_pushover_user
       - PUSHOVER_TOKEN=your_pushover_token
-      - NODE_ENV=production
+      - INFLUX_DB_URL=your_INFLUX_DB_url
+      - INFLUX_DB_TOKEN=your_INFLUX_DB_token
+      - INFLUX_DB_ORG=your_INFLUX_DB_org
+      - INFLUX_DB_BUCKET=your_INFLUX_DB_bucket
 ```
 
 ## See also
