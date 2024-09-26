@@ -101,7 +101,14 @@ async function GetLibreLinkUpData()
         // reset LibreLinkupError counter to zero after a successful read() operation
         if (libreLinkUpErrorCounter > 0)
         {
-            PushNotification(`GCM monitoring`, `Error state cleared, monitoring resumed`);
+            try
+            {
+                await PushNotification(`GCM monitoring`, `Error state cleared, monitoring resumed`);
+            }
+            catch (error)
+            {
+                throw error;
+            }
 
             libreLinkUpErrorCounter = 0;
             libreLinkUpLatestError = ``;
@@ -112,8 +119,28 @@ async function GetLibreLinkUpData()
     catch (error)
     {
         var msg = `LibreLinkUpClient ` + error;
+
+        if (error.isAxiosError && error.response && error.response.status === 401)
+        {
+            var fatal = "Non-recoverable error (" + error + ") terminating process.";
+
+            log(fatal);
+
+            try
+            {
+                await PushNotification(`GCM monitoring`, fatal);
+            }
+            catch (notificationError)
+            {
+                log(`Failed to send push notification: ${notificationError}`);
+            }
+
+            process.exit(1);
+        }
+    
         libreLinkUpErrorCounter = libreLinkUpErrorCounter++;
         libreLinkUpLatestError = msg;
+
         throw new Error(msg);
     }
 }
@@ -127,17 +154,28 @@ function AlarmMax(currentReading) {
 }
 
 function PushNotification(title, message) {
-    log(`pushing notification '${title}': '${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${message}'`);
-
-    var msg = {
-        title: title,
-        message: message,
-        priority: -1, // low priority, no sounds or vibrations
-    };
-
-    pusher.send(msg, function(error)
+    // return a promise to allow waiting for the function to complete
+    return new Promise((resolve, reject) => 
     {
-        if (error) { throw error; }
+        log(`pushing notification '${title}': '${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${message}'`);
+
+        var msg = {
+            title: title,
+            message: message,
+            priority: -1, // low priority, no sounds or vibrations
+        };
+    
+        pusher.send(msg, function(error)
+        {
+            if (error)
+            {
+                reject(error);
+            } 
+            else
+            {
+                resolve();
+            }
+        });
     });
 }
 
@@ -201,7 +239,14 @@ async function Tick()
 
         if (libreLinkUpErrorCounter === 6)
         {
-            PushNotification(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + libreLinkUpLatestError);
+            try
+            {
+                await PushNotification(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + libreLinkUpLatestError);
+            }
+            catch (error)
+            {
+                throw error;
+            }
         }
 
         // quietly fail this tick cycle
@@ -214,6 +259,7 @@ async function main()
     log(`init`);
     log(`using librelinkup username: ${process.env.LIBRE_USERNAME}`);
     log(`using librelinkup password: ********* (${process.env.LIBRE_PASSWORD.length})`);
+    log(`using librelinkup agent version: ${process.env.LIBRE_AGENT_VERSION}`);
 
     tryInitaliseDb();
 
@@ -226,6 +272,7 @@ async function main()
         }
         catch (error)
         {
+            // die if we can't CRON tick without error
             console.error(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + error.message);
             monitor.stop();
             process.exit(1);
@@ -233,14 +280,15 @@ async function main()
     });
 
     // canary notifications to show the monitor is running
-    const canary = cron.schedule(`${CANARY}`, function ()
+    const canary = cron.schedule(`${CANARY}`, async function ()
     {
-        try 
+        try
         {
-            PushNotification(`Heartbeat`, `Daily Canary 🐦`);
+            await PushNotification(`Heartbeat`, `Daily Canary 🐦`);
         }
         catch (error)
         {
+            // die if we can't push daily canary notifications without error
             console.error(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + error.message);
             canary.stop();
             process.exit(1);
@@ -253,11 +301,13 @@ async function main()
 
         await Tick();
         
-        PushNotification(`Heartbeat`, `Scheduler started, current glucose reading ${values[0]} mmol/L 🐦`);
+        await PushNotification(`Heartbeat`, `Scheduler started, current glucose reading ${values[0]} mmol/L 🐦`);
     }
     catch (error)
     {
+        // die if we can't push startup notification without error
         console.error(moment().format(`YYYY-MM-DD HH:mm:ss`) + `: ` + error.message);
+        canary.stop();
         process.exit(1);
     }
 }
