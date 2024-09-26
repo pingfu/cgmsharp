@@ -90,12 +90,11 @@ async function GetLibreLinkUpData()
 {
     try
     {
-        const { read } = LibreLinkUpClient(
-            {
-                username: process.env.LIBRE_USERNAME, 
-                password: process.env.LIBRE_PASSWORD,
-                version: process.env.LIBRE_VERSION
-            });
+        const { read } = LibreLinkUpClient({
+            username: process.env.LIBRE_USERNAME, 
+            password: process.env.LIBRE_PASSWORD,
+            clientVersion: process.env.LIBRE_AGENT_VERSION
+        });
 
         const response = await read();
 

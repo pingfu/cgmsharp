@@ -23,7 +23,7 @@ NODE_ENV=production
 
 LIBRE_USERNAME=your_libre_username
 LIBRE_PASSWORD=your_libre_password
-LIBRE_VERSION=4.9.0
+LIBRE_AGENT_VERSION=4.9.0
 
 PUSHOVER_USER=your_pushover_user
 PUSHOVER_TOKEN=your_pushover_token
@@ -57,7 +57,7 @@ services:
       - NODE_ENV=production
       - LIBRE_USERNAME=your_libre_username
       - LIBRE_PASSWORD=your_libre_password
-      - LIBRE_VERSION=4.9.0
+      - LIBRE_AGENT_VERSION=4.9.0
       - PUSHOVER_USER=your_pushover_user
       - PUSHOVER_TOKEN=your_pushover_token
       - INFLUX_DB_URL=your_INFLUX_DB_url
