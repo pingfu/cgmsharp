@@ -73,3 +73,7 @@ services:
 - https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
 - https://github.com/creepymonster/GlucoseDirect
 - https://httptoolkit.com/
+
+## Troubleshooting
+
+Occasionally Abbott update their [End User License Agreement](https://api.libreview.io/document/toullu?lang=en-gb), which until accepted (using the LibreLinkUp app) can cause the API to mysteriously start returning HTTP `401` error codes. If this happens you'll need to logout of all of devices and then log back in again using the LibreLinkUp mobile app in order for you to be presented with an option to accept the latest terms. Once accepted, the `401` responses from the API should go away.
