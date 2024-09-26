@@ -122,7 +122,7 @@ async function GetLibreLinkUpData()
 
         if (error.isAxiosError && error.response && error.response.status === 401)
         {
-            var fatal = "Non-recoverable error (" + error + ") terminating process.";
+            var fatal = "non-recoverable error (" + error + ") terminating process.";
 
             log(fatal);
 
