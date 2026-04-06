@@ -40,9 +40,9 @@ Single-file Node.js app (`src/app.js`) with three scheduled loops:
 3. **Startup** - Runs one immediate Tick and sends a startup notification
 
 Three notification channels via ntfy.sh (each mapped to a separate ntfy topic):
-- **Alert** (priority 5/max) - Critical glucose alarms, API disruptions, fatal errors
+- **Alert** (priority 5/max) - Critical glucose alarms, API disruptions, fatal errors. Fans out to both ntfy and Pushover if configured.
 - **Canary** (priority 2/low) - Daily heartbeat, startup notification
-- **Nudge** (priority 3/default) - Proactive carb-guidance messages (placeholder, not yet active)
+- **Nudge** (priority 3/default) - Proactive carb-guidance messages based on glucose trend, insulin activity, and time of day
 
 Key behaviours:
 - `clientVersion` is passed to the LibreLinkUp client via `LIBRE_AGENT_VERSION` env var (not defaulted from the library)
@@ -50,7 +50,20 @@ Key behaviours:
 - HTTP 401 from LibreLinkUp is treated as fatal (process exits) - usually means Abbott's EULA needs re-accepting in the mobile app
 - InfluxDB is optional; if env vars are missing, it silently skips database writes
 - InfluxDB auto-reconnects on timeout/connection errors
-- Nudge engine is stubbed out (`NUDGE_ENABLED = false`) with rate-of-change calculation and trend classification ready for future implementation
+
+### Nudge Engine
+
+The nudge engine runs every tick and evaluates whether to send a proactive message on the nudge channel. It uses three inputs:
+
+1. **Zone** — current reading vs target range (7.0–10.0 mmol/L)
+2. **Trend** — rate of change from the sliding window (stable, slowly/rapidly rising/falling)
+3. **Insulin activity** — biphasic curve model of premixed insulin (30% rapid-acting + 70% intermediate-acting)
+
+The biphasic insulin model uses piecewise linear interpolation with tunable constants for onset, peak, and tail of each component. Rapid component peaks at 60–90 min post-injection and tapers by 4 hours. Intermediate component peaks at 4–8 hours and tapers by 16 hours. Combined activity (0.0–1.0) determines whether insulin is "meaningfully active" (threshold: 0.15).
+
+Nudge scenarios: below-target carb suggestions (adjusted for insulin activity), in-target preemptive warnings when projected to drop below 7.0, above-target hold-off messages, and dawn phenomenon awareness (4–8 AM rising BG flagged as potentially self-resolving).
+
+If insulin times are not configured, the engine degrades gracefully — it still nudges based on zone and trend, just without insulin-aware adjustments.
 
 ## Required Environment Variables
 
@@ -59,7 +72,9 @@ Key behaviours:
 | `LIBRE_USERNAME` | Yes | LibreLinkUp account |
 | `LIBRE_PASSWORD` | Yes | LibreLinkUp account |
 | `LIBRE_AGENT_VERSION` | Yes | API client version string |
-| `NTFY_TOPIC_ALERT` | Yes | ntfy topic for critical alarms |
+| `PUSHOVER_USER` | No | Pushover user ID (enables Pushover as joint alert channel) |
+| `PUSHOVER_TOKEN` | No | Pushover API token (both required to enable) |
+| `NTFY_TOPIC_ALERT` | No | ntfy topic for critical alarms |
 | `NTFY_TOPIC_CANARY` | Yes | ntfy topic for heartbeat/status |
 | `NTFY_TOPIC_NUDGE` | No | ntfy topic for nudge messages |
 | `INSULIN_TIME_MORNING` | No | Morning insulin injection time (HH:mm) |

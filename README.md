@@ -25,6 +25,9 @@ LIBRE_USERNAME=your_libre_username
 LIBRE_PASSWORD=your_libre_password
 LIBRE_AGENT_VERSION=4.12.0
 
+PUSHOVER_USER=your_pushover_user
+PUSHOVER_TOKEN=your_pushover_token
+
 NTFY_TOPIC_ALERT=your_ntfy_alert_topic
 NTFY_TOPIC_CANARY=your_ntfy_canary_topic
 NTFY_TOPIC_NUDGE=your_ntfy_nudge_topic
@@ -61,6 +64,8 @@ services:
       - LIBRE_USERNAME=your_libre_username
       - LIBRE_PASSWORD=your_libre_password
       - LIBRE_AGENT_VERSION=4.12.0
+      - PUSHOVER_USER=your_pushover_user
+      - PUSHOVER_TOKEN=your_pushover_token
       - NTFY_TOPIC_ALERT=your_ntfy_alert_topic
       - NTFY_TOPIC_CANARY=your_ntfy_canary_topic
       - NTFY_TOPIC_NUDGE=your_ntfy_nudge_topic
