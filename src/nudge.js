@@ -300,8 +300,8 @@ function createNudgeEngine(config)
             carbs = estimateCarbsNeeded(reading, trend, insulinActive);
             food = getCarbSuggestion(carbs);
 
-            // only nudge in the lower half of target (below 8.0) — above that is comfortable
-            if (trend.direction === `falling` && insulinActive && reading < (p.targetLow + p.targetHigh) / 2)
+            // only nudge when close to the lower boundary — above 7.5 is comfortable even if falling
+            if (trend.direction === `falling` && insulinActive && reading < p.targetLow + 0.5)
             {
                 category = `in-target-falling`;
                 title = `Thinking ahead`;
