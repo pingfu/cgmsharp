@@ -1,0 +1,20 @@
+{
+    "name": "Slow hypo overnight boundary",
+    "description": "BG at 6.5 at 23:00, slowly drops to 3.5 by 01:00. Crosses into quiet hours at midnight. Tests the tension between a developing hypo and quiet hours suppression — the nudge engine should stay silent because alerts handle overnight hypos separately. Evening insulin at 19:00 is still active.",
+    "readings": [
+        { "time": "2026-04-07 23:00", "reading": 6.5 },
+        { "time": "2026-04-07 23:10", "reading": 6.4 },
+        { "time": "2026-04-07 23:20", "reading": 6.2 },
+        { "time": "2026-04-07 23:30", "reading": 6.0 },
+        { "time": "2026-04-07 23:40", "reading": 5.7 },
+        { "time": "2026-04-07 23:50", "reading": 5.5 },
+        { "time": "2026-04-08 00:00", "reading": 5.2 },
+        { "time": "2026-04-08 00:10", "reading": 4.9 },
+        { "time": "2026-04-08 00:20", "reading": 4.7 },
+        { "time": "2026-04-08 00:30", "reading": 4.4 },
+        { "time": "2026-04-08 00:40", "reading": 4.1 },
+        { "time": "2026-04-08 00:50", "reading": 3.8 },
+        { "time": "2026-04-08 01:00", "reading": 3.6 },
+        { "time": "2026-04-08 01:10", "reading": 3.5 }
+    ]
+}

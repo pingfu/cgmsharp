@@ -1,0 +1,18 @@
+{
+    "name": "pre-dinner-low",
+    "description": "BG at 9.0 at 17:00, gradually drops to ~5.0 by 18:40. Evening injection at 19:00 has not happened yet, and morning insulin from 07:30 is largely exhausted after 9.5+ hours. Tests below-target nudges firing without active insulin awareness.",
+    "readings": [
+        { "time": "2026-04-06 17:00", "reading": 9.0 },
+        { "time": "2026-04-06 17:10", "reading": 8.7 },
+        { "time": "2026-04-06 17:20", "reading": 8.4 },
+        { "time": "2026-04-06 17:30", "reading": 8.0 },
+        { "time": "2026-04-06 17:40", "reading": 7.6 },
+        { "time": "2026-04-06 17:50", "reading": 7.2 },
+        { "time": "2026-04-06 18:00", "reading": 6.8 },
+        { "time": "2026-04-06 18:10", "reading": 6.4 },
+        { "time": "2026-04-06 18:20", "reading": 5.9 },
+        { "time": "2026-04-06 18:30", "reading": 5.4 },
+        { "time": "2026-04-06 18:40", "reading": 5.1 },
+        { "time": "2026-04-06 18:50", "reading": 4.9 }
+    ]
+}

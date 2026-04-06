@@ -1,0 +1,14 @@
+{
+    "name": "Rapid hypo from target",
+    "description": "BG at 8.0 at 14:00, drops rapidly to 3.2 by 15:10. Straight-line crash losing ~0.6-0.7 per tick. Tests escalation as the situation worsens — carb recommendations should increase through each tier as BG passes through 7.0, 5.5, 4.5, and below.",
+    "readings": [
+        { "time": "2026-04-07 14:00", "reading": 8.0 },
+        { "time": "2026-04-07 14:10", "reading": 7.3 },
+        { "time": "2026-04-07 14:20", "reading": 6.6 },
+        { "time": "2026-04-07 14:30", "reading": 5.8 },
+        { "time": "2026-04-07 14:40", "reading": 5.1 },
+        { "time": "2026-04-07 14:50", "reading": 4.4 },
+        { "time": "2026-04-07 15:00", "reading": 3.7 },
+        { "time": "2026-04-07 15:10", "reading": 3.2 }
+    ]
+}

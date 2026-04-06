@@ -1,0 +1,24 @@
+{
+    "name": "stable-in-range",
+    "description": "A boring 3-hour afternoon window where BG stays between 7.5-9.0 with gentle drift. No nudges should fire at any point.",
+    "readings": [
+        { "time": "2026-04-06 13:00", "reading": 8.2 },
+        { "time": "2026-04-06 13:10", "reading": 8.4 },
+        { "time": "2026-04-06 13:20", "reading": 8.3 },
+        { "time": "2026-04-06 13:30", "reading": 8.6 },
+        { "time": "2026-04-06 13:40", "reading": 8.5 },
+        { "time": "2026-04-06 13:50", "reading": 8.7 },
+        { "time": "2026-04-06 14:00", "reading": 8.9 },
+        { "time": "2026-04-06 14:10", "reading": 8.8 },
+        { "time": "2026-04-06 14:20", "reading": 8.6 },
+        { "time": "2026-04-06 14:30", "reading": 8.3 },
+        { "time": "2026-04-06 14:40", "reading": 8.1 },
+        { "time": "2026-04-06 14:50", "reading": 7.9 },
+        { "time": "2026-04-06 15:00", "reading": 7.7 },
+        { "time": "2026-04-06 15:10", "reading": 7.6 },
+        { "time": "2026-04-06 15:20", "reading": 7.8 },
+        { "time": "2026-04-06 15:30", "reading": 7.9 },
+        { "time": "2026-04-06 15:40", "reading": 8.1 },
+        { "time": "2026-04-06 15:50", "reading": 8.0 }
+    ]
+}

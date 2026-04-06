@@ -1,0 +1,18 @@
+{
+    "name": "Hypo recovery bounce",
+    "description": "BG drops from 7.0 to 3.8 between 16:00 and 17:00, then recovers sharply to 11.0 by 17:40 after fast-acting sugar. Tests that nudges fire on the way down, stop once recovery begins (rising from below target = no nudge needed), and do not re-fire on the overshoot above target range.",
+    "readings": [
+        { "time": "2026-04-07 16:00", "reading": 7.0 },
+        { "time": "2026-04-07 16:10", "reading": 6.5 },
+        { "time": "2026-04-07 16:20", "reading": 5.8 },
+        { "time": "2026-04-07 16:30", "reading": 5.1 },
+        { "time": "2026-04-07 16:40", "reading": 4.5 },
+        { "time": "2026-04-07 16:50", "reading": 4.0 },
+        { "time": "2026-04-07 17:00", "reading": 3.8 },
+        { "time": "2026-04-07 17:10", "reading": 4.9 },
+        { "time": "2026-04-07 17:20", "reading": 6.7 },
+        { "time": "2026-04-07 17:30", "reading": 8.8 },
+        { "time": "2026-04-07 17:40", "reading": 10.3 },
+        { "time": "2026-04-07 17:50", "reading": 11.0 }
+    ]
+}

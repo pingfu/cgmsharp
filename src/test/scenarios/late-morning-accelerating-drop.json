@@ -1,0 +1,18 @@
+{
+    "name": "Late morning accelerating drop",
+    "description": "BG at 12.0 at 10:00 after morning insulin (07:30) has been working. Starts dropping slowly, then the drop accelerates through target zone. Tests accelerating rate of change — early ticks lose 0.3-0.4, later ticks lose 0.8-1.1. Engine should detect the increasing velocity.",
+    "readings": [
+        { "time": "2026-04-07 10:00", "reading": 12.0 },
+        { "time": "2026-04-07 10:10", "reading": 11.6 },
+        { "time": "2026-04-07 10:20", "reading": 11.3 },
+        { "time": "2026-04-07 10:30", "reading": 11.1 },
+        { "time": "2026-04-07 10:40", "reading": 10.7 },
+        { "time": "2026-04-07 10:50", "reading": 10.4 },
+        { "time": "2026-04-07 11:00", "reading": 9.5 },
+        { "time": "2026-04-07 11:10", "reading": 8.7 },
+        { "time": "2026-04-07 11:20", "reading": 8.4 },
+        { "time": "2026-04-07 11:30", "reading": 7.2 },
+        { "time": "2026-04-07 11:40", "reading": 6.1 },
+        { "time": "2026-04-07 11:50", "reading": 5.3 }
+    ]
+}

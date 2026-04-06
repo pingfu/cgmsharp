@@ -1,0 +1,16 @@
+{
+    "name": "sharp-post-snack-recovery",
+    "description": "BG at 5.5 at 15:00, triggering a low nudge. User eats a snack and BG rises sharply to ~9.0 by 15:40, then stabilises. Tests that absorption suppression prevents repeat nudges during the recovery phase.",
+    "readings": [
+        { "time": "2026-04-06 15:00", "reading": 5.5 },
+        { "time": "2026-04-06 15:10", "reading": 5.3 },
+        { "time": "2026-04-06 15:20", "reading": 6.1 },
+        { "time": "2026-04-06 15:30", "reading": 7.4 },
+        { "time": "2026-04-06 15:40", "reading": 8.8 },
+        { "time": "2026-04-06 15:50", "reading": 9.2 },
+        { "time": "2026-04-06 16:00", "reading": 9.0 },
+        { "time": "2026-04-06 16:10", "reading": 8.7 },
+        { "time": "2026-04-06 16:20", "reading": 8.5 },
+        { "time": "2026-04-06 16:30", "reading": 8.4 }
+    ]
+}

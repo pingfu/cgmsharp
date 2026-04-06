@@ -1,0 +1,22 @@
+{
+    "name": "Noon slow drift below target",
+    "description": "BG at 8.0 at 11:00, very slowly drifts down losing about 0.1-0.2 per tick. Crosses 7.0 around 12:30, continues to 6.0 by 13:30. A gentle decline that barely triggers anything at each individual tick but accumulates over 2.5 hours. Tests whether the engine detects a persistent slow trend.",
+    "readings": [
+        { "time": "2026-04-07 11:00", "reading": 8.0 },
+        { "time": "2026-04-07 11:10", "reading": 7.9 },
+        { "time": "2026-04-07 11:20", "reading": 7.8 },
+        { "time": "2026-04-07 11:30", "reading": 7.6 },
+        { "time": "2026-04-07 11:40", "reading": 7.5 },
+        { "time": "2026-04-07 11:50", "reading": 7.4 },
+        { "time": "2026-04-07 12:00", "reading": 7.3 },
+        { "time": "2026-04-07 12:10", "reading": 7.2 },
+        { "time": "2026-04-07 12:20", "reading": 7.1 },
+        { "time": "2026-04-07 12:30", "reading": 6.9 },
+        { "time": "2026-04-07 12:40", "reading": 6.8 },
+        { "time": "2026-04-07 12:50", "reading": 6.6 },
+        { "time": "2026-04-07 13:00", "reading": 6.4 },
+        { "time": "2026-04-07 13:10", "reading": 6.3 },
+        { "time": "2026-04-07 13:20", "reading": 6.1 },
+        { "time": "2026-04-07 13:30", "reading": 6.0 }
+    ]
+}

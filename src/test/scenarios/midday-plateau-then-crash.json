@@ -1,0 +1,20 @@
+{
+    "name": "Midday plateau then crash",
+    "description": "BG stable at ~8.5 from 11:00-12:00, then suddenly drops fast to 4.5 by 13:00. The plateau means the engine should be quiet during the first hour, then react as the rapid descent begins. Tests transition from stable in-range to urgent drop.",
+    "readings": [
+        { "time": "2026-04-07 11:00", "reading": 8.5 },
+        { "time": "2026-04-07 11:10", "reading": 8.4 },
+        { "time": "2026-04-07 11:20", "reading": 8.6 },
+        { "time": "2026-04-07 11:30", "reading": 8.3 },
+        { "time": "2026-04-07 11:40", "reading": 8.5 },
+        { "time": "2026-04-07 11:50", "reading": 8.4 },
+        { "time": "2026-04-07 12:00", "reading": 8.2 },
+        { "time": "2026-04-07 12:10", "reading": 7.6 },
+        { "time": "2026-04-07 12:20", "reading": 7.0 },
+        { "time": "2026-04-07 12:30", "reading": 6.3 },
+        { "time": "2026-04-07 12:40", "reading": 5.7 },
+        { "time": "2026-04-07 12:50", "reading": 5.1 },
+        { "time": "2026-04-07 13:00", "reading": 4.5 },
+        { "time": "2026-04-07 13:10", "reading": 4.3 }
+    ]
+}

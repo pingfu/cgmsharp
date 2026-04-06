@@ -1,0 +1,23 @@
+{
+    "name": "post-meal-descent-no-intervention",
+    "description": "Dinner at 19:00. BG starts at 6.5 pre-dinner, rises to ~10.5 by 20:00, then naturally settles to 8.0 by 21:30. Meal window (19:00-21:00) covers the rise and most of the descent. Engine should stay quiet throughout a normal post-meal curve.",
+    "readings": [
+        { "time": "2026-04-06 18:50", "reading": 6.5 },
+        { "time": "2026-04-06 19:00", "reading": 6.6 },
+        { "time": "2026-04-06 19:10", "reading": 7.1 },
+        { "time": "2026-04-06 19:20", "reading": 7.9 },
+        { "time": "2026-04-06 19:30", "reading": 8.5 },
+        { "time": "2026-04-06 19:40", "reading": 9.4 },
+        { "time": "2026-04-06 19:50", "reading": 9.8 },
+        { "time": "2026-04-06 20:00", "reading": 10.3 },
+        { "time": "2026-04-06 20:10", "reading": 10.5 },
+        { "time": "2026-04-06 20:20", "reading": 10.1 },
+        { "time": "2026-04-06 20:30", "reading": 9.9 },
+        { "time": "2026-04-06 20:40", "reading": 9.3 },
+        { "time": "2026-04-06 20:50", "reading": 9.0 },
+        { "time": "2026-04-06 21:00", "reading": 8.6 },
+        { "time": "2026-04-06 21:10", "reading": 8.3 },
+        { "time": "2026-04-06 21:20", "reading": 8.1 },
+        { "time": "2026-04-06 21:30", "reading": 8.0 }
+    ]
+}

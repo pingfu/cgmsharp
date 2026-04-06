@@ -1,0 +1,20 @@
+{
+    "name": "Late morning rollercoaster",
+    "description": "BG oscillates non-monotonically: 10.0 at 10:30, drops to 7.5 by 11:00, bounces to 9.5 by 11:30, drops to 6.8 by 12:00, rises to 8.0 by 12:30. Tests how the engine handles repeated direction changes — each leg is only 30 minutes so the engine must re-evaluate trend frequently.",
+    "readings": [
+        { "time": "2026-04-07 10:20", "reading": 10.2 },
+        { "time": "2026-04-07 10:30", "reading": 10.0 },
+        { "time": "2026-04-07 10:40", "reading": 9.3 },
+        { "time": "2026-04-07 10:50", "reading": 8.5 },
+        { "time": "2026-04-07 11:00", "reading": 7.5 },
+        { "time": "2026-04-07 11:10", "reading": 7.9 },
+        { "time": "2026-04-07 11:20", "reading": 8.7 },
+        { "time": "2026-04-07 11:30", "reading": 9.5 },
+        { "time": "2026-04-07 11:40", "reading": 9.1 },
+        { "time": "2026-04-07 11:50", "reading": 7.8 },
+        { "time": "2026-04-07 12:00", "reading": 6.8 },
+        { "time": "2026-04-07 12:10", "reading": 7.0 },
+        { "time": "2026-04-07 12:20", "reading": 7.6 },
+        { "time": "2026-04-07 12:30", "reading": 8.0 }
+    ]
+}
