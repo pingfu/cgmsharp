@@ -90,7 +90,7 @@ function createNudgeEngine(config)
         lastNudgeReading: null
     };
 
-    function calculateRateOfChange(readings)
+    function calculateRateOfChange()
     {
         if (readings.length < 2) return null;
 
@@ -101,9 +101,9 @@ function createNudgeEngine(config)
         return (newest - oldest) / timeSpanMinutes; // mmol/L per minute
     }
 
-    function getTrend(readings)
+    function getTrend()
     {
-        var rate = calculateRateOfChange(readings);
+        var rate = calculateRateOfChange();
         if (rate === null) return { rate: null, direction: `unknown`, description: `insufficient data` };
 
         var absRate = Math.abs(rate);
@@ -262,7 +262,7 @@ function createNudgeEngine(config)
         // overnight quiet hours — fully silent
         if (isQuietHours(now)) return;
 
-        var trend = getTrend(readings);
+        var trend = getTrend();
         var minutesSinceInjection = getMinutesSinceLastInjection(now);
         var insulinActivity = getInsulinActivity(minutesSinceInjection);
         var insulinActive = insulinActivity !== null && insulinActivity >= INSULIN_ACTIVE_THRESHOLD;
@@ -274,6 +274,7 @@ function createNudgeEngine(config)
         var message = null;
         var category = null;
         var carbs = null;
+        var food = null;
 
         if (reading < NUDGE_TARGET_LOW)
         {
@@ -286,7 +287,7 @@ function createNudgeEngine(config)
             if (trend.direction === `rising`) return;
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActive);
-            var food = getCarbSuggestion(carbs);
+            food = getCarbSuggestion(carbs);
 
             if (trend.direction === `falling` && insulinActive)
             {
@@ -310,7 +311,7 @@ function createNudgeEngine(config)
             if (mealWindow) return;
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActive);
-            var food = getCarbSuggestion(carbs);
+            food = getCarbSuggestion(carbs);
 
             if (trend.direction === `falling` && insulinActive)
             {

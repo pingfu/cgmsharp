@@ -55,7 +55,7 @@ async function Tick()
     {
         log(error);
 
-        if (libre.getErrorCounter() === 6)
+        if (libre.getErrorCounter() > 0 && libre.getErrorCounter() % 6 === 0)
         {
             try
             {
