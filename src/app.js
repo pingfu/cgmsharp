@@ -109,7 +109,8 @@ async function tryWriteGlucoseReading(glucoseReading) {
                 .floatField('value', glucoseReading)
                 .timestamp(new Date());
 
-            await influxWriteApi.writePoint(point);
+            influxWriteApi.writePoint(point);
+            await influxWriteApi.flush();
         } 
         catch (error)
         {
@@ -522,7 +523,7 @@ async function Tick()
 
         log(`glucose reading received: ${reading} mmol/L. latest readings: [` + values.join(` mmol/L, `) + `]`);
 
-        tryWriteGlucoseReading(reading);
+        await tryWriteGlucoseReading(reading);
 
         // remove the oldest glucose reading
         if (values.length >= NUMBER_OF_LAST_READINGS_TO_EXAMINE) values.shift();
