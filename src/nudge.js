@@ -35,7 +35,7 @@ const DEFAULTS = {
     dawnStartHour: 4,
     dawnEndHour: 10,
 
-    // how far ahead to project glucose (minutes). linear extrapolation from current rate.
+    // how far ahead to project glucose (minutes). uses short-term rate + acceleration.
     projectionMinutes: 30,
 
     // meal window — insulin is injected with a meal. suppress carb nudges for this period.
@@ -60,6 +60,11 @@ const DEFAULTS = {
     trendFlatThreshold: 0.01,
     trendSlowThreshold: 0.05,
     trendRapidThreshold: 0.07,
+
+    // acceleration thresholds — how fast the rate of change is itself changing.
+    // negative acceleration means the drop is getting steeper.
+    accelerationThreshold: -0.003, // mmol/L per min² — below this, drop is accelerating meaningfully
+    urgentShortRate: -0.07, // mmol/L per min — short-term rate below this is "dropping fast"
 
     // readings buffer size
     maxReadings: 6 // 60 min at 10-min intervals
@@ -134,6 +139,33 @@ const CARB_SUGGESTIONS = [
     ]}
 ];
 
+// emergency food suggestions — fast-acting carbs for rapid/accelerating drops.
+// these raise BG within 5-10 minutes. used when trend is urgent.
+const EMERGENCY_SUGGESTIONS = [
+    { grams: 5, ideas: [
+        `3 jelly babies`,
+        `4 or 5 wine gums`,
+        `a small glass (150ml) of orange juice`
+    ]},
+    { grams: 10, ideas: [
+        `5 jelly babies`,
+        `a small glass (200ml) of orange juice`,
+        `a small glass (200ml) of full-sugar cola`,
+        `3 glucose tablets`
+    ]},
+    { grams: 15, ideas: [
+        `7 jelly babies`,
+        `a glass (250ml) of orange juice`,
+        `4 glucose tablets`,
+        `a glass (250ml) of full-sugar cola`
+    ]},
+    { grams: 20, ideas: [
+        `9 jelly babies`,
+        `a large glass (300ml) of orange juice`,
+        `5 glucose tablets and a glass of milk`
+    ]}
+];
+
 function createNudgeEngine(config)
 {
     // merge config over defaults — config values win, missing values fall back to defaults
@@ -156,29 +188,107 @@ function createNudgeEngine(config)
         lastNudgeReading: null
     };
 
-    function calculateRateOfChange()
+    // long-term rate: slope across the full readings buffer (~60 min). overall direction.
+    function getLongTermRate()
     {
-        if (readings.length < 2) return null;
-
+        if (readings.length < 4) return null;
         var newest = readings[readings.length - 1];
         var oldest = readings[0];
-        var timeSpanMinutes = (readings.length - 1) * interval;
-
-        return (newest - oldest) / timeSpanMinutes;
+        return (newest - oldest) / ((readings.length - 1) * interval);
     }
 
-    function getTrend()
+    // short-term rate: slope across last 3 readings (~20 min). what's happening right now.
+    // uses 3 readings to smooth out single-tick CGM noise.
+    function getShortTermRate()
     {
-        var rate = calculateRateOfChange();
-        if (rate === null) return { rate: null, direction: `unknown`, description: `insufficient data` };
+        if (readings.length < 3) return null;
+        var newest = readings[readings.length - 1];
+        var recent = readings[readings.length - 3];
+        return (newest - recent) / (2 * interval);
+    }
 
-        var absRate = Math.abs(rate);
-        var direction = rate > 0 ? `rising` : rate < 0 ? `falling` : `flat`;
+    // acceleration: difference between short-term and long-term rate.
+    // negative = drop is getting steeper. positive = drop is levelling off (or rise accelerating).
+    function getAcceleration()
+    {
+        var longRate = getLongTermRate();
+        var shortRate = getShortTermRate();
+        if (longRate === null || shortRate === null) return null;
+        return shortRate - longRate;
+    }
 
-        if (absRate < p.trendFlatThreshold) return { rate, direction: `flat`, description: `stable` };
-        if (absRate < p.trendSlowThreshold) return { rate, direction, description: `slowly ${direction}` };
-        if (absRate < p.trendRapidThreshold) return { rate, direction, description: direction };
-        return { rate, direction, description: `rapidly ${direction}` };
+    function getTrend(reading)
+    {
+        var longRate = getLongTermRate();
+        var shortRate = getShortTermRate();
+        var acceleration = getAcceleration();
+
+        // fall back to simple 2-reading rate if we don't have enough history
+        if (shortRate === null)
+        {
+            if (readings.length < 2) return { rate: null, shortRate: null, acceleration: null, direction: `unknown`, description: `insufficient data`, urgent: false };
+            var simpleRate = (readings[readings.length - 1] - readings[readings.length - 2]) / interval;
+            var dir = simpleRate > 0 ? `rising` : simpleRate < 0 ? `falling` : `flat`;
+            return { rate: simpleRate, shortRate: simpleRate, acceleration: null, direction: dir, description: Math.abs(simpleRate) < p.trendFlatThreshold ? `stable` : `slowly ${dir}`, urgent: false };
+        }
+
+        // use short-term rate for direction classification — it's what's happening now
+        var absShort = Math.abs(shortRate);
+        var direction = shortRate > 0 ? `rising` : shortRate < 0 ? `falling` : `flat`;
+
+        // build description incorporating acceleration
+        var description;
+        var urgent = false;
+
+        if (absShort < p.trendFlatThreshold)
+        {
+            description = `stable`;
+        }
+        else if (absShort < p.trendSlowThreshold)
+        {
+            description = `slowly ${direction}`;
+        }
+        else if (absShort < p.trendRapidThreshold)
+        {
+            if (acceleration !== null && direction === `falling` && acceleration < p.accelerationThreshold)
+            {
+                description = `falling and picking up pace`;
+            }
+            else
+            {
+                description = direction;
+            }
+        }
+        else
+        {
+            // short-term rate is rapid
+            if (acceleration !== null && direction === `falling` && acceleration < p.accelerationThreshold)
+            {
+                description = `dropping fast and accelerating`;
+                urgent = true;
+            }
+            else
+            {
+                description = `dropping fast`;
+                if (direction === `falling`) urgent = true;
+            }
+        }
+
+        // urgent only when falling AND already close to or below target.
+        // a rapid drop from 13 to 9 is not urgent — she's still in range.
+        if (urgent && direction === `falling`)
+        {
+            if (reading > p.targetLow + 1.0) urgent = false;
+        }
+
+        return {
+            rate: longRate || shortRate,
+            shortRate: shortRate,
+            acceleration: acceleration,
+            direction: direction,
+            description: description,
+            urgent: urgent
+        };
     }
 
     function getInsulinComponentActivity(minutesSinceInjection, onset, peakStart, peakEnd, tail)
@@ -242,10 +352,17 @@ function createNudgeEngine(config)
         return hour >= p.dawnStartHour && hour < p.dawnEndHour;
     }
 
-    function projectGlucose(currentReading, ratePerMinute, minutes)
+    // projection uses short-term rate + acceleration for more accurate forecasting.
+    // if drop is accelerating, the projection is worse than linear — basic kinematics.
+    function projectGlucose(reading, trend)
     {
-        if (ratePerMinute === null) return null;
-        return currentReading + (ratePerMinute * minutes);
+        if (trend.shortRate === null) return null;
+        var projected = reading + (trend.shortRate * p.projectionMinutes);
+        if (trend.acceleration !== null && trend.acceleration < 0)
+        {
+            projected = projected + (0.5 * trend.acceleration * p.projectionMinutes);
+        }
+        return projected;
     }
 
     function estimateCarbsNeeded(reading, trend, insulinActive)
@@ -256,7 +373,9 @@ function createNudgeEngine(config)
         var targetGap = gap + 0.5;
         var base = Math.round(targetGap * p.carbsPerMmol);
 
-        if (trend.description === `rapidly falling`) base = base + Math.round(p.carbsPerMmol * 0.5);
+        // factor in acceleration — accelerating drops need more carbs
+        if (trend.urgent) base = base + Math.round(p.carbsPerMmol * 1.0);
+        else if (trend.description === `dropping fast`) base = base + Math.round(p.carbsPerMmol * 0.5);
         else if (trend.direction === `rising`) base = Math.max(base - Math.round(p.carbsPerMmol * 0.5), 2);
 
         if (insulinActive) base = base + Math.round(p.carbsPerMmol * 0.5);
@@ -267,23 +386,33 @@ function createNudgeEngine(config)
         return base;
     }
 
-    function getCarbSuggestion(grams)
+    function getSuggestionFromTable(table, grams)
     {
-        var best = CARB_SUGGESTIONS[0];
+        var best = table[0];
         var bestDiff = Math.abs(grams - best.grams);
 
-        for (var i = 1; i < CARB_SUGGESTIONS.length; i++)
+        for (var i = 1; i < table.length; i++)
         {
-            var diff = Math.abs(grams - CARB_SUGGESTIONS[i].grams);
+            var diff = Math.abs(grams - table[i].grams);
             if (diff < bestDiff)
             {
-                best = CARB_SUGGESTIONS[i];
+                best = table[i];
                 bestDiff = diff;
             }
         }
 
         var idea = best.ideas[Math.floor(Math.random() * best.ideas.length)];
         return { grams: best.grams, suggestion: idea };
+    }
+
+    function getCarbSuggestion(grams)
+    {
+        return getSuggestionFromTable(CARB_SUGGESTIONS, grams);
+    }
+
+    function getEmergencySuggestion(grams)
+    {
+        return getSuggestionFromTable(EMERGENCY_SUGGESTIONS, grams);
     }
 
     function isAbsorptionSuppressed(carbs, category, now)
@@ -312,12 +441,12 @@ function createNudgeEngine(config)
 
         if (isQuietHours(now)) return;
 
-        var trend = getTrend();
+        var trend = getTrend(reading);
         var minutesSinceInjection = getMinutesSinceLastInjection(now);
         var insulinActivity = getInsulinActivity(minutesSinceInjection);
         var insulinActive = insulinActivity !== null && insulinActivity >= p.insulinActiveThreshold;
         var mealWindow = isInMealWindow(now);
-        var projected = projectGlucose(reading, trend.rate, p.projectionMinutes);
+        var projected = projectGlucose(reading, trend);
         var isDawn = isDawnPhenomenonWindow(now);
 
         var title = null;
@@ -334,22 +463,33 @@ function createNudgeEngine(config)
             if (trend.direction === `rising`) return;
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActive);
-            food = getCarbSuggestion(carbs);
 
-            if (trend.direction === `falling` && insulinActive)
+            // urgent/accelerating drops get emergency foods and direct messaging
+            if (trend.urgent)
             {
-                title = `Time for a snack`;
-                message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working, so it'll probably keep drifting down. About ${food.grams}g of carbs would help — something like ${food.suggestion}. That's a bit more than usual because your insulin is still active.`;
-            }
-            else if (trend.direction === `falling`)
-            {
-                title = `A little top-up might help`;
-                message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That amount suits a gentle ${trend.description} trend when you're a touch below target.`;
+                food = getEmergencySuggestion(carbs);
+                title = `Have some fast sugar now`;
+                message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
             }
             else
             {
-                title = `Sugar update`;
-                message = `Your sugar is ${reading} and ${trend.description}, sitting just below target. A small top-up of about ${food.grams}g of carbs would give it a nudge — try ${food.suggestion}.`;
+                food = getCarbSuggestion(carbs);
+
+                if (trend.direction === `falling` && insulinActive)
+                {
+                    title = `Time for a snack`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working, so it'll probably keep drifting down. About ${food.grams}g of carbs would help — something like ${food.suggestion}. That's a bit more than usual because your insulin is still active.`;
+                }
+                else if (trend.direction === `falling`)
+                {
+                    title = `A little top-up might help`;
+                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That amount suits a gentle ${trend.description} trend when you're a touch below target.`;
+                }
+                else
+                {
+                    title = `Sugar update`;
+                    message = `Your sugar is ${reading} and ${trend.description}, sitting just below target. A small top-up of about ${food.grams}g of carbs would give it a nudge — try ${food.suggestion}.`;
+                }
             }
         }
         else if (reading <= p.targetHigh)
@@ -357,30 +497,42 @@ function createNudgeEngine(config)
             if (mealWindow) return;
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActive);
-            food = getCarbSuggestion(carbs);
 
-            // only nudge when close to the lower boundary — above 7.5 is comfortable even if falling
-            if (trend.direction === `falling` && insulinActive && reading < p.targetLow + 0.5)
+            // urgent drops in target — emergency foods, act now
+            if (trend.urgent)
             {
+                food = getEmergencySuggestion(carbs);
                 category = `in-target-falling`;
-                title = `Thinking ahead`;
-                message = `Your sugar is ${reading} and ${trend.description}. You're in range but your insulin is still working, so it may keep drifting down. A small snack of about ${food.grams}g of carbs could help you stay comfortable — something like ${food.suggestion}.`;
-            }
-            else if (trend.description === `rapidly falling`)
-            {
-                category = `in-target-falling`;
-                title = `Worth a small snack`;
-                message = `Your sugar is ${reading} and coming down fairly quickly. About ${food.grams}g of carbs would help it level off — try ${food.suggestion}.`;
-            }
-            else if (projected !== null && projected < p.targetLow)
-            {
-                category = `in-target-falling`;
-                title = `Gentle heads-up`;
-                message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. Something like ${food.suggestion} (about ${food.grams}g carbs) would keep things steady.`;
+                title = `Have some fast sugar now`;
+                message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
             }
             else
             {
-                return;
+                food = getCarbSuggestion(carbs);
+
+                // only nudge when close to the lower boundary — above 7.5 is comfortable even if falling
+                if (trend.direction === `falling` && insulinActive && reading < p.targetLow + 0.5)
+                {
+                    category = `in-target-falling`;
+                    title = `Thinking ahead`;
+                    message = `Your sugar is ${reading} and ${trend.description}. You're in range but your insulin is still working, so it may keep drifting down. A small snack of about ${food.grams}g of carbs could help you stay comfortable — something like ${food.suggestion}.`;
+                }
+                else if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating` || trend.description === `falling and picking up pace`)
+                {
+                    category = `in-target-falling`;
+                    title = `Worth a small snack`;
+                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs would help it level off — try ${food.suggestion}.`;
+                }
+                else if (projected !== null && projected < p.targetLow)
+                {
+                    category = `in-target-falling`;
+                    title = `Gentle heads-up`;
+                    message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. Something like ${food.suggestion} (about ${food.grams}g carbs) would keep things steady.`;
+                }
+                else
+                {
+                    return;
+                }
             }
         }
         else
@@ -391,7 +543,8 @@ function createNudgeEngine(config)
 
         if (title === null || message === null) return;
 
-        if (carbs !== null && isAbsorptionSuppressed(carbs, category, now)) return;
+        // urgent trends bypass absorption suppression — if she's crashing, a previous nudge is irrelevant
+        if (!trend.urgent && carbs !== null && isAbsorptionSuppressed(carbs, category, now)) return;
 
         await sendNudge(title, message);
         state.lastNudgeSent = now.valueOf();
@@ -403,4 +556,4 @@ function createNudgeEngine(config)
     return { evaluate: evaluate, state: state, profile: p };
 }
 
-module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS };
+module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS };
