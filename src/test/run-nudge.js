@@ -52,6 +52,7 @@ async function runScenario(scenario)
             var last = nudges[nudges.length - 1];
             console.log(`    title: ${last.title}`);
             console.log(`    message: ${last.message}`);
+            console.log(`    state: carbs=${engine.state.lastNudgeCarbs}, expected=${engine.state.lastNudgeExpectedReading ? engine.state.lastNudgeExpectedReading.toFixed(1) : null}, cat=${engine.state.lastNudgeCategory}`);
         }
     }
 

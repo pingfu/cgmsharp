@@ -1,5 +1,88 @@
 const moment = require(`moment`);
 
+// =============================================================================
+// nudge engine
+// =============================================================================
+//
+// objective
+// ---------
+// gently coach the user into making smaller, earlier corrective food choices so
+// their blood sugar stays in range more often — without needing to understand
+// the underlying science. every message sent must be actionable. if there's
+// nothing to do, stay quiet.
+//
+// how it works
+// ------------
+// each tick (10 min), the engine receives a new glucose reading. it maintains
+// its own sliding window of recent readings (6 readings, 60 min) and evaluates
+// whether to send a nudge on the ntfy nudge channel.
+//
+// the decision uses five inputs:
+//
+//   1. zone — where the reading sits relative to the target range (7.0-10.0):
+//      - below target: suggest carbs (amount depends on gap, trend, insulin)
+//      - in target (lower half, <7.5): preemptive nudge if falling + insulin active
+//      - in target (upper half): quiet — comfortable
+//      - above target: quiet — not the nudge engine's job (alerts handle highs)
+//
+//   2. trend — two-timescale slope analysis:
+//      - long-term rate: slope across the full 60-min window (overall direction)
+//      - short-term rate: slope across the last 20 min (what's happening now)
+//      - acceleration: difference between short and long term rates.
+//        negative acceleration = the drop is getting steeper.
+//        this distinguishes "been gently falling all hour" from "was stable,
+//        now suddenly crashing" — the latter needs emergency sugar, not yoghurt.
+//
+//   3. insulin activity — biphasic curve model of premixed insulin (e.g. NovoMix 30):
+//      - 30% rapid-acting: peaks 60-90 min, gone by 4 hours
+//      - 70% intermediate: peaks 4-8 hours, tails off by 16 hours
+//      - piecewise linear interpolation, combined weighted activity 0.0-1.0
+//      - "meaningfully active" above 0.25 threshold
+//      - when insulin is active and BG is falling, carb suggestions are increased
+//        because the drop will likely continue
+//
+//   4. suppression gates — prevent noise and fatigue:
+//      - meal window (120 min after injection): assume a meal is being digested,
+//        don't suggest more food on top of dinner
+//      - overnight quiet hours (midnight-6am): fully silent, she's asleep
+//      - dawn phenomenon (4-10am): suppress nudges for rising BG that's normal
+//        morning cortisol, not diet-related
+//      - expected-response tracking: when we suggest "eat 5g", we calculate where
+//        BG should end up. suppress re-nudging until either the advice worked
+//        (BG reached expected level) or the situation has meaningfully worsened
+//        (carb estimate jumped by 3g+). prevents repeating "have a pear" every
+//        20 min during a slow drift.
+//
+//   5. food selection — two categories:
+//      - normal suggestions: healthy UK foods with specific portions (yoghurt,
+//        oatcakes, fruit, toast). used for gentle corrections.
+//      - emergency suggestions: fast-acting sugar (jelly babies, glucose tablets,
+//        orange juice). used when the trend is urgent — dropping fast and/or
+//        accelerating towards hypo. these raise BG within 5-10 minutes.
+//
+// carb estimation
+// ---------------
+// the amount of carbs to suggest is calculated from:
+//   - gap between current reading and target (7.0) + 0.5 mmol/L buffer
+//   - multiplied by carbsPerMmol (observed: 4.4g per 1 mmol/L rise)
+//   - adjusted up for acceleration, rapid drops, and active insulin
+//   - adjusted down if rising
+//   - clamped to 2-20g range
+//
+// the carbsPerMmol ratio is the single most important tuning knob. it was
+// calibrated from one evening data point (18g carbs → 4.1 mmol/L rise). it
+// will vary by time of day, activity, and meal composition. the test harness
+// allows overriding it per scenario to explore different sensitivities.
+//
+// projection
+// ----------
+// glucose is projected 30 min forward using the short-term rate + acceleration
+// (basic kinematics). this catches situations where BG is currently in range
+// but heading out the bottom — enabling preemptive nudges before she actually
+// goes low.
+//
+// =============================================================================
+
 // default profile — current values calibrated from historical data (Apr-Oct 2025, 21,777 readings)
 // and observed carb sensitivity (2026-04-06 evening session)
 const DEFAULTS = {
@@ -185,7 +268,8 @@ function createNudgeEngine(config)
         lastNudgeSent: null,
         lastNudgeCategory: null,
         lastNudgeCarbs: null,
-        lastNudgeReading: null
+        lastNudgeReading: null,
+        lastNudgeExpectedReading: null // where we expect BG to be once the suggested food absorbs
     };
 
     // long-term rate: slope across the full readings buffer (~60 min). overall direction.
@@ -421,18 +505,42 @@ function createNudgeEngine(config)
         return getSuggestionFromTable(EMERGENCY_SUGGESTIONS, grams);
     }
 
-    function isAbsorptionSuppressed(carbs, category, now)
+    // expected-response suppression: when we send a carb suggestion, we calculate where BG
+    // should be once the food absorbs. suppress further nudges until either:
+    // a) the reading has reached or exceeded the expected level (advice worked — stay quiet)
+    // b) enough time has passed AND the reading is below expected (advice wasn't enough — escalate)
+    // c) the carb tier has jumped (situation worsened beyond what original advice covers)
+    function shouldSuppressNudge(reading, carbs, category, now)
     {
         if (state.lastNudgeSent === null || state.lastNudgeCarbs === null) return false;
 
-        var absorptionWindow = state.lastNudgeCarbs <= 7 ? p.absorptionSmall : p.absorptionLarge;
         var minutesSinceLastNudge = (now.valueOf() - state.lastNudgeSent) / 60000;
+        var absorptionWindow = state.lastNudgeCarbs <= 7 ? p.absorptionSmall : p.absorptionLarge;
 
-        if (minutesSinceLastNudge >= absorptionWindow) return false;
-        if (carbs >= state.lastNudgeCarbs + 5) return false;
+        // category changed (e.g. was in-target-falling, now below) — different situation, don't suppress
         if (category !== state.lastNudgeCategory) return false;
 
-        return true;
+        // still within absorption window — food hasn't had time to work yet
+        if (minutesSinceLastNudge < absorptionWindow)
+        {
+            // unless carb tier has jumped significantly (situation rapidly worsening)
+            if (carbs >= state.lastNudgeCarbs + 5) return false;
+            return true;
+        }
+
+        // absorption window has passed — check if the advice worked
+        if (state.lastNudgeExpectedReading !== null)
+        {
+            // reading has reached or exceeded expected level — advice worked, stay quiet
+            if (reading >= state.lastNudgeExpectedReading) return true;
+
+            // reading is below expected — but only re-nudge if the carb estimate has jumped
+            // meaningfully (at least 3g more). small increases from 5→6→7 are estimation noise,
+            // not a materially worse situation.
+            if (carbs < state.lastNudgeCarbs + 3) return true;
+        }
+
+        return false;
     }
 
     // now is optional — defaults to moment(). pass a moment instance to control time in tests.
@@ -549,14 +657,16 @@ function createNudgeEngine(config)
 
         if (title === null || message === null) return;
 
-        // urgent trends bypass absorption suppression — if she's crashing, a previous nudge is irrelevant
-        if (!trend.urgent && carbs !== null && isAbsorptionSuppressed(carbs, category, now)) return;
+        // urgent trends bypass suppression — if she's crashing, a previous nudge is irrelevant
+        if (!trend.urgent && carbs !== null && shouldSuppressNudge(reading, carbs, category, now)) return;
 
         await sendNudge(title, message);
         state.lastNudgeSent = now.valueOf();
         state.lastNudgeCategory = category;
         state.lastNudgeCarbs = carbs;
         state.lastNudgeReading = reading;
+        // calculate where we expect BG to be if she eats the suggested carbs
+        state.lastNudgeExpectedReading = carbs !== null ? reading + (carbs / p.carbsPerMmol) : null;
     }
 
     return { evaluate: evaluate, state: state, profile: p };
