@@ -33,7 +33,16 @@ Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds 
 
 ## Architecture
 
-Single-file Node.js app (`src/app.js`) with three scheduled loops:
+Node.js app with five source files:
+- `src/app.js` — orchestrator: cron schedules, Tick loop, alarm sliding window, main()
+- `src/librelinkup.js` — LibreLinkUp API client: authentication, reading retrieval, error counter, 401 handling
+- `src/nudge.js` — nudge engine: insulin model, trend analysis, carb estimation, zone-based decision logic (maintains own readings buffer)
+- `src/notifications.js` — notification transport: ntfy.sh, Pushover, SendAlert/SendCanary/SendNudge
+- `src/influxdb.js` — InfluxDB client: initialisation, glucose writes, reconnection
+
+Each module that needs glucose history maintains its own readings buffer. App.js passes each new reading to modules individually.
+
+Three scheduled loops:
 
 1. **Tick** (every 10 min) - Fetches glucose reading from LibreLinkUp API, writes to InfluxDB, evaluates sliding window of last 6 readings against critical thresholds (low: 3.5, high: 22 mmol/L), runs nudge engine evaluation
 2. **Canary** (daily at 9 AM) - Sends a heartbeat notification to confirm the monitor is alive
@@ -51,19 +60,20 @@ Key behaviours:
 - InfluxDB is optional; if env vars are missing, it silently skips database writes
 - InfluxDB auto-reconnects on timeout/connection errors
 
-### Nudge Engine
+### Nudge Engine (`src/nudge.js`)
 
-The nudge engine runs every tick and evaluates whether to send a proactive message on the nudge channel. It uses three inputs:
+Extracted into its own module via `createNudgeEngine(config)` factory. App.js passes `SendNudge` as a callback so nudge.js has no dependency on the notification transport.
 
-1. **Zone** — current reading vs target range (7.0–10.0 mmol/L)
-2. **Trend** — rate of change from the sliding window (stable, slowly/rapidly rising/falling)
-3. **Insulin activity** — biphasic curve model of premixed insulin (30% rapid-acting + 70% intermediate-acting)
+The engine uses zone-based decision logic (below target / in target / quiet zone / above threshold) combined with:
+- **Trend** — rate of change from the sliding window (stable, slowly/rapidly rising/falling, calibrated from historical data)
+- **Insulin activity** — biphasic curve model (30% rapid + 70% intermediate, piecewise linear, threshold 0.25)
+- **Meal window** — suppresses carb suggestions for 120 min after injection times (covers eat-peak-settle cycle)
+- **Absorption awareness** — after recommending carbs, suppresses repeat nudges until the food has had time to show in BG (20 min for ≤7g, 35 min for >7g), unless the situation materially worsens
+- **Overnight quiet hours** — fully silent midnight–6 AM
+- **Dawn phenomenon** — suppresses nudges during 4–10 AM rising BG
+- **Calibrated carb estimation** — uses observed ratio of 4.4g per 1 mmol/L rise, with food suggestions from a tiered lookup table
 
-The biphasic insulin model uses piecewise linear interpolation with tunable constants for onset, peak, and tail of each component. Rapid component peaks at 60–90 min post-injection and tapers by 4 hours. Intermediate component peaks at 4–8 hours and tapers by 16 hours. Combined activity (0.0–1.0) determines whether insulin is "meaningfully active" (threshold: 0.15).
-
-Nudge scenarios: below-target carb suggestions (adjusted for insulin activity), in-target preemptive warnings when projected to drop below 7.0, above-target hold-off messages, and dawn phenomenon awareness (4–8 AM rising BG flagged as potentially self-resolving).
-
-If insulin times are not configured, the engine degrades gracefully — it still nudges based on zone and trend, just without insulin-aware adjustments.
+Every message sent is actionable. If no action is needed, no message is sent.
 
 ## Required Environment Variables
 
