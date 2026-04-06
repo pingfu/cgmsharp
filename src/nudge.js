@@ -543,6 +543,17 @@ function createNudgeEngine(config)
         return false;
     }
 
+    // return-to-range detection: if any reading in the buffer was above target,
+    // the current descent is insulin bringing BG back down — not a new low to correct.
+    function isDescendingFromHigh()
+    {
+        for (var i = 0; i < readings.length; i++)
+        {
+            if (readings[i] > p.targetHigh) return true;
+        }
+        return false;
+    }
+
     // now is optional — defaults to moment(). pass a moment instance to control time in tests.
     async function evaluate(reading, sendNudge, now)
     {
@@ -609,6 +620,9 @@ function createNudgeEngine(config)
         else if (reading <= p.targetHigh)
         {
             if (mealWindow) return;
+
+            // if BG was above target recently, this descent is insulin working — don't interrupt
+            if (isDescendingFromHigh() && trend.direction === `falling`) return;
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActive);
 
