@@ -1,0 +1,15 @@
+{
+    "name": "Dawn phenomenon",
+    "description": "Rising BG 4-8 AM due to cortisol. Historical mean 12.15 in this window. Engine should suppress nudges — dawn phenomenon is self-resolving and not diet-related.",
+    "readings": [
+        { "time": "2026-04-07 04:00", "reading": 7.5 },
+        { "time": "2026-04-07 04:10", "reading": 7.8 },
+        { "time": "2026-04-07 04:20", "reading": 8.2 },
+        { "time": "2026-04-07 04:30", "reading": 8.9 },
+        { "time": "2026-04-07 04:40", "reading": 9.5 },
+        { "time": "2026-04-07 04:50", "reading": 10.3 },
+        { "time": "2026-04-07 05:00", "reading": 11.2 },
+        { "time": "2026-04-07 05:10", "reading": 12.0 },
+        { "time": "2026-04-07 05:20", "reading": 12.5 }
+    ]
+}

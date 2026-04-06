@@ -323,27 +323,10 @@ function createNudgeEngine(config)
                 return;
             }
         }
-        else if (reading < p.aboveThreshold)
-        {
-            return;
-        }
         else
         {
-            if (trend.direction !== `rising`) return;
-            if (isDawn) return;
-
-            category = `above`;
-
-            if (projected !== null && projected > p.aboveThreshold + 2.0)
-            {
-                title = `Sugar update`;
-                message = `Your sugar is ${reading} and ${trend.description}. At this pace it could reach about ${projected.toFixed(1)} over the next half hour. Probably best to skip snacks for a bit and let it come back down.`;
-            }
-            else
-            {
-                title = `Sugar update`;
-                message = `Your sugar is ${reading} and ${trend.description}. It's a little above target so maybe hold off on snacks for now and let it drift back down.`;
-            }
+            // above target — not the nudge engine's job. alerts handle dangerous highs separately.
+            return;
         }
 
         if (title === null || message === null) return;

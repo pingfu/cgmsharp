@@ -1,0 +1,13 @@
+{
+    "name": "Rapid drop",
+    "description": "Fast decline from in-range to hypo territory over 70 minutes. Morning insulin active. Tests escalation: first nudge at mild drop, then carb tier should increase as situation worsens beyond absorption window.",
+    "readings": [
+        { "time": "2026-04-07 12:00", "reading": 8.5 },
+        { "time": "2026-04-07 12:10", "reading": 7.8 },
+        { "time": "2026-04-07 12:20", "reading": 7.0 },
+        { "time": "2026-04-07 12:30", "reading": 6.2 },
+        { "time": "2026-04-07 12:40", "reading": 5.5 },
+        { "time": "2026-04-07 12:50", "reading": 4.8 },
+        { "time": "2026-04-07 13:00", "reading": 4.2 }
+    ]
+}

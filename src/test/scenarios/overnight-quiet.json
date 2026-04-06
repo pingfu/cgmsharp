@@ -1,0 +1,11 @@
+{
+    "name": "Overnight (quiet hours)",
+    "description": "Dropping BG during midnight-6AM quiet window. Engine should produce zero nudges regardless of reading level. Alerts handle emergencies separately.",
+    "readings": [
+        { "time": "2026-04-07 01:00", "reading": 6.0 },
+        { "time": "2026-04-07 01:10", "reading": 5.5 },
+        { "time": "2026-04-07 01:20", "reading": 5.2 },
+        { "time": "2026-04-07 01:30", "reading": 4.8 },
+        { "time": "2026-04-07 01:40", "reading": 4.5 }
+    ]
+}

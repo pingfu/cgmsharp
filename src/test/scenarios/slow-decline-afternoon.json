@@ -1,0 +1,15 @@
+{
+    "name": "Slow decline mid-afternoon",
+    "description": "Steady decline from in-range to below target. Morning insulin intermediate component still active (07:30 injection, 4-8h peak = 11:30-15:30). Tests whether nudges escalate appropriately as reading drops.",
+    "readings": [
+        { "time": "2026-04-07 14:00", "reading": 9.0 },
+        { "time": "2026-04-07 14:10", "reading": 8.7 },
+        { "time": "2026-04-07 14:20", "reading": 8.3 },
+        { "time": "2026-04-07 14:30", "reading": 7.8 },
+        { "time": "2026-04-07 14:40", "reading": 7.4 },
+        { "time": "2026-04-07 14:50", "reading": 7.0 },
+        { "time": "2026-04-07 15:00", "reading": 6.7 },
+        { "time": "2026-04-07 15:10", "reading": 6.3 },
+        { "time": "2026-04-07 15:20", "reading": 6.0 }
+    ]
+}

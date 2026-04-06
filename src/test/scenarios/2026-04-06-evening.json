@@ -1,0 +1,26 @@
+{
+    "name": "2026-04-06 evening (real data)",
+    "description": "First live session. Dinner 18g carbs at ~19:30, peak 8.8 at 20:00, settled to 7.3 by 21:00. Biscuit + chocolate (12.7g) at ~21:30. Settled around 7.4-7.7 by 23:10. Bedtime snack at ~23:15: milk (7g) + half banana (13g) = 20g from base of 7.7. At 4.4g/mmol sensitivity, expect peak ~12.2 overnight.",
+    "readings": [
+        { "time": "2026-04-06 19:10", "reading": 4.7 },
+        { "time": "2026-04-06 19:18", "reading": 6.0 },
+        { "time": "2026-04-06 19:20", "reading": 6.1 },
+        { "time": "2026-04-06 19:30", "reading": 6.2 },
+        { "time": "2026-04-06 19:40", "reading": 6.7 },
+        { "time": "2026-04-06 19:50", "reading": 7.0 },
+        { "time": "2026-04-06 20:00", "reading": 8.8 },
+        { "time": "2026-04-06 20:10", "reading": 8.7 },
+        { "time": "2026-04-06 20:20", "reading": 8.7 },
+        { "time": "2026-04-06 20:30", "reading": 7.7 },
+        { "time": "2026-04-06 20:40", "reading": 8.3 },
+        { "time": "2026-04-06 20:50", "reading": 7.9 },
+        { "time": "2026-04-06 21:00", "reading": 7.3 },
+        { "time": "2026-04-06 21:10", "reading": 7.9 },
+        { "time": "2026-04-06 21:20", "reading": 7.4 },
+        { "time": "2026-04-06 21:30", "reading": 8.6 },
+        { "time": "2026-04-06 21:40", "reading": 7.9 },
+        { "time": "2026-04-06 21:50", "reading": 7.5 },
+        { "time": "2026-04-06 22:00", "reading": 7.4 },
+        { "time": "2026-04-06 22:10", "reading": 7.7 }
+    ]
+}
