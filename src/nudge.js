@@ -65,7 +65,8 @@ const moment = require(`moment`);
 // the amount of carbs to suggest is calculated from:
 //   - gap between current reading and target (7.0) + 0.5 mmol/L buffer
 //   - multiplied by carbsPerMmol (observed: 4.4g per 1 mmol/L rise)
-//   - adjusted up for acceleration, rapid drops, and active insulin
+//   - adjusted up for acceleration, rapid drops, and insulin counteraction
+//     (scaled proportionally by insulin activity — not a binary on/off)
 //   - adjusted down if rising
 //   - clamped to 2-20g range
 //
@@ -128,6 +129,13 @@ const DEFAULTS = {
     // observed carb sensitivity: 18g carbs raised BG by 4.1 mmol/L (4.7 → 8.8).
     // ~4.4g per 1 mmol/L. the single most important per-individual tuning knob.
     carbsPerMmol: 4.4,
+
+    // insulin counteraction factor: at peak insulin activity (1.0), how many mmol/L
+    // will insulin pull BG down during the ~30 min food absorption window?
+    // observed: 20g bedtime snack from 7.7 peaked at 10.3 (+2.6) vs expected +4.5.
+    // insulin activity was ~0.6, so insulin counteracted ~1.9 mmol/L. at activity 1.0
+    // that's ~3.2 mmol/L. we use this to add extra carbs when insulin is fighting the food.
+    insulinCounterFactor: 3.2,
 
     // overnight quiet hours — fully silent. alerts handle emergencies separately.
     quietStartHour: 0, // midnight
@@ -455,20 +463,26 @@ function createNudgeEngine(config)
         return projected;
     }
 
-    function estimateCarbsNeeded(reading, trend, insulinActive)
+    function estimateCarbsNeeded(reading, trend, insulinActivity)
     {
         var gap = p.targetLow - reading;
         if (gap < 0) gap = 0;
 
         var targetGap = gap + 0.5;
+
+        // when insulin is active, the food has to overcome the insulin's BG-lowering effect
+        // in addition to raising BG. scale the counter-effect by current insulin activity level.
+        if (insulinActivity !== null && insulinActivity > 0)
+        {
+            targetGap = targetGap + (insulinActivity * p.insulinCounterFactor * (p.projectionMinutes / 60));
+        }
+
         var base = Math.round(targetGap * p.carbsPerMmol);
 
         // factor in acceleration — accelerating drops need more carbs
         if (trend.urgent) base = base + Math.round(p.carbsPerMmol * 1.0);
         else if (trend.description === `dropping fast`) base = base + Math.round(p.carbsPerMmol * 0.5);
         else if (trend.direction === `rising`) base = Math.max(base - Math.round(p.carbsPerMmol * 0.5), 2);
-
-        if (insulinActive) base = base + Math.round(p.carbsPerMmol * 0.5);
 
         base = Math.max(base, 2);
         base = Math.min(base, 20);
@@ -587,7 +601,7 @@ function createNudgeEngine(config)
             if (mealWindow) return;
             if (trend.direction === `rising`) return;
 
-            carbs = estimateCarbsNeeded(reading, trend, insulinActive);
+            carbs = estimateCarbsNeeded(reading, trend, insulinActivity);
 
             // urgent/accelerating drops get emergency foods and direct messaging
             if (trend.urgent)
@@ -624,7 +638,7 @@ function createNudgeEngine(config)
             // if BG was above target recently, this descent is insulin working — don't interrupt
             if (isDescendingFromHigh() && trend.direction === `falling`) return;
 
-            carbs = estimateCarbsNeeded(reading, trend, insulinActive);
+            carbs = estimateCarbsNeeded(reading, trend, insulinActivity);
 
             // urgent drops in target — emergency foods, act now
             if (trend.urgent)
