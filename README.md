@@ -25,8 +25,11 @@ LIBRE_USERNAME=your_libre_username
 LIBRE_PASSWORD=your_libre_password
 LIBRE_AGENT_VERSION=4.12.0
 
-PUSHOVER_USER=your_pushover_user
-PUSHOVER_TOKEN=your_pushover_token
+NTFY_TOPIC_ALERT=your_ntfy_alert_topic
+NTFY_TOPIC_CANARY=your_ntfy_canary_topic
+NTFY_TOPIC_NUDGE=your_ntfy_nudge_topic
+INSULIN_TIME_MORNING=07:30
+INSULIN_TIME_EVENING=19:00
 
 INFLUX_DB_URL=your_INFLUX_DB_url
 INFLUX_DB_TOKEN=your_INFLUX_DB_token
@@ -58,8 +61,9 @@ services:
       - LIBRE_USERNAME=your_libre_username
       - LIBRE_PASSWORD=your_libre_password
       - LIBRE_AGENT_VERSION=4.12.0
-      - PUSHOVER_USER=your_pushover_user
-      - PUSHOVER_TOKEN=your_pushover_token
+      - NTFY_TOPIC_ALERT=your_ntfy_alert_topic
+      - NTFY_TOPIC_CANARY=your_ntfy_canary_topic
+      - NTFY_TOPIC_NUDGE=your_ntfy_nudge_topic
       - INFLUX_DB_URL=your_INFLUX_DB_url
       - INFLUX_DB_TOKEN=your_INFLUX_DB_token
       - INFLUX_DB_ORG=your_INFLUX_DB_org

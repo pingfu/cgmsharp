@@ -2,8 +2,6 @@ require(`dotenv`).config();
 
 const cron = require(`node-cron`);
 const moment = require(`moment`);
-const pushover = require(`pushover-notifications`);
-
 const { LibreLinkUpClient } = require(`@diakem/libre-link-up-api-client`);
 const { InfluxDB, Point } = require('@influxdata/influxdb-client');
 
@@ -13,15 +11,24 @@ const NUMBER_OF_LAST_READINGS_TO_EXAMINE = 6; // number of glucose readings to h
 const GLUCOSE_CRITICAL_LOW = 3.5; // Minimum threshold
 const GLUCOSE_CRITICAL_HIGH = 22; // Maximum threshold
 
+const NTFY_SERVER = `https://ntfy.sh`;
+
+const NUDGE_ENABLED = false;
+const NUDGE_TARGET_LOW = 7.0; // lower bound of "top half of green" (mmol/L)
+const NUDGE_TARGET_HIGH = 10.0; // upper bound of target range (mmol/L)
+
 let values = []; // store received glucose values
 let libreLinkUpErrorCounter = 0;
 let libreLinkUpLatestError = "";
 let influxWriteApi;
 
-let pusher = new pushover({
-    user: process.env.PUSHOVER_USER,
-    token: process.env.PUSHOVER_TOKEN,
-});
+let nudgeState = {
+    insulinTimes: {
+        morning: process.env.INSULIN_TIME_MORNING || null,
+        evening: process.env.INSULIN_TIME_EVENING || null
+    },
+    lastNudgeSent: null
+};
 
 function log(message)
 {
@@ -103,7 +110,7 @@ async function GetLibreLinkUpData()
         {
             try
             {
-                await PushNotification(`GCM monitoring`, `Error state cleared, monitoring resumed`);
+                await SendAlert(`GCM monitoring`, `Error state cleared, monitoring resumed`);
             }
             catch (error)
             {
@@ -128,7 +135,7 @@ async function GetLibreLinkUpData()
 
             try
             {
-                await PushNotification(`GCM monitoring`, fatal);
+                await SendAlert(`GCM monitoring`, fatal);
             }
             catch (notificationError)
             {
@@ -138,62 +145,94 @@ async function GetLibreLinkUpData()
             process.exit(1);
         }
     
-        libreLinkUpErrorCounter = libreLinkUpErrorCounter++;
+        libreLinkUpErrorCounter++;
         libreLinkUpLatestError = msg;
 
         throw new Error(msg);
     }
 }
 
-function AlarmMin(currentReading) {
-    PushAlarm(`Extended Low Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading} mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+async function AlarmMin(currentReading) {
+    await SendAlert(`Extended Low Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading} mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
 }
 
-function AlarmMax(currentReading) {
-    PushAlarm(`Extended High Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading} mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
+async function AlarmMax(currentReading) {
+    await SendAlert(`Extended High Glucose Alarm`, `${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${currentReading} mmol/L over last ${NUMBER_OF_LAST_READINGS_TO_EXAMINE} readings, ${INTERVAL} min intervals.`);
 }
 
-function PushNotification(title, message) {
-    // return a promise to allow waiting for the function to complete
-    return new Promise((resolve, reject) => 
-    {
-        log(`pushing notification '${title}': '${moment().format(`YYYY-MM-DD HH:mm:ss`)} ${message}'`);
-
-        var msg = {
-            title: title,
-            message: message,
-            priority: -1, // low priority, no sounds or vibrations
-        };
-    
-        pusher.send(msg, function(error)
-        {
-            if (error)
-            {
-                reject(error);
-            } 
-            else
-            {
-                resolve();
-            }
-        });
-    });
-}
-
-function PushAlarm(title, message) {
-    log(`pushing alarm '${title}': '${message}'`);
-
-    var msg = {
-        title: title,
-        message: message,
-        priority: 2, // emergency priority code (require user acknowledgement)
-        retry: 30, // retry to get user acknowledgement every n (seconds)
-        expire: 300 // give up attempting to solicit user acknowledgment after n (seconds)
+async function ntfySend(topic, title, message, priority, tags)
+{
+    var headers = {
+        'Title': title,
+        'Priority': String(priority),
+        'Tags': tags || ``
     };
 
-    pusher.send(msg, function(error)
-    {
-        if (error) { throw error; }
+    var response = await fetch(`${NTFY_SERVER}/${topic}`, {
+        method: 'POST',
+        headers: headers,
+        body: message
     });
+
+    if (!response.ok)
+    {
+        throw new Error(`ntfy returned ${response.status}: ${response.statusText}`);
+    }
+}
+
+function SendAlert(title, message)
+{
+    log(`pushing alert '${title}': '${message}'`);
+    return ntfySend(process.env.NTFY_TOPIC_ALERT, title, message, 5, `rotating_light,warning`);
+}
+
+function SendCanary(title, message)
+{
+    log(`pushing canary '${title}': '${message}'`);
+    return ntfySend(process.env.NTFY_TOPIC_CANARY, title, message, 2, `bird,green_circle`);
+}
+
+function SendNudge(title, message)
+{
+    log(`pushing nudge '${title}': '${message}'`);
+    return ntfySend(process.env.NTFY_TOPIC_NUDGE, title, message, 3, `thought_balloon,syringe`);
+}
+
+function calculateRateOfChange(readings)
+{
+    if (readings.length < 2) return null;
+
+    var newest = readings[readings.length - 1];
+    var oldest = readings[0];
+    var timeSpanMinutes = (readings.length - 1) * INTERVAL;
+
+    return (newest - oldest) / timeSpanMinutes; // mmol/L per minute
+}
+
+function getTrend(readings)
+{
+    var rate = calculateRateOfChange(readings);
+    if (rate === null) return { rate: null, direction: `unknown`, description: `insufficient data` };
+
+    var absRate = Math.abs(rate);
+    var direction = rate > 0 ? `rising` : rate < 0 ? `falling` : `flat`;
+
+    if (absRate < 0.01) return { rate, direction: `flat`, description: `stable` };
+    if (absRate < 0.05) return { rate, direction, description: `slowly ${direction}` };
+    if (absRate < 0.10) return { rate, direction, description: direction };
+    return { rate, direction, description: `rapidly ${direction}` };
+}
+
+async function evaluateNudge(reading, readings)
+{
+    if (!NUDGE_ENABLED) return;
+
+    // placeholder logic for future implementation:
+    // 1. calculate trend from readings via getTrend()
+    // 2. determine time since last insulin injection using nudgeState.insulinTimes
+    // 3. project where glucose will be in 30-60 minutes based on trend
+    // 4. if projected value exits target range (NUDGE_TARGET_LOW - NUDGE_TARGET_HIGH), send nudge
+    // 5. rate-limit nudges using nudgeState.lastNudgeSent (no more than one per 30 minutes)
 }
 
 async function Tick()
@@ -225,13 +264,16 @@ async function Tick()
 
             if (allBelowMinimum)
             {
-                AlarmMin(reading);
+                await AlarmMin(reading);
             }
             else if (allAboveMaximum)
             {
-                AlarmMax(reading);
+                await AlarmMax(reading);
             }
         }
+
+        // nudge engine evaluation
+        await evaluateNudge(reading, values);
     }
     catch (error)
     {
@@ -241,7 +283,7 @@ async function Tick()
         {
             try
             {
-                await PushNotification(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + libreLinkUpLatestError);
+                await SendAlert(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + libreLinkUpLatestError);
             }
             catch (error)
             {
@@ -260,6 +302,8 @@ async function main()
     log(`using librelinkup username: ${process.env.LIBRE_USERNAME}`);
     log(`using librelinkup password: ********* (${process.env.LIBRE_PASSWORD.length})`);
     log(`using librelinkup agent version: ${process.env.LIBRE_AGENT_VERSION}`);
+    log(`using ntfy server: ${NTFY_SERVER}`);
+    log(`using ntfy topics: alert=${process.env.NTFY_TOPIC_ALERT}, canary=${process.env.NTFY_TOPIC_CANARY}, nudge=${process.env.NTFY_TOPIC_NUDGE}`);
 
     tryInitaliseDb();
 
@@ -284,7 +328,7 @@ async function main()
     {
         try
         {
-            await PushNotification(`Heartbeat`, `Daily Canary 🐦`);
+            await SendCanary(`Heartbeat`, `Daily Canary`);
         }
         catch (error)
         {
@@ -301,7 +345,7 @@ async function main()
 
         await Tick();
         
-        await PushNotification(`Heartbeat`, `Scheduler started, current glucose reading ${values[0]} mmol/L 🐦`);
+        await SendCanary(`Heartbeat`, `Scheduler started, current glucose reading ${values[0]} mmol/L`);
     }
     catch (error)
     {

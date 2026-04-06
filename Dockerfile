@@ -1,5 +1,5 @@
-# Use the official Node.js 16 image as a parent image
-FROM node:16-alpine
+# Use the official Node.js 22 image as a parent image
+FROM node:22-alpine
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
