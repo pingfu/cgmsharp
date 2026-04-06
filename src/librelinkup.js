@@ -3,9 +3,8 @@ const { LibreLinkUpClient } = require(`@diakem/libre-link-up-api-client`);
 function createLibreLinkUpClient(config)
 {
     var errorCounter = 0;
-    var latestError = ``;
 
-    async function getReading(log, sendAlert)
+    async function getReading()
     {
         try
         {
@@ -17,59 +16,24 @@ function createLibreLinkUpClient(config)
 
             const response = await read();
 
-            // reset error counter after a successful read
-            if (errorCounter > 0)
-            {
-                try
-                {
-                    await sendAlert(`GCM monitoring`, `Error state cleared, monitoring resumed`);
-                }
-                catch (error)
-                {
-                    throw error;
-                }
+            var wasInError = errorCounter > 0;
+            errorCounter = 0;
 
-                errorCounter = 0;
-                latestError = ``;
-            }
-
-            return response.current.value;
+            return { value: response.current.value, recovered: wasInError };
         }
         catch (error)
         {
-            var msg = `LibreLinkUpClient ` + error;
+            errorCounter++;
 
             // HTTP 401 from LibreLinkUp is treated as fatal — usually means Abbott's EULA
             // needs re-accepting in the LibreLinkUp mobile app
-            if (error.isAxiosError && error.response && error.response.status === 401)
-            {
-                var fatal = "non-recoverable error (" + error + ") terminating process.";
+            var isFatal = error.isAxiosError && error.response && error.response.status === 401;
 
-                log(fatal);
-
-                try
-                {
-                    await sendAlert(`GCM monitoring`, fatal);
-                }
-                catch (notificationError)
-                {
-                    log(`Failed to send push notification: ${notificationError}`);
-                }
-
-                process.exit(1);
-            }
-
-            errorCounter++;
-            latestError = msg;
-
-            throw new Error(msg);
+            throw { message: `LibreLinkUpClient ` + error, fatal: isFatal, errorCount: errorCounter };
         }
     }
 
-    function getErrorCounter() { return errorCounter; }
-    function getLatestError() { return latestError; }
-
-    return { getReading, getErrorCounter, getLatestError };
+    return { getReading };
 }
 
 module.exports = { createLibreLinkUpClient };

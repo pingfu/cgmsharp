@@ -41,29 +41,41 @@ async function Tick()
 {
     try
     {
-        const reading = await libre.getReading(log, SendAlert);
+        var result = await libre.getReading();
 
-        lastReading = reading;
+        lastReading = result.value;
 
-        log(`glucose reading received: ${reading} mmol/L`);
+        if (result.recovered)
+        {
+            await SendAlert(`GCM monitoring`, `Error state cleared, monitoring resumed`);
+        }
 
-        await influxdb.writeGlucoseReading(reading, log);
-        await alarms.evaluate(reading, SendAlert);
-        await nudge.evaluate(reading, SendNudge);
+        log(`glucose reading received: ${result.value} mmol/L`);
+
+        await influxdb.writeGlucoseReading(result.value, log);
+        await alarms.evaluate(result.value, SendAlert);
+        await nudge.evaluate(result.value, SendNudge);
     }
     catch (error)
     {
-        log(error);
+        log(error.message || error);
 
-        if (libre.getErrorCounter() > 0 && libre.getErrorCounter() % 6 === 0)
+        if (error.fatal)
+        {
+            log(`fatal error, terminating process`);
+            try { await SendAlert(`GCM monitoring`, error.message); } catch (e) { log(`Failed to send alert: ${e}`); }
+            process.exit(1);
+        }
+
+        if (error.errorCount > 0 && error.errorCount % 6 === 0)
         {
             try
             {
-                await SendAlert(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + libre.getLatestError());
+                await SendAlert(`GCM monitoring`, `Monitoring disrupted due to consecutive errors. ` + error.message);
             }
-            catch (error)
+            catch (e)
             {
-                throw error;
+                throw e;
             }
         }
 
