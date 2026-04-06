@@ -76,7 +76,7 @@ const CARB_SUGGESTIONS = [
         `2 walnut halves`,
         `8 to 10 raspberries`,
         `a 1-inch cube of cheddar`,
-        `3 slices of cucumber with a teaspoon of Philadelphia`
+        `3 slices of cucumber with a teaspoon of cream cheese`
     ]},
     { grams: 5, ideas: [
         `a 125g pot of plain natural yoghurt`,
@@ -97,18 +97,18 @@ const CARB_SUGGESTIONS = [
         `1 oatcake with a thin slice of cheddar`,
         `3 pieces of dried mango`,
         `half a crumpet with a scrape of butter`,
-        `2 Ryvita with a tablespoon of Philadelphia`,
+        `2 Ryvita with a tablespoon of cream cheese`,
         `a 100g pot of cottage cheese with 2 tinned pineapple chunks`
     ]},
     { grams: 10, ideas: [
-        `1 slice of Hovis wholemeal toast with butter`,
+        `1 slice of wholemeal toast with butter`,
         `1 small banana (about 15cm long)`,
         `4 tablespoons of porridge oats made with water`,
         `about 10 grapes with 5 almonds`,
         `1 medium apple with a teaspoon of peanut butter`,
         `2 oatcakes with 1 tablespoon of hummus`,
         `1 crumpet with butter`,
-        `a mug of Heinz tomato soup (half a tin)`,
+        `a mug of tomato soup (half a tin)`,
         `1 Weetabix with 100ml of semi-skimmed milk`,
         `2 tablespoons of trail mix`
     ]},
@@ -121,16 +121,16 @@ const CARB_SUGGESTIONS = [
         `half a small jacket potato with a knob of butter`,
         `4 tablespoons of porridge oats made with semi-skimmed milk and a drizzle of honey`,
         `half a wholemeal pitta with 2 tablespoons of hummus`,
-        `3 tablespoons of Heinz baked beans on half a slice of wholemeal toast`
+        `3 tablespoons of baked beans on half a slice of wholemeal toast`
     ]},
     { grams: 20, ideas: [
         `half a cheese and pickle sandwich on wholemeal bread`,
         `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
-        `half a small jacket potato with 3 tablespoons of Heinz baked beans`,
-        `a mug of Heinz tomato soup with 1 slice of wholemeal bread`,
+        `half a small jacket potato with 3 tablespoons of baked beans`,
+        `a mug of tomato soup with 1 slice of wholemeal bread`,
         `2 crumpets with butter`,
-        `1 slice of wholemeal toast with 4 tablespoons of Heinz baked beans`,
-        `4 to 5 tablespoons of penne with Dolmio tomato and basil sauce`
+        `1 slice of wholemeal toast with 4 tablespoons of baked beans`,
+        `4 to 5 tablespoons of cooked pasta with tomato and basil sauce`
     ]}
 ];
 
