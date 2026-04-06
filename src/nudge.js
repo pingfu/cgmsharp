@@ -53,7 +53,14 @@ const moment = require(`moment`);
 //        (carb estimate jumped by 3g+). prevents repeating "have a pear" every
 //        20 min during a slow drift.
 //
-//   5. food selection — two categories:
+//   5. bedtime nudge — one proactive message per evening (22:00-23:30):
+//      - calculates a bedtime target: targetLow + expected overnight drop (3.5 mmol/L)
+//      - if reading is below the target, suggests carbs to top up for the night
+//      - if reading is above the target, sends a reassuring "looking good" message
+//      - waits for BG to be stable (not still settling from dinner)
+//      - fires once per evening, then the regular engine takes over until quiet hours
+//
+//   6. food selection — two categories:
 //      - normal suggestions: healthy UK foods with specific portions (yoghurt,
 //        oatcakes, fruit, toast). used for gentle corrections.
 //      - emergency suggestions: fast-acting sugar (jelly babies, glucose tablets,
@@ -136,6 +143,16 @@ const DEFAULTS = {
     // insulin activity was ~0.6, so insulin counteracted ~1.9 mmol/L. at activity 1.0
     // that's ~3.2 mmol/L. we use this to add extra carbs when insulin is fighting the food.
     insulinCounterFactor: 3.2,
+
+    // bedtime nudge window — one proactive nudge to position BG for the overnight insulin peak.
+    // fires once per evening during this window if the reading is stable.
+    bedtimeWindowStart: 22, // hour (22:00)
+    bedtimeWindowEnd: 23.5, // hour (23:30)
+
+    // expected overnight BG drop from bedtime to lowest point (typically 02:00-04:00).
+    // derived from historical data: overnight drops range 3-9 mmol/L, typical is 3-4.
+    // conservative estimate to avoid suggesting too much food.
+    overnightDrop: 3.5, // mmol/L
 
     // overnight quiet hours — fully silent. alerts handle emergencies separately.
     quietStartHour: 0, // midnight
@@ -257,6 +274,45 @@ const EMERGENCY_SUGGESTIONS = [
     ]}
 ];
 
+// bedtime food suggestions — slow-release carbs that absorb over 2-3 hours.
+// the goal is sustained glucose overnight, not a fast spike. starchy carbs with
+// protein or fat slow digestion and provide a trickle of glucose that matches
+// the intermediate insulin's sustained pull. no fruit, juice, or fast-acting sugar.
+const BEDTIME_SUGGESTIONS = [
+    { grams: 5, ideas: [
+        `1 oatcake with a thin slice of cheddar`,
+        `half a slice of wholemeal toast with butter`,
+        `2 tablespoons of porridge oats made with water`,
+        `1 plain rice cake with a teaspoon of peanut butter`
+    ]},
+    { grams: 7, ideas: [
+        `1 oatcake with a teaspoon of peanut butter`,
+        `half a slice of wholemeal toast with a thin slice of cheddar`,
+        `2 tablespoons of porridge oats made with semi-skimmed milk`,
+        `2 Ryvita with a tablespoon of cream cheese`
+    ]},
+    { grams: 10, ideas: [
+        `1 slice of wholemeal toast with a thin slice of cheddar`,
+        `2 oatcakes with a teaspoon of peanut butter`,
+        `3 tablespoons of porridge oats made with semi-skimmed milk`,
+        `1 Weetabix with 100ml of semi-skimmed milk`,
+        `1 slice of wholemeal toast with butter`
+    ]},
+    { grams: 15, ideas: [
+        `1 slice of wholemeal toast with cheddar`,
+        `2 oatcakes with cheddar and a teaspoon of peanut butter`,
+        `4 tablespoons of porridge oats made with semi-skimmed milk`,
+        `1 slice of wholemeal toast with a tablespoon of peanut butter`,
+        `half a wholemeal pitta with 2 tablespoons of hummus and a slice of cheddar`
+    ]},
+    { grams: 20, ideas: [
+        `1 slice of wholemeal toast with cheddar and a teaspoon of peanut butter`,
+        `4 tablespoons of porridge oats made with semi-skimmed milk and 5 almonds`,
+        `2 oatcakes with cheddar and half a slice of wholemeal toast with butter`,
+        `half a cheese sandwich on wholemeal bread`
+    ]}
+];
+
 function createNudgeEngine(config)
 {
     // merge config over defaults — config values win, missing values fall back to defaults
@@ -277,7 +333,8 @@ function createNudgeEngine(config)
         lastNudgeCategory: null,
         lastNudgeCarbs: null,
         lastNudgeReading: null,
-        lastNudgeExpectedReading: null // where we expect BG to be once the suggested food absorbs
+        lastNudgeExpectedReading: null, // where we expect BG to be once the suggested food absorbs
+        bedtimeNudgeSentDate: null // date string (YYYY-MM-DD) of last bedtime nudge — one per evening
     };
 
     // long-term rate: slope across the full readings buffer (~60 min). overall direction.
@@ -519,6 +576,11 @@ function createNudgeEngine(config)
         return getSuggestionFromTable(EMERGENCY_SUGGESTIONS, grams);
     }
 
+    function getBedtimeSuggestion(grams)
+    {
+        return getSuggestionFromTable(BEDTIME_SUGGESTIONS, grams);
+    }
+
     // expected-response suppression: when we send a carb suggestion, we calculate where BG
     // should be once the food absorbs. suppress further nudges until either:
     // a) the reading has reached or exceeded the expected level (advice worked — stay quiet)
@@ -568,6 +630,64 @@ function createNudgeEngine(config)
         return false;
     }
 
+    function isInBedtimeWindow(now)
+    {
+        var hour = now.hour() + (now.minute() / 60);
+        return hour >= p.bedtimeWindowStart && hour < p.bedtimeWindowEnd;
+    }
+
+    function hasBedtimeNudgeBeenSentToday(now)
+    {
+        if (state.bedtimeNudgeSentDate === null) return false;
+        return state.bedtimeNudgeSentDate === now.format(`YYYY-MM-DD`);
+    }
+
+    // bedtime nudge: one proactive message per evening to position BG for overnight.
+    // returns true if a bedtime nudge was sent (so the regular evaluate can skip).
+    async function evaluateBedtime(reading, trend, sendNudge, now)
+    {
+        if (!isInBedtimeWindow(now)) return false;
+        if (hasBedtimeNudgeBeenSentToday(now)) return false;
+
+        // wait until BG is stable — don't send bedtime nudge while still settling from dinner
+        if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating`) return false;
+
+        var bedtimeTarget = p.targetLow + p.overnightDrop;
+        var gap = bedtimeTarget - reading;
+
+        var title = null;
+        var message = null;
+
+        if (gap <= 0)
+        {
+            // she's high enough — reassuring message
+            title = `Looking good for bed`;
+            message = `Your sugar is ${reading} heading into the night. That should see you through comfortably — no snack needed. Sleep well.`;
+        }
+        else
+        {
+            var carbs = Math.round(gap * p.carbsPerMmol);
+            carbs = Math.max(carbs, 2);
+            carbs = Math.min(carbs, 20);
+            var food = getBedtimeSuggestion(carbs);
+
+            if (reading < p.targetLow)
+            {
+                title = `Bedtime top-up`;
+                message = `Your sugar is ${reading} which is a bit low for bedtime. About ${food.grams}g of slow-release carbs would give you a better starting point for the night — try ${food.suggestion}. Something starchy lasts longer while your insulin works overnight.`;
+            }
+            else
+            {
+                title = `Bedtime top-up`;
+                message = `Your sugar is ${reading} heading into the night. A small snack of about ${food.grams}g of slow-release carbs would help keep you steady overnight — something like ${food.suggestion}. Starchy food lasts longer than fruit or milk while you sleep.`;
+            }
+        }
+
+        await sendNudge(title, message);
+        state.bedtimeNudgeSentDate = now.format(`YYYY-MM-DD`);
+        return true;
+    }
+
     // now is optional — defaults to moment(). pass a moment instance to control time in tests.
     async function evaluate(reading, sendNudge, now)
     {
@@ -581,6 +701,10 @@ function createNudgeEngine(config)
         if (isQuietHours(now)) return;
 
         var trend = getTrend(reading);
+
+        // bedtime nudge — one proactive message per evening, takes priority over regular logic
+        if (await evaluateBedtime(reading, trend, sendNudge, now)) return;
+
         var minutesSinceInjection = getMinutesSinceLastInjection(now);
         var insulinActivity = getInsulinActivity(minutesSinceInjection);
         var insulinActive = insulinActivity !== null && insulinActivity >= p.insulinActiveThreshold;
@@ -700,4 +824,4 @@ function createNudgeEngine(config)
     return { evaluate: evaluate, state: state, profile: p };
 }
 
-module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS };
+module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS };

@@ -16,7 +16,8 @@ var profile = {
     insulinTimeMorning: `07:30`,
     insulinTimeEvening: `19:00`,
     carbsPerMmol: 4.4,
-    insulinCounterFactor: 3.2
+    insulinCounterFactor: 3.2,
+    overnightDrop: 3.5
 };
 
 async function runScenario(scenario)
