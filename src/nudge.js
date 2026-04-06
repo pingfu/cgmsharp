@@ -262,15 +262,21 @@ function createNudgeEngine(config)
         else
         {
             // short-term rate is rapid
-            if (acceleration !== null && direction === `falling` && acceleration < p.accelerationThreshold)
+            if (direction === `falling`)
             {
-                description = `dropping fast and accelerating`;
+                if (acceleration !== null && acceleration < p.accelerationThreshold)
+                {
+                    description = `dropping fast and accelerating`;
+                }
+                else
+                {
+                    description = `dropping fast`;
+                }
                 urgent = true;
             }
             else
             {
-                description = `dropping fast`;
-                if (direction === `falling`) urgent = true;
+                description = `rising quickly`;
             }
         }
 
