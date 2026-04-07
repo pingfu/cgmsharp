@@ -62,18 +62,22 @@ Key behaviours:
 
 ### Nudge Engine (`src/nudge.js`)
 
+Designed for a type 1 diabetic on twice-daily premixed (biphasic) insulin. The user produces no insulin of their own — the injected insulin is the only insulin in their system, which means no natural reduction when BG drops and acute overnight hypo risk.
+
 Extracted into its own module via `createNudgeEngine(config)` factory. App.js passes `SendNudge` as a callback so nudge.js has no dependency on the notification transport.
 
 The engine uses zone-based decision logic (below target / in target / quiet zone / above threshold) combined with:
-- **Trend** — rate of change from the sliding window (stable, slowly/rapidly rising/falling, calibrated from historical data)
-- **Insulin activity** — biphasic curve model (30% rapid + 70% intermediate, piecewise linear, threshold 0.25)
+- **Trend** — two-timescale slope analysis (long-term 60 min + short-term 20 min) with acceleration detection
+- **Insulin activity** — biphasic curve model (30% rapid + 70% intermediate, piecewise linear, threshold 0.25). Insulin counter-factor scales carb suggestions proportionally by current activity level.
 - **Meal window** — suppresses carb suggestions for 120 min after injection times (covers eat-peak-settle cycle)
 - **Absorption awareness** — after recommending carbs, suppresses repeat nudges until the food has had time to show in BG (20 min for ≤7g, 35 min for >7g), unless the situation materially worsens
 - **Overnight quiet hours** — fully silent midnight–6 AM
 - **Dawn phenomenon** — suppresses nudges during 4–10 AM rising BG
-- **Calibrated carb estimation** — uses observed ratio of 4.4g per 1 mmol/L rise, with food suggestions from a tiered lookup table
+- **Calibrated carb estimation** — uses observed ratio of 4.4g per 1 mmol/L rise, with insulin counter-factor scaling and food suggestions from a tiered lookup table
+- **Bedtime nudge** — one proactive message per evening (22:00-23:30) suggesting low-GI slow-release carbs to sustain BG through the overnight insulin peak
+- **Three food categories** — normal (healthy snacks), emergency (fast-acting sugar for rapid drops), bedtime (slow-release starchy foods for overnight)
 
-Every message sent is actionable. If no action is needed, no message is sent.
+Every message sent is actionable. The one exception is the bedtime nudge, which also sends a reassuring "looking good" message if BG is high enough for the night.
 
 ## Required Environment Variables
 

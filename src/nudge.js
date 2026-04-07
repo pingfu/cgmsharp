@@ -6,10 +6,19 @@ const moment = require(`moment`);
 //
 // objective
 // ---------
+// designed for a type 1 diabetic on twice-daily premixed (biphasic) insulin.
 // gently coach the user into making smaller, earlier corrective food choices so
 // their blood sugar stays in range more often — without needing to understand
 // the underlying science. every message sent must be actionable. if there's
 // nothing to do, stay quiet.
+//
+// type 1 context: the user produces no insulin of their own. the injected
+// biphasic insulin is the only insulin in their system. this means:
+// - no natural insulin reduction when BG drops (the injection keeps working)
+// - overnight hypo risk is acute — the intermediate component peaks at 4-8h
+//   post-injection and will pull BG down regardless of the current level
+// - dawn phenomenon is uncompensated liver glucose output with no natural
+//   insulin response — the morning injection has to cover it
 //
 // how it works
 // ------------
