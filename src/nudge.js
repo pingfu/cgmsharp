@@ -705,7 +705,7 @@ function createNudgeEngine(config)
                 var emergency = getEmergencySuggestion(15);
                 var starchy = getBedtimeSuggestion(carbs);
                 title = `Low at bedtime`;
-                message = `Your sugar is ${reading} — too low for bed. Have ${emergency.grams}g of fast sugar first (${emergency.suggestion}), then once it comes up, have something starchy like ${starchy.suggestion} to keep you going overnight.`;
+                message = `Your sugar is ${reading} — too low for bed. Have ${emergency.grams}g of fast-acting sugar first (${emergency.suggestion}), then once it comes up, have something starchy like ${starchy.suggestion} to keep you going overnight.`;
             }
             else if (reading < p.targetLow)
             {
@@ -796,12 +796,12 @@ function createNudgeEngine(config)
                 if (trend.direction === `falling`)
                 {
                     title = `A little top-up might help`;
-                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That's about right for a ${trend.description} trend like this.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of slower-acting carbs (low GI) should help steady things — for example, ${food.suggestion}.`;
                 }
                 else
                 {
                     title = `Sugar update`;
-                    message = `Your sugar is ${reading} and ${trend.description}, sitting just below target. A small top-up of about ${food.grams}g of carbs would give it a nudge — try ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}, sitting just below target. A small top-up of about ${food.grams}g of slower-acting carbs (low GI) would give it a nudge — try ${food.suggestion}.`;
                 }
             }
         }
@@ -831,19 +831,19 @@ function createNudgeEngine(config)
                 {
                     category = `in-target-falling`;
                     title = `Thinking ahead`;
-                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may drift lower. About ${food.grams}g of carbs would help — something like ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may drift lower. About ${food.grams}g of slower-acting carbs (low GI) would help — something like ${food.suggestion}.`;
                 }
                 else if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating` || trend.description === `falling and picking up pace`)
                 {
                     category = `in-target-falling`;
                     title = `Worth a small snack`;
-                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs would help it level off — try ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of slower-acting carbs (low GI) would help it level off — try ${food.suggestion}.`;
                 }
                 else if (projected !== null && projected < p.targetLow)
                 {
                     category = `in-target-falling`;
                     title = `Gentle heads-up`;
-                    message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. About ${food.grams}g of carbs would keep things steady — try ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. About ${food.grams}g of slower-acting carbs (low GI) would keep things steady — try ${food.suggestion}.`;
                 }
                 else
                 {
