@@ -49,6 +49,13 @@ $ cd ./src
 $ node app.js
 ```
 
+### Run tests
+
+```bash
+docker build -t cgmsharp-test .
+docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js
+```
+
 ### Docker Compose
 
 With environment variables

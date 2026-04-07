@@ -25,7 +25,26 @@ docker-compose -f docker-compose.dev.yml up
 docker-compose -f docker-compose.prod.yml up
 ```
 
-There are no tests, no linter, and no build step. The app is a single file (`src/app.js`) run directly with Node.js.
+There is no linter and no build step.
+
+## Tests
+
+The nudge engine has a test harness that feeds timestamped glucose readings through the engine and captures what notifications would be sent. No actual notifications are dispatched, no API calls are made.
+
+```bash
+# Build the test image
+docker build -t cgmsharp-test .
+
+# Run all scenarios
+docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js
+
+# Run a single scenario
+docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js test/scenarios/2026-04-06-evening.json
+```
+
+Test scenarios live in `src/test/scenarios/` as JSON files. Each contains a name, description, optional `timezoneOffsetMinutes` (for converting stored UTC timestamps to local time), and an array of `{ time, reading }` pairs. The test runner creates a fresh nudge engine per scenario with the individual's profile and feeds each reading sequentially.
+
+Dated scenarios (2025-*, 2026-*) use real InfluxDB data stored as UTC timestamps with `timezoneOffsetMinutes: 60` for BST conversion. Synthetic scenarios use local timestamps with no offset.
 
 ## CI/CD
 

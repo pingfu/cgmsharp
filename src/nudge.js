@@ -688,8 +688,7 @@ function createNudgeEngine(config)
         var title = null;
         var message = null;
 
-        // if already above target, she doesn't need more food — insulin will bring it down
-        if (reading > p.targetHigh || gap <= 0)
+        if (gap <= 0)
         {
             title = `Looking good for bed`;
             message = `Your sugar is ${reading} heading into the night. That should see you through comfortably — no snack needed. Sleep well.`;
