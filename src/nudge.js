@@ -711,12 +711,12 @@ function createNudgeEngine(config)
             if (reading < p.targetLow)
             {
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} which is a bit low for bedtime. About ${food.grams}g of slow-release carbs would give you a better starting point for the night — try ${food.suggestion}. Something starchy lasts longer while your insulin works overnight.`;
+                message = `Your sugar is ${reading} — a bit low for bed. Have about ${food.grams}g of something starchy like ${food.suggestion}. Starchy beats sugary at bedtime — it lasts longer while your insulin works overnight.`;
             }
             else
             {
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading into the night. A small snack of about ${food.grams}g of slow-release carbs would help keep you steady overnight — something like ${food.suggestion}. Starchy food lasts longer than fruit or milk while you sleep.`;
+                message = `Your sugar is ${reading} heading to bed. About ${food.grams}g of something starchy would help — ${food.suggestion}. Starchy over sugary at night — it keeps working longer while your insulin does.`;
             }
         }
 
