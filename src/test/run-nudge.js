@@ -17,6 +17,7 @@ var profile = {
     insulinTimeEvening: `19:00`,
     carbsPerMmol: 4.4,
     insulinCounterFactor: 3.2,
+    overnightPullRate: 2.5,
     overnightDrop: 3.5
 };
 

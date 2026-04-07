@@ -158,9 +158,18 @@ const DEFAULTS = {
     bedtimeWindowStart: 22, // hour (22:00)
     bedtimeWindowEnd: 23.5, // hour (23:30)
 
-    // expected overnight BG drop from bedtime to lowest point (typically 02:00-04:00).
-    // derived from historical data: overnight drops range 3-9 mmol/L, typical is 3-4.
-    // conservative estimate to avoid suggesting too much food.
+    // overnight insulin pull rate: mmol/L per hour at peak insulin activity (1.0).
+    // this is lower than insulinCounterFactor because overnight there's no incoming
+    // food for the insulin to metabolise — the pull rate is the basal glucose-lowering
+    // effect. calibrated from historical data:
+    //   Apr 20: 17.1 → 5.1 over ~7h (drop 12.0, avg ~1.7/h)
+    //   Jul 22: 15.8 → 2.9 over ~6h (drop 12.9, avg ~2.2/h)
+    //   Sep 15: 7.2 → 2.8 over ~3h (drop 4.4, avg ~1.5/h)
+    // accounting for insulin activity curve (not constant), 2.5/h at peak fits the data.
+    // 1.8 was too low — Apr 20 (17.1→5.1) and Jul 22 (15.8→2.9) show actual pulls of 12-13.
+    overnightPullRate: 2.5, // mmol/L per hour at activity 1.0
+
+    // fallback static overnight drop if insulin times not configured
     overnightDrop: 3.5, // mmol/L
 
     // overnight quiet hours — fully silent. alerts handle emergencies separately.
@@ -651,6 +660,24 @@ function createNudgeEngine(config)
         return state.bedtimeNudgeSentDate === now.format(`YYYY-MM-DD`);
     }
 
+    // estimate total BG drop overnight by integrating the insulin activity curve
+    // across the next 8 hours. this replaces the static overnightDrop constant —
+    // the actual drop depends on where we are in the insulin cycle at bedtime.
+    function estimateOvernightDrop(now)
+    {
+        var minutesSince = getMinutesSinceLastInjection(now);
+        if (minutesSince === null) return p.overnightDrop; // fallback if no insulin times configured
+
+        var totalDrop = 0;
+        for (var m = 0; m < 480; m += 10) // 8 hours in 10-min steps
+        {
+            var activity = getInsulinActivity(minutesSince + m);
+            if (activity === null) return p.overnightDrop;
+            totalDrop += activity * p.overnightPullRate * (10 / 60);
+        }
+        return totalDrop;
+    }
+
     // bedtime nudge: one proactive message per evening to position BG for overnight.
     // returns true if a bedtime nudge was sent (so the regular evaluate can skip).
     async function evaluateBedtime(reading, trend, sendNudge, now)
@@ -661,7 +688,8 @@ function createNudgeEngine(config)
         // wait until BG is stable — don't send bedtime nudge while still settling from dinner
         if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating`) return false;
 
-        var bedtimeTarget = p.targetLow + p.overnightDrop;
+        var overnightDrop = estimateOvernightDrop(now);
+        var bedtimeTarget = p.targetLow + overnightDrop;
         var gap = bedtimeTarget - reading;
 
         var title = null;
