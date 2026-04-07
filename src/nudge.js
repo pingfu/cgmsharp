@@ -263,20 +263,12 @@ const CARB_SUGGESTIONS = [
 const EMERGENCY_SUGGESTIONS = [
     { grams: 5, ideas: [
         `3 jelly babies`,
-        `4 or 5 wine gums`,
-        `a small glass (150ml) of orange juice`
     ]},
     { grams: 10, ideas: [
         `5 jelly babies`,
-        `a small glass (200ml) of orange juice`,
-        `a small glass (200ml) of full-sugar cola`,
-        `3 glucose tablets`
     ]},
     { grams: 15, ideas: [
         `7 jelly babies`,
-        `a glass (250ml) of orange juice`,
-        `4 glucose tablets`,
-        `a glass (250ml) of full-sugar cola`
     ]}
     // no 20g tier — rule of 15: treat with 15g fast-acting, wait 15 min, repeat if still low.
     // overtreating hypos causes rebound spikes. let the engine re-evaluate after absorption.
