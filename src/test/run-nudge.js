@@ -38,10 +38,12 @@ async function runScenario(scenario)
     console.log(`Profile: carbsPerMmol=${merged.carbsPerMmol}, insulin=${merged.insulinTimeMorning}/${merged.insulinTimeEvening}, mealWindow=${merged.mealWindowMinutes || DEFAULTS.mealWindowMinutes}min`);
     console.log(`${'='.repeat(80)}`);
 
+    var tzOffset = scenario.timezoneOffsetMinutes || 0; // minutes to add to stored UTC times to get local time
+
     for (var i = 0; i < scenario.readings.length; i++)
     {
         var entry = scenario.readings[i];
-        var now = moment(entry.time);
+        var now = moment(entry.time).add(tzOffset, `minutes`);
         var nudgeCountBefore = nudges.length;
 
         await engine.evaluate(entry.reading, mockSendNudge, now);
