@@ -683,7 +683,7 @@ function createNudgeEngine(config)
         if (gap <= 0)
         {
             title = `Looking good for bed`;
-            message = `Your sugar is ${reading} heading into the night. That should see you through comfortably — no snack needed. Sleep well.`;
+            message = `Your sugar is ${reading} heading towards bed (11pm). That should see you through comfortably — no snack needed. Sleep well.`;
         }
         else
         {
@@ -693,23 +693,32 @@ function createNudgeEngine(config)
 
             if (reading <= p.hypoFloor)
             {
-                // dangerously low at bedtime — treat the hypo first with fast sugar, then sustain with starchy
+                // dangerously low at bedtime — fast sugar to rescue, then starchy to sustain
                 var emergency = getEmergencySuggestion(15);
                 var starchy = getBedtimeSuggestion(carbs);
                 title = `Low at bedtime`;
-                message = `Your sugar is ${reading} — too low for bed. Have ${emergency.grams}g of fast-acting sugar first (${emergency.suggestion}), then once it comes up, have something starchy like ${starchy.suggestion} to keep you going overnight.`;
+                message = `Your sugar is ${reading} — too low for bed (11pm). Have ${emergency.grams}g of fast sugar first (${emergency.suggestion}), then once it comes up, have something starchy like ${starchy.suggestion} to keep you going overnight.`;
+            }
+            else if (reading < p.targetLow && trend.direction === `falling`)
+            {
+                // below target and dropping — starchy alone won't absorb fast enough
+                var emergency = getEmergencySuggestion(10);
+                var starchy = getBedtimeSuggestion(carbs);
+                title = `Bedtime top-up`;
+                message = `Your sugar is ${reading} and ${trend.description} heading towards bed (11pm). Have ${emergency.grams}g of fast sugar (${emergency.suggestion}) to stop the drop, then have something starchy like ${starchy.suggestion} for overnight.`;
             }
             else if (reading < p.targetLow)
             {
+                // below target but stable — starchy has time to absorb (bedtime window is 2h before insulin peak)
                 var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} — a bit low for bed. Have about ${food.grams}g of something starchy like ${food.suggestion}. Starchy beats sugary at bedtime — it lasts longer while your insulin works overnight.`;
+                message = `Your sugar is ${reading} — a bit low for bed (11pm). Have about ${food.grams}g of something starchy like ${food.suggestion}. Starchy beats sugary at bedtime — it lasts longer while your insulin works overnight.`;
             }
             else
             {
                 var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading to bed. About ${food.grams}g of something starchy would help — ${food.suggestion}. Starchy over sugary at night — it keeps working longer while your insulin does.`;
+                message = `Your sugar is ${reading} heading towards bed (11pm). About ${food.grams}g of something starchy would help — ${food.suggestion}. Starchy over sugary at night — it keeps working longer while your insulin does.`;
             }
         }
 

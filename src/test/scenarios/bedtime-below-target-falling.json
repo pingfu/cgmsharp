@@ -1,0 +1,17 @@
+{
+    "name": "Bedtime below target and falling",
+    "description": "Synthetic scenario testing the bedtime two-step advice. BG starts at 8.0 at 19:30 UTC (20:30 BST), drifts down through target to 6.2 by 20:10 UTC (21:10 BST, bedtime window). Tests that the bedtime nudge includes fast sugar + starchy when below target and falling, not starchy alone.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-07 19:30", "reading": 8.0 },
+        { "time": "2026-04-07 19:40", "reading": 7.8 },
+        { "time": "2026-04-07 19:50", "reading": 7.5 },
+        { "time": "2026-04-07 20:00", "reading": 7.1 },
+        { "time": "2026-04-07 20:10", "reading": 6.8 },
+        { "time": "2026-04-07 20:20", "reading": 6.5 },
+        { "time": "2026-04-07 20:30", "reading": 6.2 },
+        { "time": "2026-04-07 20:40", "reading": 5.9 },
+        { "time": "2026-04-07 20:50", "reading": 5.6 },
+        { "time": "2026-04-07 21:00", "reading": 5.3 }
+    ]
+}
