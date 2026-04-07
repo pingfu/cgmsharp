@@ -62,7 +62,7 @@ const moment = require(`moment`);
 //        (carb estimate jumped by 3g+). prevents repeating "have a pear" every
 //        20 min during a slow drift.
 //
-//   5. bedtime nudge — one proactive message per evening (22:00-23:30):
+//   5. bedtime nudge — one proactive message per evening (21:00-22:00 local):
 //      - calculates a bedtime target: targetLow + expected overnight drop (3.5 mmol/L)
 //      - if reading is below the target, suggests carbs to top up for the night
 //      - if reading is above the target, sends a reassuring "looking good" message
@@ -84,7 +84,7 @@ const moment = require(`moment`);
 //   - adjusted up for acceleration, rapid drops, and insulin counteraction
 //     (scaled proportionally by insulin activity — not a binary on/off)
 //   - adjusted down if rising
-//   - clamped to 2-20g range
+//   - clamped to 5-20g range (below 5g has no measurable BG effect)
 //
 // the carbsPerMmol ratio is the single most important tuning knob. it was
 // calibrated from one evening data point (18g carbs → 4.1 mmol/L rise). it
@@ -105,6 +105,7 @@ const moment = require(`moment`);
 const DEFAULTS = {
     // target range
     targetLow: 7.0, // lower bound of "top half of green" (mmol/L). p25 of historical data is 7.4.
+    hypoFloor: 4.5, // below this, always use emergency foods regardless of trend. clinical hypo territory.
     targetHigh: 10.0, // upper bound of target range. Median is 9.4.
     aboveThreshold: 11.0, // only nudge about high sugar above this. 43% of readings above 10.0 — nudging there would be constant noise.
 
@@ -203,15 +204,7 @@ const DEFAULTS = {
 // UK supermarket staples, healthy where possible, practical for an elderly person.
 // every suggestion is specific about food type and portion size.
 const CARB_SUGGESTIONS = [
-    { grams: 2, ideas: [
-        `5 or 6 grapes`,
-        `2 dried apricots`,
-        `about 15 blueberries`,
-        `2 walnut halves`,
-        `8 to 10 raspberries`,
-        `a 1-inch cube of cheddar`,
-        `3 slices of cucumber with a teaspoon of cream cheese`
-    ]},
+    // no 2g tier — amounts that small have no measurable BG effect. minimum useful correction is 5g.
     { grams: 5, ideas: [
         `a 125g pot of plain natural yoghurt`,
         `half a small banana`,
@@ -242,7 +235,6 @@ const CARB_SUGGESTIONS = [
         `1 medium apple with a teaspoon of peanut butter`,
         `2 oatcakes with 1 tablespoon of hummus`,
         `1 crumpet with butter`,
-        `a mug of tomato soup (half a tin)`,
         `1 Weetabix with 100ml of semi-skimmed milk`,
         `2 tablespoons of trail mix`
     ]},
@@ -261,10 +253,8 @@ const CARB_SUGGESTIONS = [
         `half a cheese and pickle sandwich on wholemeal bread`,
         `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
         `half a small jacket potato with 3 tablespoons of baked beans`,
-        `a mug of tomato soup with 1 slice of wholemeal bread`,
         `2 crumpets with butter`,
-        `1 slice of wholemeal toast with 4 tablespoons of baked beans`,
-        `4 to 5 tablespoons of cooked pasta with tomato and basil sauce`
+        `1 slice of wholemeal toast with 4 tablespoons of baked beans`
     ]}
 ];
 
@@ -287,12 +277,9 @@ const EMERGENCY_SUGGESTIONS = [
         `a glass (250ml) of orange juice`,
         `4 glucose tablets`,
         `a glass (250ml) of full-sugar cola`
-    ]},
-    { grams: 20, ideas: [
-        `9 jelly babies`,
-        `a large glass (300ml) of orange juice`,
-        `5 glucose tablets and a glass of milk`
     ]}
+    // no 20g tier — rule of 15: treat with 15g fast-acting, wait 15 min, repeat if still low.
+    // overtreating hypos causes rebound spikes. let the engine re-evaluate after absorption.
 ];
 
 // bedtime food suggestions — slow-release carbs that absorb over 2-3 hours.
@@ -562,7 +549,7 @@ function createNudgeEngine(config)
         else if (trend.description === `dropping fast`) base = base + Math.round(p.carbsPerMmol * 0.5);
         else if (trend.direction === `rising`) base = Math.max(base - Math.round(p.carbsPerMmol * 0.5), 2);
 
-        base = Math.max(base, 2);
+        base = Math.max(base, 5); // minimum useful correction — below 5g has no measurable BG effect
         base = Math.min(base, 20);
 
         return base;
@@ -770,23 +757,26 @@ function createNudgeEngine(config)
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActivity);
 
-            // urgent/accelerating drops get emergency foods and direct messaging
-            if (trend.urgent)
+            // clinical hypo territory or urgent trend — always emergency foods
+            if (reading <= p.hypoFloor || trend.urgent)
             {
                 food = getEmergencySuggestion(carbs);
                 title = `Have some fast sugar now`;
                 message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
             }
+            // below target with insulin actively pulling — use fast-acting food
+            // because slow food won't absorb before the insulin drops her further
+            else if (insulinActive && trend.direction === `falling`)
+            {
+                food = getEmergencySuggestion(carbs);
+                title = `Time for some fast sugar`;
+                message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
+            }
             else
             {
                 food = getCarbSuggestion(carbs);
 
-                if (trend.direction === `falling` && insulinActive)
-                {
-                    title = `Time for a snack`;
-                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. About ${food.grams}g of carbs would help — something like ${food.suggestion}.`;
-                }
-                else if (trend.direction === `falling`)
+                if (trend.direction === `falling`)
                 {
                     title = `A little top-up might help`;
                     message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That's about right for a ${trend.description} trend like this.`;

@@ -98,6 +98,10 @@ Every message sent is actionable. The one exception is the bedtime nudge, which 
 | `INFLUX_DB_ORG` | No | InfluxDB organization |
 | `INFLUX_DB_BUCKET` | No | InfluxDB bucket |
 
+## Timezone
+
+The container must run with `TZ=Europe/London` (set in docker-compose and Portainer). All time-of-day logic in the codebase (quiet hours, dawn window, bedtime window, meal window, insulin injection times) is expressed in local UK time. InfluxDB stores timestamps in UTC; the conversion happens at the OS level via the TZ environment variable. Test scenarios store UTC timestamps with `timezoneOffsetMinutes` to convert to local time for the engine.
+
 ## Docker
 
 The Dockerfile uses `node:22-alpine`. The build context is the repo root but only `src/` is copied into the image.
