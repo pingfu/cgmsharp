@@ -787,7 +787,7 @@ function createNudgeEngine(config)
             {
                 food = getEmergencySuggestion(carbs);
                 title = `Time for some fast sugar`;
-                var followUp = getCarbSuggestion(10);
+                var followUp = getBedtimeSuggestion(10);
                 message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}. Follow with about 10g of something starchy like ${followUp.suggestion} to stop it dropping again.`;
             }
             else
