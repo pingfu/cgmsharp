@@ -38,7 +38,10 @@ async function runScenario(scenario)
     console.log(`Profile: carbsPerMmol=${merged.carbsPerMmol}, insulin=${merged.insulinTimeMorning}/${merged.insulinTimeEvening}, mealWindow=${merged.mealWindowMinutes || DEFAULTS.mealWindowMinutes}min`);
     console.log(`${'='.repeat(80)}`);
 
-    var tzOffset = scenario.timezoneOffsetMinutes || 0; // minutes to add to stored UTC times to get local time
+    // timezoneOffsetMinutes converts stored UTC times to local time.
+    // in production, TZ=Europe/London handles this automatically.
+    // in tests, we apply it manually since the test process may not have TZ set.
+    var tzOffset = scenario.timezoneOffsetMinutes || 0;
 
     for (var i = 0; i < scenario.readings.length; i++)
     {

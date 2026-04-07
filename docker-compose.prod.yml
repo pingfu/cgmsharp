@@ -4,6 +4,7 @@ services:
     image: ghcr.io/pingfu/cgmsharp/cgmsharp:latest
     container_name: cgmsharp
     environment:
+      - TZ=Europe/London
       - LIBRE_USERNAME=your_libre_username
       - LIBRE_PASSWORD=your_libre_password
       - LIBRE_AGENT_VERSION=4.16.0

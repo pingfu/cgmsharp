@@ -7,3 +7,4 @@ services:
       - ./src/.env
     environment:
       - NODE_ENV=production
+      - TZ=Europe/London

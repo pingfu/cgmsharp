@@ -155,8 +155,11 @@ const DEFAULTS = {
 
     // bedtime nudge window — one proactive nudge to position BG for the overnight insulin peak.
     // fires once per evening during this window if the reading is stable.
-    bedtimeWindowStart: 22, // hour (22:00)
-    bedtimeWindowEnd: 23.5, // hour (23:30)
+    // set 1.5-2h before typical bedtime so slow-release food has time to absorb
+    // before the intermediate insulin peaks (4-8h post evening injection).
+    // all times are local (container TZ=Europe/London handles BST/GMT automatically).
+    bedtimeWindowStart: 21, // 21:00 local
+    bedtimeWindowEnd: 22, // 22:00 local
 
     // overnight insulin pull rate: mmol/L per hour at peak insulin activity (1.0).
     // this is lower than insulinCounterFactor because overnight there's no incoming
@@ -685,7 +688,10 @@ function createNudgeEngine(config)
         if (!isInBedtimeWindow(now)) return false;
         if (hasBedtimeNudgeBeenSentToday(now)) return false;
 
-        // wait until BG is stable — don't send bedtime nudge while still settling from dinner
+        // don't send bedtime nudge while dinner is still being digested
+        if (isInMealWindow(now)) return false;
+
+        // wait until BG is stable — don't send while still settling from dinner
         if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating`) return false;
 
         var overnightDrop = estimateOvernightDrop(now);
