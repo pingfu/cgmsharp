@@ -783,7 +783,7 @@ function createNudgeEngine(config)
                 else if (trend.direction === `falling`)
                 {
                     title = `A little top-up might help`;
-                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That's about right for a gentle drift like this.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That's about right for a ${trend.description} trend like this.`;
                 }
                 else
                 {
