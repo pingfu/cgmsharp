@@ -778,12 +778,12 @@ function createNudgeEngine(config)
                 if (trend.direction === `falling` && insulinActive)
                 {
                     title = `Time for a snack`;
-                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working, so it'll probably keep drifting down. About ${food.grams}g of carbs would help — something like ${food.suggestion}. That's a bit more than usual because your insulin is still active.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. About ${food.grams}g of carbs would help — something like ${food.suggestion}.`;
                 }
                 else if (trend.direction === `falling`)
                 {
                     title = `A little top-up might help`;
-                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That amount suits a gentle ${trend.description} trend when you're a touch below target.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of carbs should help steady things — for example, ${food.suggestion}. That's about right for a gentle drift like this.`;
                 }
                 else
                 {
@@ -818,7 +818,7 @@ function createNudgeEngine(config)
                 {
                     category = `in-target-falling`;
                     title = `Thinking ahead`;
-                    message = `Your sugar is ${reading} and ${trend.description}. You're in range but your insulin is still working, so it may keep drifting down. A small snack of about ${food.grams}g of carbs could help you stay comfortable — something like ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may drift lower. About ${food.grams}g of carbs would help — something like ${food.suggestion}.`;
                 }
                 else if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating` || trend.description === `falling and picking up pace`)
                 {
