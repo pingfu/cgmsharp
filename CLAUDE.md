@@ -32,8 +32,8 @@ There is no linter and no build step.
 The nudge engine has a test harness that feeds timestamped glucose readings through the engine and captures what notifications would be sent. No actual notifications are dispatched, no API calls are made.
 
 ```bash
-# Build the test image
-docker build -t cgmsharp-test .
+# Build the test image (--no-cache ensures local source changes are picked up)
+docker build --no-cache -t cgmsharp-test .
 
 # Run all scenarios
 docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js
@@ -93,8 +93,11 @@ The engine uses zone-based decision logic (below target / in target / quiet zone
 - **Overnight quiet hours** — fully silent midnight–6 AM
 - **Dawn phenomenon** — suppresses nudges during 4–10 AM rising BG
 - **Calibrated carb estimation** — uses observed ratio of 4.4g per 1 mmol/L rise, with insulin counter-factor scaling and food suggestions from a tiered lookup table
-- **Bedtime nudge** — one proactive message per evening (22:00-23:30) suggesting low-GI slow-release carbs to sustain BG through the overnight insulin peak
-- **Three food categories** — normal (healthy snacks), emergency (fast-acting sugar for rapid drops), bedtime (slow-release starchy foods for overnight)
+- **Bedtime nudge** — one proactive message per evening (21:00-22:00) suggesting slow-release starchy carbs to sustain BG through the overnight insulin peak
+- **Three food categories** — each with a distinct label used in every message so the recipient always knows what type of food is being recommended:
+  - **Emergency** (`EMERGENCY_SUGGESTIONS`) — fast-acting sugar (jelly babies, glucose tablets, orange juice). Labelled **"fast-acting sugar"** in messages. Used for clinical hypo (≤5.0), urgent/accelerating drops, and below-target with active insulin.
+  - **Normal** (`CARB_SUGGESTIONS`) — fruit, yoghurt, oatcakes, toast, porridge — mixed foods with protein/fat/fibre that raise BG more gradually. Labelled **"slower-acting carbs (low GI)"** in messages. Used for gentle corrections when the situation is not urgent.
+  - **Bedtime** (`BEDTIME_SUGGESTIONS`) — slow-release starchy carbs with protein/fat (toast+cheese, oatcakes+PB, porridge). Labelled **"something starchy"** in messages, with an explanation that starchy lasts longer overnight. Used for bedtime top-ups and as follow-up after emergency sugar when insulin is active.
 
 Every message sent is actionable. The one exception is the bedtime nudge, which also sends a reassuring "looking good" message if BG is high enough for the night.
 
