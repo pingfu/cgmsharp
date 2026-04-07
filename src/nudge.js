@@ -105,7 +105,7 @@ const moment = require(`moment`);
 const DEFAULTS = {
     // target range
     targetLow: 7.0, // lower bound of "top half of green" (mmol/L). p25 of historical data is 7.4.
-    hypoFloor: 4.5, // below this, always use emergency foods regardless of trend. clinical hypo territory.
+    hypoFloor: 5.0, // below this, always use emergency foods regardless of trend. clinical hypo territory for type 1.
     targetHigh: 10.0, // upper bound of target range. Median is 9.4.
     aboveThreshold: 11.0, // only nudge about high sugar above this. 43% of readings above 10.0 — nudging there would be constant noise.
 
@@ -688,26 +688,35 @@ function createNudgeEngine(config)
         var title = null;
         var message = null;
 
-        if (gap <= 0)
+        // if already above target, she doesn't need more food — insulin will bring it down
+        if (reading > p.targetHigh || gap <= 0)
         {
-            // she's high enough — reassuring message
             title = `Looking good for bed`;
             message = `Your sugar is ${reading} heading into the night. That should see you through comfortably — no snack needed. Sleep well.`;
         }
         else
         {
             var carbs = Math.round(gap * p.carbsPerMmol);
-            carbs = Math.max(carbs, 2);
+            carbs = Math.max(carbs, 5);
             carbs = Math.min(carbs, 20);
-            var food = getBedtimeSuggestion(carbs);
 
-            if (reading < p.targetLow)
+            if (reading <= p.hypoFloor)
             {
+                // dangerously low at bedtime — treat the hypo first with fast sugar, then sustain with starchy
+                var emergency = getEmergencySuggestion(15);
+                var starchy = getBedtimeSuggestion(carbs);
+                title = `Low at bedtime`;
+                message = `Your sugar is ${reading} — too low for bed. Have ${emergency.grams}g of fast sugar first (${emergency.suggestion}), then once it comes up, have something starchy like ${starchy.suggestion} to keep you going overnight.`;
+            }
+            else if (reading < p.targetLow)
+            {
+                var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
                 message = `Your sugar is ${reading} — a bit low for bed. Have about ${food.grams}g of something starchy like ${food.suggestion}. Starchy beats sugary at bedtime — it lasts longer while your insulin works overnight.`;
             }
             else
             {
+                var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
                 message = `Your sugar is ${reading} heading to bed. About ${food.grams}g of something starchy would help — ${food.suggestion}. Starchy over sugary at night — it keeps working longer while your insulin does.`;
             }
@@ -762,7 +771,15 @@ function createNudgeEngine(config)
             {
                 food = getEmergencySuggestion(carbs);
                 title = `Have some fast sugar now`;
-                message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
+                if (insulinActive)
+                {
+                    var followUp = getBedtimeSuggestion(10);
+                    message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}. Once it comes back up, follow with about 10g of something starchy like ${followUp.suggestion} — your insulin is still working and will pull it back down.`;
+                }
+                else
+                {
+                    message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
+                }
             }
             // below target with insulin actively pulling — use fast-acting food
             // because slow food won't absorb before the insulin drops her further
@@ -770,7 +787,8 @@ function createNudgeEngine(config)
             {
                 food = getEmergencySuggestion(carbs);
                 title = `Time for some fast sugar`;
-                message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
+                var followUp = getCarbSuggestion(10);
+                message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}. Follow with about 10g of something starchy like ${followUp.suggestion} to stop it dropping again.`;
             }
             else
             {
@@ -826,7 +844,7 @@ function createNudgeEngine(config)
                 {
                     category = `in-target-falling`;
                     title = `Gentle heads-up`;
-                    message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. Something like ${food.suggestion} (about ${food.grams}g carbs) would keep things steady.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. About ${food.grams}g of carbs would keep things steady — try ${food.suggestion}.`;
                 }
                 else
                 {
