@@ -1,0 +1,13 @@
+{
+    "name": "Breakfast: above target (12.0)",
+    "description": "Synthetic scenario where dawn has pushed BG above target. Engine should suggest low-carb breakfast (eggs, yoghurt), not porridge. Times are local (no offset).",
+    "timezoneOffsetMinutes": 0,
+    "readings": [
+        { "time": "2026-04-09 06:30", "reading": 11.0 },
+        { "time": "2026-04-09 06:40", "reading": 11.5 },
+        { "time": "2026-04-09 06:50", "reading": 11.8 },
+        { "time": "2026-04-09 07:00", "reading": 12.0 },
+        { "time": "2026-04-09 07:10", "reading": 12.0 },
+        { "time": "2026-04-09 07:20", "reading": 12.0 }
+    ]
+}

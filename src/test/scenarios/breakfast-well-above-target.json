@@ -1,0 +1,13 @@
+{
+    "name": "Breakfast: well above target (15.0)",
+    "description": "Synthetic scenario where dawn has pushed BG well above 14. Engine should suggest skipping carbs entirely. Times are local (no offset).",
+    "timezoneOffsetMinutes": 0,
+    "readings": [
+        { "time": "2026-04-09 06:30", "reading": 13.0 },
+        { "time": "2026-04-09 06:40", "reading": 13.5 },
+        { "time": "2026-04-09 06:50", "reading": 14.2 },
+        { "time": "2026-04-09 07:00", "reading": 14.8 },
+        { "time": "2026-04-09 07:10", "reading": 15.0 },
+        { "time": "2026-04-09 07:20", "reading": 15.0 }
+    ]
+}

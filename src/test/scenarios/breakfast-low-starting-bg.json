@@ -1,0 +1,13 @@
+{
+    "name": "Breakfast: low starting BG (6.5)",
+    "description": "Synthetic scenario mirroring Apr 7 morning. BG at 6.5 during breakfast window (07:00-07:30 local). Engine should suggest ~15g carbs (full porridge). Times are local (no offset).",
+    "timezoneOffsetMinutes": 0,
+    "readings": [
+        { "time": "2026-04-09 06:30", "reading": 6.6 },
+        { "time": "2026-04-09 06:40", "reading": 6.4 },
+        { "time": "2026-04-09 06:50", "reading": 6.4 },
+        { "time": "2026-04-09 07:00", "reading": 6.5 },
+        { "time": "2026-04-09 07:10", "reading": 6.5 },
+        { "time": "2026-04-09 07:20", "reading": 6.5 }
+    ]
+}

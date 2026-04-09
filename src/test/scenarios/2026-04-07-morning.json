@@ -1,0 +1,19 @@
+{
+    "name": "2026-04-07 morning (real data)",
+    "description": "All times UTC. Morning readings from InfluxDB. Overnight rescue carbs pushed BG up to 10.1 (06:30 BST), then fell through 7.2 to 6.8 by the breakfast window (07:00-07:20 BST). Porridge ~15g eaten at 07:52 BST, peaked 12.2.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-07 05:30", "reading": 10.1 },
+        { "time": "2026-04-07 05:40", "reading": 8.4 },
+        { "time": "2026-04-07 05:50", "reading": 7.5 },
+        { "time": "2026-04-07 06:00", "reading": 7.2 },
+        { "time": "2026-04-07 06:10", "reading": 6.9 },
+        { "time": "2026-04-07 06:20", "reading": 6.8 },
+        { "time": "2026-04-07 06:30", "reading": 6.6 },
+        { "time": "2026-04-07 06:40", "reading": 6.4 },
+        { "time": "2026-04-07 06:50", "reading": 6.4 },
+        { "time": "2026-04-07 07:00", "reading": 7.0 },
+        { "time": "2026-04-07 07:10", "reading": 7.1 },
+        { "time": "2026-04-07 07:20", "reading": 6.6 }
+    ]
+}

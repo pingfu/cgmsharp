@@ -1,0 +1,13 @@
+{
+    "name": "Breakfast: mid-target BG (8.0)",
+    "description": "Synthetic scenario mirroring Apr 9 morning. BG at 8.0 during breakfast window — in target but morning rise underway. Engine should suggest ~9g carbs. Times are local (no offset).",
+    "timezoneOffsetMinutes": 0,
+    "readings": [
+        { "time": "2026-04-09 06:30", "reading": 7.5 },
+        { "time": "2026-04-09 06:40", "reading": 7.7 },
+        { "time": "2026-04-09 06:50", "reading": 7.8 },
+        { "time": "2026-04-09 07:00", "reading": 8.0 },
+        { "time": "2026-04-09 07:10", "reading": 8.0 },
+        { "time": "2026-04-09 07:20", "reading": 8.0 }
+    ]
+}

@@ -62,14 +62,21 @@ const moment = require(`moment`);
 //        (carb estimate jumped by 3g+). prevents repeating "have a pear" every
 //        20 min during a slow drift.
 //
-//   5. bedtime nudge — one proactive message per evening (21:00-22:00 local):
+//   5. breakfast nudge — one proactive message per morning (07:00-07:30 local):
+//      - calculates how many carbs would keep post-breakfast peak below targetHigh
+//      - uses availableRoom = targetHigh - reading, scaled by carbsPerMmol
+//      - if BG is already above target, suggests low-carb breakfast (eggs, yoghurt)
+//      - if BG is well above target (>14), suggests skipping carbs entirely
+//      - fires once per morning at injection time, before eating
+//
+//   6. bedtime nudge — one proactive message per evening (21:00-22:00 local):
 //      - calculates a bedtime target: targetLow + expected overnight drop (3.5 mmol/L)
 //      - if reading is below the target, suggests carbs to top up for the night
 //      - if reading is above the target, sends a reassuring "looking good" message
 //      - waits for BG to be stable (not still settling from dinner)
 //      - fires once per evening, then the regular engine takes over until quiet hours
 //
-//   6. food selection — two categories:
+//   7. food selection — three categories:
 //      - normal suggestions: healthy UK foods with specific portions (yoghurt,
 //        oatcakes, fruit, toast). used for gentle corrections.
 //      - emergency suggestions: fast-acting sugar (jelly babies, glucose tablets,
@@ -159,6 +166,12 @@ const DEFAULTS = {
     // set 1.5-2h before typical bedtime so slow-release food has time to absorb
     // before the intermediate insulin peaks (4-8h post evening injection).
     // all times are local (container TZ=Europe/London handles BST/GMT automatically).
+    // breakfast nudge window — one proactive nudge to guide carb intake based on current BG.
+    // fires once per morning during this window (injection time, before eating).
+    // all times are local (container TZ=Europe/London handles BST/GMT automatically).
+    breakfastWindowStart: 7, // 07:00 local
+    breakfastWindowEnd: 7.5, // 07:30 local
+
     bedtimeWindowStart: 21, // 21:00 local
     bedtimeWindowEnd: 22, // 22:00 local
 
@@ -323,6 +336,57 @@ const BEDTIME_SUGGESTIONS = [
     ]}
 ];
 
+// breakfast carb suggestions — breakfast-appropriate foods with specific portions.
+// same tiered structure as CARB_SUGGESTIONS but only foods you'd eat at breakfast.
+const BREAKFAST_SUGGESTIONS = [
+    { grams: 5, ideas: [
+        `half a small banana`,
+        `a 125g pot of plain natural yoghurt`,
+        `a small glass (100ml) of semi-skimmed milk`,
+        `1 tablespoon of raisins`,
+        `2 plain rice cakes with butter`
+    ]},
+    { grams: 7, ideas: [
+        `half a crumpet with a scrape of butter`,
+        `a 125g pot of natural yoghurt with 5 or 6 blueberries`,
+        `2 tablespoons of porridge oats made with water`,
+        `1 oatcake with a thin slice of cheddar`
+    ]},
+    { grams: 10, ideas: [
+        `1 slice of wholemeal toast with butter`,
+        `1 small banana (about 15cm long)`,
+        `4 tablespoons of porridge oats made with water`,
+        `1 crumpet with butter`,
+        `1 Weetabix with 100ml of semi-skimmed milk`
+    ]},
+    { grams: 15, ideas: [
+        `1 slice of wholemeal toast with a teaspoon of peanut butter`,
+        `a 30g bowl of bran flakes with semi-skimmed milk`,
+        `1 crumpet with a teaspoon of strawberry jam`,
+        `4 tablespoons of porridge oats made with semi-skimmed milk and a drizzle of honey`,
+        `1 Weetabix with semi-skimmed milk and half a small banana`
+    ]},
+    { grams: 20, ideas: [
+        `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
+        `2 crumpets with butter`,
+        `1 slice of wholemeal toast with a teaspoon of peanut butter and half a banana`,
+        `2 Weetabix with semi-skimmed milk`
+    ]}
+];
+
+// low-carb breakfast suggestions — for mornings when BG is already above target.
+// zero/minimal carb options to avoid stacking carbs on top of dawn phenomenon.
+// no gram tiers needed — these are used when carbs should be avoided entirely.
+const LOW_CARB_BREAKFAST_SUGGESTIONS = [
+    `scrambled eggs`,
+    `a boiled egg`,
+    `poached eggs on their own`,
+    `a 125g pot of plain natural yoghurt with a few berries`,
+    `a couple of slices of cheese`,
+    `scrambled eggs with a slice of cheese`,
+    `plain omelette`
+];
+
 function createNudgeEngine(config)
 {
     // merge config over defaults — config values win, missing values fall back to defaults
@@ -344,6 +408,7 @@ function createNudgeEngine(config)
         lastNudgeCarbs: null,
         lastNudgeReading: null,
         lastNudgeExpectedReading: null, // where we expect BG to be once the suggested food absorbs
+        breakfastNudgeSentDate: null, // date string (YYYY-MM-DD) of last breakfast nudge — one per morning
         bedtimeNudgeSentDate: null // date string (YYYY-MM-DD) of last bedtime nudge — one per evening
     };
 
@@ -591,6 +656,11 @@ function createNudgeEngine(config)
         return getSuggestionFromTable(BEDTIME_SUGGESTIONS, grams);
     }
 
+    function getBreakfastSuggestion(grams)
+    {
+        return getSuggestionFromTable(BREAKFAST_SUGGESTIONS, grams);
+    }
+
     // expected-response suppression: when we send a carb suggestion, we calculate where BG
     // should be once the food absorbs. suppress further nudges until either:
     // a) the reading has reached or exceeded the expected level (advice worked — stay quiet)
@@ -640,6 +710,23 @@ function createNudgeEngine(config)
         return false;
     }
 
+    function isInBreakfastWindow(now)
+    {
+        var hour = now.hour() + (now.minute() / 60);
+        return hour >= p.breakfastWindowStart && hour < p.breakfastWindowEnd;
+    }
+
+    function hasBreakfastNudgeBeenSentToday(now)
+    {
+        if (state.breakfastNudgeSentDate === null) return false;
+        return state.breakfastNudgeSentDate === now.format(`YYYY-MM-DD`);
+    }
+
+    function getLowCarbBreakfastSuggestion()
+    {
+        return LOW_CARB_BREAKFAST_SUGGESTIONS[Math.floor(Math.random() * LOW_CARB_BREAKFAST_SUGGESTIONS.length)];
+    }
+
     function isInBedtimeWindow(now)
     {
         var hour = now.hour() + (now.minute() / 60);
@@ -668,6 +755,59 @@ function createNudgeEngine(config)
             totalDrop += activity * p.overnightPullRate * (10 / 60);
         }
         return totalDrop;
+    }
+
+    // breakfast nudge: one proactive message per morning to guide carb intake.
+    // fires in the 07:00-07:30 local window (injection time). the breakfast spike
+    // is determined by starting BG — same food from different starting BGs produces
+    // wildly different peaks. this nudge tells the user how much room they have.
+    // returns true if a breakfast nudge was sent (so the regular evaluate can skip).
+    async function evaluateBreakfast(reading, trend, sendNudge, now)
+    {
+        if (!isInBreakfastWindow(now)) return false;
+        if (hasBreakfastNudgeBeenSentToday(now)) return false;
+
+        // wait until BG is stable — don't send while still bouncing from overnight
+        if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating`) return false;
+
+        var availableRoom = p.targetHigh - reading;
+        var breakfastCarbs = Math.max(0, Math.round(availableRoom * p.carbsPerMmol));
+
+        var title = null;
+        var message = null;
+
+        if (reading > 14.0)
+        {
+            // well above target — skip carbs entirely
+            var lowCarbFood = getLowCarbBreakfastSuggestion();
+            title = `Good morning`;
+            message = `Your sugar is ${reading} — your morning rise has pushed it up. Best to skip carbs at breakfast today and let your insulin bring it down. ${lowCarbFood} would be good.`;
+        }
+        else if (reading > p.targetHigh)
+        {
+            // above target — low-carb breakfast
+            var lowCarbFood = getLowCarbBreakfastSuggestion();
+            title = `Good morning`;
+            message = `Your sugar is ${reading} — already high from the morning rise. A low-carb breakfast would help today — ${lowCarbFood}. Save the porridge for a morning when your sugar is lower.`;
+        }
+        else if (reading >= p.targetLow)
+        {
+            // in target — reduced carbs with explanation
+            var food = getBreakfastSuggestion(breakfastCarbs);
+            title = `Good morning`;
+            message = `Your sugar is ${reading}. About ${food.grams}g of carbs at breakfast would be a good amount — ${food.suggestion}. Your morning rise is already underway so a smaller portion helps keep the spike down.`;
+        }
+        else
+        {
+            // below target — full carb room
+            var food = getBreakfastSuggestion(breakfastCarbs);
+            title = `Good morning`;
+            message = `Your sugar is ${reading}. You've got room for about ${food.grams}g of carbs at breakfast — ${food.suggestion}.`;
+        }
+
+        await sendNudge(title, message);
+        state.breakfastNudgeSentDate = now.format(`YYYY-MM-DD`);
+        return true;
     }
 
     // bedtime nudge: one proactive message per evening to position BG for overnight.
@@ -750,6 +890,9 @@ function createNudgeEngine(config)
         if (isQuietHours(now)) return;
 
         var trend = getTrend(reading);
+
+        // breakfast nudge — one proactive message per morning with carb guidance
+        if (await evaluateBreakfast(reading, trend, sendNudge, now)) return;
 
         // bedtime nudge — one proactive message per evening, takes priority over regular logic
         if (await evaluateBedtime(reading, trend, sendNudge, now)) return;
@@ -885,4 +1028,4 @@ function createNudgeEngine(config)
     return { evaluate: evaluate, state: state, profile: p };
 }
 
-module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS };
+module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS, BREAKFAST_SUGGESTIONS, LOW_CARB_BREAKFAST_SUGGESTIONS };
