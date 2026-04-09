@@ -29,20 +29,29 @@ There is no linter and no build step.
 
 ## Tests
 
-The nudge engine has a test harness that feeds timestamped glucose readings through the engine and captures what notifications would be sent. No actual notifications are dispatched, no API calls are made.
+The nudge engine has two test tools. Both use the same scenario JSON files and share the same engine profile. No actual notifications are dispatched, no API calls are made.
+
+**Assertion tests** (`node:test`, built into Node 22 — zero dependencies):
 
 ```bash
 # Build the test image (--no-cache ensures local source changes are picked up)
 docker build --no-cache -t cgmsharp-test .
 
-# Run all scenarios
-docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js
-
-# Run a single scenario
-docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js test/scenarios/2026-04-06-evening.json
+# Run assertion tests
+docker run --rm -e TZ=Europe/London cgmsharp-test node --test test/nudge.test.js
 ```
 
-Test scenarios live in `src/test/scenarios/` as JSON files. Each contains a name, description, optional `timezoneOffsetMinutes` (for converting stored UTC timestamps to local time), and an array of `{ time, reading }` pairs. The test runner creates a fresh nudge engine per scenario with the individual's profile and feeds each reading sequentially.
+**Scenario inspector** (visual debugging — prints every reading and marks which ones fired nudges):
+
+```bash
+# Inspect all scenarios
+docker run --rm -e TZ=Europe/London cgmsharp-test node test/inspect-scenario.js
+
+# Inspect a single scenario
+docker run --rm -e TZ=Europe/London cgmsharp-test node test/inspect-scenario.js test/scenarios/2026-04-06-evening.json
+```
+
+Test scenarios live in `src/test/scenarios/` as JSON files. Each contains a name, description, optional `timezoneOffsetMinutes` (for converting stored UTC timestamps to local time), and an array of `{ time, reading }` pairs. Both tools create a fresh nudge engine per scenario with the individual's profile and feed each reading sequentially.
 
 Dated scenarios (2025-*, 2026-*) use real InfluxDB data stored as UTC timestamps with `timezoneOffsetMinutes: 60` for BST conversion. Synthetic scenarios use local timestamps with no offset.
 

@@ -695,7 +695,13 @@ function createNudgeEngine(config)
     // should be once the food absorbs. suppress further nudges until either:
     // a) the reading has reached or exceeded the expected level (advice worked — stay quiet)
     // b) enough time has passed AND the reading is below expected (advice wasn't enough — escalate)
-    // c) the carb tier has jumped (situation worsened beyond what original advice covers)
+    //
+    // within the absorption window: always suppress. the food is still being digested —
+    // sending another nudge risks double-dosing because we can't know if the user
+    // actioned the first message. alerts handle clinical emergencies separately.
+    //
+    // after the absorption window: re-nudge only if the carb estimate has jumped
+    // meaningfully (3g+), indicating the original advice wasn't enough.
     function shouldSuppressNudge(reading, carbs, category, now)
     {
         if (state.lastNudgeSent === null || state.lastNudgeCarbs === null) return false;
@@ -703,16 +709,8 @@ function createNudgeEngine(config)
         var minutesSinceLastNudge = (now.valueOf() - state.lastNudgeSent) / 60000;
         var absorptionWindow = state.lastNudgeCarbs <= 7 ? p.absorptionSmall : p.absorptionLarge;
 
-        // category changed (e.g. was in-target-falling, now below) — different situation, don't suppress
-        if (category !== state.lastNudgeCategory) return false;
-
         // still within absorption window — food hasn't had time to work yet
-        if (minutesSinceLastNudge < absorptionWindow)
-        {
-            // unless carb tier has jumped significantly (situation rapidly worsening)
-            if (carbs >= state.lastNudgeCarbs + 5) return false;
-            return true;
-        }
+        if (minutesSinceLastNudge < absorptionWindow) return true;
 
         // absorption window has passed — check if the advice worked
         if (state.lastNudgeExpectedReading !== null)
@@ -1052,8 +1050,7 @@ function createNudgeEngine(config)
 
         if (title === null || message === null) return;
 
-        // urgent trends bypass suppression — if she's crashing, a previous nudge is irrelevant
-        if (!trend.urgent && carbs !== null && shouldSuppressNudge(reading, carbs, category, now)) return;
+        if (carbs !== null && shouldSuppressNudge(reading, carbs, category, now)) return;
 
         await sendNudge(title, message);
         state.lastNudgeSent = now.valueOf();

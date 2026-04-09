@@ -1,9 +1,13 @@
-// nudge engine test runner
-// usage: node test/run-nudge.js [scenario-file]
+// scenario inspector — visual debugging tool
+// usage: node test/inspect-scenario.js [scenario-file]
 //
+// prints every reading and marks which ones fired nudges, with full message
+// text and engine state. use this to eyeball a scenario's behaviour when
+// developing or investigating a specific case.
+//
+// this is NOT the test suite — see test/nudge.test.js for assertions.
 // runs all scenarios in test/scenarios/ or a single file if specified.
-// feeds timestamped glucose readings through the nudge engine and prints
-// what notifications would be sent. no actual notifications are dispatched.
+// no actual notifications are dispatched.
 
 const fs = require(`fs`);
 const path = require(`path`);
