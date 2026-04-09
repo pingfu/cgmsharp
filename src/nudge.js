@@ -876,6 +876,15 @@ function createNudgeEngine(config)
                 title = `Bedtime top-up`;
                 message = `Your sugar is ${reading} — a bit low for bed (11pm). Have about ${food.grams}g of something starchy around half ten — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first — it helps the carbs absorb more slowly overnight.`;
             }
+            else if (reading > p.targetHigh)
+            {
+                // above target but overnight drop will still pull her low — conservative suggestion
+                // with explanation of why she needs food despite being high now
+                var conservativeCarbs = Math.min(carbs, 15);
+                var food = getBedtimeSuggestion(conservativeCarbs);
+                title = `Bedtime top-up`;
+                message = `Your sugar is ${reading} heading towards bed (11pm). That looks comfortable now but your overnight insulin will bring it down. A small starchy snack around half ten would help you through to morning — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first.`;
+            }
             else
             {
                 var food = getBedtimeSuggestion(carbs);
