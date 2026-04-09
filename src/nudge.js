@@ -70,18 +70,34 @@ const moment = require(`moment`);
 //      - fires once per morning at injection time, before eating
 //
 //   6. bedtime nudge — one proactive message per evening (21:00-22:00 local):
-//      - calculates a bedtime target: targetLow + expected overnight drop (3.5 mmol/L)
-//      - if reading is below the target, suggests carbs to top up for the night
-//      - if reading is above the target, sends a reassuring "looking good" message
+//      - calculates a bedtime target: targetLow + estimated overnight drop
+//        (integrates insulin activity curve over 8 hours, not a static value)
+//      - if reading is below the target, suggests starchy carbs to top up
+//      - if reading is above target but drop will still pull her low, suggests
+//        a conservative amount with explanation of why food is needed despite
+//        being high now
+//      - if reading is high enough to survive the drop, sends "looking good"
+//      - messages include timing advice (eat around half ten) and food order
+//        advice (eat cheese/PB first, then the carbs — delays absorption 1-3h)
 //      - waits for BG to be stable (not still settling from dinner)
 //      - fires once per evening, then the regular engine takes over until quiet hours
 //
-//   7. food selection — three categories:
-//      - normal suggestions: healthy UK foods with specific portions (yoghurt,
-//        oatcakes, fruit, toast). used for gentle corrections.
-//      - emergency suggestions: fast-acting sugar (jelly babies, glucose tablets,
-//        orange juice). used when the trend is urgent — dropping fast and/or
+//   7. food selection — five categories:
+//      - normal (`CARB_SUGGESTIONS`): healthy UK foods with specific portions
+//        (yoghurt, oatcakes, fruit, toast). used for gentle daytime corrections.
+//      - emergency (`EMERGENCY_SUGGESTIONS`): fast-acting sugar (jelly babies,
+//        honey, jam). used when the trend is urgent — dropping fast and/or
 //        accelerating towards hypo. these raise BG within 5-10 minutes.
+//      - bedtime (`BEDTIME_SUGGESTIONS`): slow-release starchy carbs paired with
+//        fat/protein (toast+cheese, oatcakes+PB, porridge). oatcake carbs based
+//        on Nairn's Rough Oatcakes (5.8g/oatcake). used for bedtime top-ups and
+//        as follow-up after emergency sugar when insulin is active.
+//      - breakfast (`BREAKFAST_SUGGESTIONS`): breakfast-appropriate carb foods
+//        (porridge, toast, crumpets, Weetabix, banana). used when the breakfast
+//        nudge calculates room for carbs.
+//      - low-carb breakfast (`LOW_CARB_BREAKFAST_SUGGESTIONS`): zero/minimal carb
+//        options (eggs, yoghurt, cheese, omelette). used when BG is already above
+//        target at breakfast and carbs should be avoided.
 //
 // carb estimation
 // ---------------

@@ -93,11 +93,14 @@ The engine uses zone-based decision logic (below target / in target / quiet zone
 - **Overnight quiet hours** — fully silent midnight–6 AM
 - **Dawn phenomenon** — suppresses nudges during 4–10 AM rising BG
 - **Calibrated carb estimation** — uses observed ratio of 4.4g per 1 mmol/L rise, with insulin counter-factor scaling and food suggestions from a tiered lookup table
-- **Bedtime nudge** — one proactive message per evening (21:00-22:00) suggesting slow-release starchy carbs to sustain BG through the overnight insulin peak
-- **Three food categories** — each with a distinct label used in every message so the recipient always knows what type of food is being recommended:
-  - **Emergency** (`EMERGENCY_SUGGESTIONS`) — fast-acting sugar (jelly babies, glucose tablets, orange juice). Labelled **"fast-acting sugar"** in messages. Used for clinical hypo (≤5.0), urgent/accelerating drops, and below-target with active insulin.
-  - **Normal** (`CARB_SUGGESTIONS`) — fruit, yoghurt, oatcakes, toast, porridge — mixed foods with protein/fat/fibre that raise BG more gradually. Labelled **"slower-acting carbs (low GI)"** in messages. Used for gentle corrections when the situation is not urgent.
-  - **Bedtime** (`BEDTIME_SUGGESTIONS`) — slow-release starchy carbs with protein/fat (toast+cheese, oatcakes+PB, porridge). Labelled **"something starchy"** in messages, with an explanation that starchy lasts longer overnight. Used for bedtime top-ups and as follow-up after emergency sugar when insulin is active.
+- **Breakfast nudge** — one proactive message per morning (07:00-07:30) with carb guidance based on current BG. Calculates available room below targetHigh, suggests appropriately sized breakfast. If BG is already above target from dawn, suggests low-carb options (eggs, yoghurt). If well above (>14), suggests skipping carbs entirely.
+- **Bedtime nudge** — one proactive message per evening (21:00-22:00) suggesting slow-release starchy carbs to sustain BG through the overnight insulin peak. Integrates insulin activity curve to estimate overnight drop. Includes timing advice (eat around half ten) and food order advice (eat fat/protein first, then carbs — delays glucose absorption 1-3h). Above-target readings get a conservative suggestion with explanation that overnight insulin will bring BG down.
+- **Five food categories** — each with a distinct label used in every message so the recipient always knows what type of food is being recommended:
+  - **Emergency** (`EMERGENCY_SUGGESTIONS`) — fast-acting sugar (jelly babies, honey, jam). Labelled **"fast-acting sugar"** in messages. Used for clinical hypo (≤5.0), urgent/accelerating drops, and below-target with active insulin.
+  - **Normal** (`CARB_SUGGESTIONS`) — fruit, yoghurt, oatcakes, toast, porridge — mixed foods with protein/fat/fibre that raise BG more gradually. Labelled **"slower-acting carbs (low GI)"** in messages. Used for gentle daytime corrections when the situation is not urgent.
+  - **Bedtime** (`BEDTIME_SUGGESTIONS`) — slow-release starchy carbs with protein/fat (toast+cheese, oatcakes+PB, porridge). Oatcake carbs based on Nairn's Rough Oatcakes (5.8g/oatcake). Labelled **"something starchy"** in messages. Used for bedtime top-ups and as follow-up after emergency sugar when insulin is active.
+  - **Breakfast** (`BREAKFAST_SUGGESTIONS`) — breakfast-appropriate carb foods (porridge, toast, crumpets, Weetabix, banana). Used when the breakfast nudge calculates room for carbs.
+  - **Low-carb breakfast** (`LOW_CARB_BREAKFAST_SUGGESTIONS`) — zero/minimal carb options (eggs, yoghurt, cheese, omelette). Used when BG is already above target at breakfast.
 
 Every message sent is actionable. The one exception is the bedtime nudge, which also sends a reassuring "looking good" message if BG is high enough for the night.
 
