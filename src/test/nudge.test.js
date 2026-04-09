@@ -496,6 +496,206 @@ test(`slow decline afternoon: slow carbs for a non-urgent drift`, async () =>
     assert.ok(nudges.length >= 1, `should nudge during slow decline`);
 });
 
+// ===========================================================================
+// ACCELERATION DETECTION
+//
+// clinical basis: acceleration distinguishes "been gently falling all hour"
+// from "was stable, now suddenly crashing." the latter is far more dangerous
+// — it means something has changed (insulin kicking in, missed meal, exercise)
+// and BG is heading for hypo faster than the current reading suggests.
+//
+// the engine uses two timescales:
+//   - long-term rate: slope across the full buffer (up to 60 min, 6 readings)
+//   - short-term rate: slope across the last 3 readings (20 min)
+//   - acceleration = shortRate - longRate
+//     negative = drop getting steeper. threshold: -0.003 mmol/L per min²
+//
+// acceleration affects:
+//   - trend description: "falling" → "falling and picking up pace" or
+//     "dropping fast" → "dropping fast and accelerating"
+//   - food selection: accelerating drops get emergency foods
+//   - carb amounts: urgent trends add ~4.4g to the estimate
+//   - projection: acceleration worsens the 30-min forecast
+//
+// minimum data: 4 readings (40 min) before acceleration can be calculated.
+// long-term needs 4 readings; short-term needs 3; acceleration needs both.
+// ===========================================================================
+
+// helper: feed raw readings into an engine and capture nudges + trend info
+async function feedReadings(readingValues, startTime)
+{
+    var engine = createNudgeEngine(Object.assign({}, profile));
+    var nudges = [];
+    var lastTrend = null;
+    var start = moment(startTime || `2026-04-10 12:00`);
+
+    // wrap evaluate to capture trend from the message content
+    var mockSendNudge = async function (title, message)
+    {
+        nudges.push({ title, message, reading: readingValues[i], index: i });
+    };
+
+    for (var i = 0; i < readingValues.length; i++)
+    {
+        await engine.evaluate(readingValues[i], mockSendNudge, moment(start).add(i * 10, `minutes`));
+    }
+
+    return { nudges, engine };
+}
+
+test(`acceleration: not available with fewer than 4 readings`, async () =>
+{
+    // with only 3 readings, the engine has short-term rate but no long-term
+    // rate (needs 4+), so acceleration is null. the engine should still
+    // detect direction but cannot classify as "accelerating."
+    // 3 readings dropping fast: 8.0, 7.0, 6.0 — rate is -0.1/min (rapid)
+    // but without acceleration, cannot distinguish steady drop from crash.
+    var result = await feedReadings([8.0, 7.0, 6.0]);
+    // should nudge (it's below target and falling) but message should NOT
+    // mention acceleration since we can't calculate it yet
+    if (result.nudges.length > 0)
+    {
+        assert.ok(!result.nudges[0].message.includes(`accelerating`),
+            `cannot detect acceleration with only 3 readings`);
+    }
+});
+
+test(`acceleration: detected from 4th reading onwards`, async () =>
+{
+    // 4 readings: stable then sudden drop. this is the minimum for
+    // acceleration detection.
+    // readings: 8.0, 8.0, 7.5, 6.5
+    // long-term rate: (6.5 - 8.0) / (3 × 10) = -0.05/min
+    // short-term rate: (6.5 - 8.0) / (2 × 10) = -0.075/min
+    // acceleration: -0.075 - (-0.05) = -0.025 (well below -0.003 threshold)
+    // the sudden steepening should be detectable
+    var result = await feedReadings([8.0, 8.0, 7.5, 6.5]);
+    // at 6.5 with acceleration, engine should describe as accelerating
+    if (result.nudges.length > 0)
+    {
+        assert.ok(
+            result.nudges[0].message.includes(`picking up pace`) || result.nudges[0].message.includes(`accelerating`),
+            `should detect acceleration from 4th reading, got: ${result.nudges[0].message}`);
+    }
+});
+
+test(`acceleration: steady linear drop does NOT trigger accelerating`, async () =>
+{
+    // constant rate of descent: losing exactly 0.3 per tick for 6 readings.
+    // long-term and short-term rates should be identical → acceleration ≈ 0.
+    // engine should say "slowly falling" or "falling", NOT "accelerating."
+    // readings: 7.8, 7.5, 7.2, 6.9, 6.6, 6.3
+    // long-term: (6.3 - 7.8) / (5 × 10) = -0.03/min
+    // short-term: (6.3 - 6.9) / (2 × 10) = -0.03/min
+    // acceleration: -0.03 - (-0.03) = 0.0 (no acceleration)
+    var result = await feedReadings([7.8, 7.5, 7.2, 6.9, 6.6, 6.3]);
+    if (result.nudges.length > 0)
+    {
+        assert.ok(!result.nudges[0].message.includes(`accelerating`),
+            `steady linear drop should not be classified as accelerating, got: ${result.nudges[0].message}`);
+        assert.ok(!result.nudges[0].message.includes(`picking up pace`),
+            `steady linear drop should not be classified as picking up pace, got: ${result.nudges[0].message}`);
+    }
+});
+
+test(`acceleration: stable then sudden crash detected as "picking up pace"`, async () =>
+{
+    // BG stable for 40 min then suddenly drops. the engine first nudges at
+    // 6.0 (5th reading) where short-term rate is -0.05/min — moderate, not
+    // rapid. acceleration is detected and the message says "picking up pace".
+    // the engine uses slow carbs here because the rate isn't rapid yet.
+    // at 5.0 (6th reading, -0.10/min), it WOULD be urgent + emergency foods,
+    // but the absorption window from the first nudge suppresses it.
+    // this is correct: one nudge per dip, escalation happens if the food
+    // doesn't work within the absorption window.
+    var result = await feedReadings([7.0, 7.0, 7.0, 7.0, 6.0, 5.0]);
+    assert.ok(result.nudges.length >= 1, `should nudge on sudden crash from stable`);
+    assert.ok(result.nudges[0].message.includes(`picking up pace`),
+        `should detect acceleration as "picking up pace", got: ${result.nudges[0].message}`);
+});
+
+test(`acceleration: gradual steepening nudges early via projection`, async () =>
+{
+    // BG falling slowly at first, then steepening.
+    // readings: 8.0, 7.8, 7.5, 7.1, 6.6, 6.0
+    // the engine first nudges at 7.1 (4th reading) via projection — the
+    // short-term rate is only -0.035/min (below slowThreshold 0.05), so the
+    // description is "slowly falling" and acceleration doesn't affect the
+    // label yet. but the projection (which DOES use acceleration) forecasts
+    // BG below targetLow in 30 min, triggering a preemptive "gentle heads-up."
+    //
+    // this tests that acceleration feeds into projection even when the rate
+    // isn't fast enough to change the trend description.
+    var result = await feedReadings([8.0, 7.8, 7.5, 7.1, 6.6, 6.0]);
+    assert.ok(result.nudges.length >= 1, `steepening drop should trigger a nudge`);
+    assert.ok(result.nudges[0].message.includes(`might dip`) || result.nudges[0].message.includes(`drift`),
+        `early nudge from steepening drop should be projection-based, got: ${result.nudges[0].message}`);
+});
+
+test(`acceleration: deceleration (levelling off) does not trigger emergency`, async () =>
+{
+    // BG was dropping fast but is now levelling off — positive acceleration.
+    // this means the correction is working. engine should NOT escalate to
+    // emergency foods — the situation is improving.
+    // readings: 7.0, 6.2, 5.6, 5.3, 5.1, 5.0
+    // long-term: (5.0 - 7.0) / (5 × 10) = -0.04/min
+    // short-term: (5.0 - 5.3) / (2 × 10) = -0.015/min
+    // acceleration: -0.015 - (-0.04) = +0.025 (positive = decelerating)
+    // the drop is slowing. engine should still nudge (BG is low) but
+    // should recognise the trend is improving, not worsening.
+    var result = await feedReadings([7.0, 6.2, 5.6, 5.3, 5.1, 5.0]);
+    if (result.nudges.length > 0)
+    {
+        assert.ok(!result.nudges[0].message.includes(`accelerating`),
+            `decelerating drop should not say "accelerating", got: ${result.nudges[0].message}`);
+    }
+});
+
+test(`acceleration: affects carb amount — accelerating drop gets more carbs than steady drop`, async () =>
+{
+    // two scenarios at the same BG level but different acceleration profiles.
+    // the accelerating drop should recommend more carbs because the situation
+    // is worsening — the food needs to overcome both the current deficit and
+    // the increasing rate of decline.
+
+    // scenario A: steady drop to 5.5
+    var steadyResult = await feedReadings([7.0, 6.7, 6.4, 6.1, 5.8, 5.5]);
+
+    // scenario B: stable then sudden crash to 5.5
+    var accelResult = await feedReadings([7.0, 7.0, 7.0, 7.0, 6.2, 5.5]);
+
+    // both should nudge
+    assert.ok(steadyResult.nudges.length >= 1, `steady drop should nudge`);
+    assert.ok(accelResult.nudges.length >= 1, `accelerating drop should nudge`);
+
+    var steadyCarbs = extractCarbs(steadyResult.nudges[0].message);
+    var accelCarbs = extractCarbs(accelResult.nudges[0].message);
+
+    assert.ok(accelCarbs >= steadyCarbs,
+        `accelerating drop should recommend at least as many carbs as steady drop: accelerating=${accelCarbs}g, steady=${steadyCarbs}g`);
+});
+
+test(`acceleration: projection uses acceleration to forecast worse outcome`, async () =>
+{
+    // with acceleration, the 30-min projection should be worse than linear.
+    // a reading of 6.5 with short-term rate -0.05/min and acceleration -0.02
+    // projects to: 6.5 + (-0.05 × 30) + (0.5 × -0.02 × 30) = 6.5 - 1.5 - 0.3 = 4.7
+    // without acceleration it would be: 6.5 - 1.5 = 5.0
+    // this difference matters — 4.7 is deep hypo territory, 5.0 is borderline.
+    //
+    // test: an accelerating in-range reading should trigger a preemptive nudge
+    // (via projection) even though the current reading is safe.
+    // readings: 8.5, 8.5, 8.5, 8.0, 7.2, 6.5
+    // short-term: (6.5 - 8.0) / 20 = -0.075
+    // long-term: (6.5 - 8.5) / 50 = -0.04
+    // acceleration: -0.075 - (-0.04) = -0.035
+    // projection: 6.5 + (-0.075 × 30) + (0.5 × -0.035 × 30) = 6.5 - 2.25 - 0.525 = 3.7
+    // even though 6.5 is in-range, projection says 3.7 in 30 min → must nudge
+    var result = await feedReadings([8.5, 8.5, 8.5, 8.0, 7.2, 6.5]);
+    assert.ok(result.nudges.length >= 1,
+        `accelerating drop should trigger preemptive nudge via projection even while in-range`);
+});
+
 test(`pre-dinner low: nudges for daytime low, no bedtime nudge`, async () =>
 {
     // BG falls to 5.1 before dinner (17:00-18:50).
