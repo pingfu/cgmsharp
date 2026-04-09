@@ -1,0 +1,15 @@
+{
+    "name": "Bedtime BG 19.0 looking good",
+    "description": "BG stable at 19.0 by 21:10 BST (20:10 UTC). High enough that even the overnight insulin drop will not pull BG below targetLow — tests the 'looking good for bed' path where no food is needed. Evening injection 19:00 local.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 19:00", "reading": 19.5 },
+        { "time": "2026-04-10 19:10", "reading": 19.3 },
+        { "time": "2026-04-10 19:20", "reading": 19.2 },
+        { "time": "2026-04-10 19:30", "reading": 19.1 },
+        { "time": "2026-04-10 19:40", "reading": 19.0 },
+        { "time": "2026-04-10 19:50", "reading": 19.0 },
+        { "time": "2026-04-10 20:00", "reading": 19.1 },
+        { "time": "2026-04-10 20:10", "reading": 19.0 }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "name": "Bedtime BG 8.0 stable",
+    "description": "BG stable at 8.0 by 21:10 BST (20:10 UTC). In-target and stable at bedtime — tests that the bedtime nudge recommends substantial starchy carbs to survive the overnight insulin peak. Evening injection 19:00 local.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 19:00", "reading": 8.2 },
+        { "time": "2026-04-10 19:10", "reading": 8.1 },
+        { "time": "2026-04-10 19:20", "reading": 8.0 },
+        { "time": "2026-04-10 19:30", "reading": 8.1 },
+        { "time": "2026-04-10 19:40", "reading": 8.0 },
+        { "time": "2026-04-10 19:50", "reading": 8.0 },
+        { "time": "2026-04-10 20:00", "reading": 8.1 },
+        { "time": "2026-04-10 20:10", "reading": 8.0 }
+    ]
+}

@@ -875,7 +875,7 @@ function createNudgeEngine(config)
                 var emergency = getEmergencySuggestion(15);
                 var starchy = getBedtimeSuggestion(carbs);
                 title = `Low at bedtime`;
-                message = `Your sugar is ${reading} — too low for bed (11pm). Have ${emergency.grams}g of fast sugar first (${emergency.suggestion}), then once it comes up, have something starchy like ${starchy.suggestion} to keep you going overnight.`;
+                message = `Your sugar is ${reading} — too low for bed (11pm). Have ${emergency.grams}g of fast sugar first (${emergency.suggestion}), then once it comes up, have about ${starchy.grams}g of something starchy like ${starchy.suggestion} to keep you going overnight.`;
             }
             else if (reading < p.targetLow && trend.direction === `falling`)
             {
@@ -883,7 +883,7 @@ function createNudgeEngine(config)
                 var emergency = getEmergencySuggestion(10);
                 var starchy = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} and ${trend.description} heading towards bed (11pm). Have ${emergency.grams}g of fast sugar (${emergency.suggestion}) to stop the drop, then have something starchy like ${starchy.suggestion} for overnight.`;
+                message = `Your sugar is ${reading} and ${trend.description} heading towards bed (11pm). Have ${emergency.grams}g of fast sugar (${emergency.suggestion}) to stop the drop, then have about ${starchy.grams}g of something starchy like ${starchy.suggestion} for overnight.`;
             }
             else if (reading < p.targetLow)
             {
@@ -899,7 +899,7 @@ function createNudgeEngine(config)
                 var conservativeCarbs = Math.min(carbs, 15);
                 var food = getBedtimeSuggestion(conservativeCarbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading towards bed (11pm). That looks comfortable now but your overnight insulin will bring it down. A small starchy snack around half ten would help you through to morning — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first.`;
+                message = `Your sugar is ${reading} heading towards bed (11pm). That looks comfortable now but your overnight insulin will bring it down. About ${food.grams}g of something starchy around half ten would help you through to morning — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first.`;
             }
             else
             {
@@ -1061,7 +1061,7 @@ function createNudgeEngine(config)
         state.lastNudgeExpectedReading = carbs !== null ? reading + (carbs / p.carbsPerMmol) : null;
     }
 
-    return { evaluate: evaluate, state: state, profile: p };
+    return { evaluate: evaluate, state: state, profile: p, _test: { getInsulinActivity: getInsulinActivity } };
 }
 
 module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS, BREAKFAST_SUGGESTIONS, LOW_CARB_BREAKFAST_SUGGESTIONS };

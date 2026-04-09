@@ -1,0 +1,12 @@
+{
+    "name": "Data gap (30-min missing reading)",
+    "description": "Normal 10-min readings then a 30-min gap (14:40 to 15:10) simulating a missed CGM reading. The engine assumes 10-min spacing, so the rate calculation is inflated 3x for the short-term window. Documents a known limitation where gaps can cause false urgent classification.",
+    "readings": [
+        { "time": "2026-04-10 14:00", "reading": 8.0 },
+        { "time": "2026-04-10 14:10", "reading": 7.8 },
+        { "time": "2026-04-10 14:20", "reading": 7.6 },
+        { "time": "2026-04-10 14:30", "reading": 7.3 },
+        { "time": "2026-04-10 14:40", "reading": 7.0 },
+        { "time": "2026-04-10 15:10", "reading": 6.2 }
+    ]
+}

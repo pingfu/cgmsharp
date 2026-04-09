@@ -1,0 +1,15 @@
+{
+    "name": "Bedtime BG 11.0 above target",
+    "description": "BG stable at 11.0 by 21:10 BST (20:10 UTC). Above targetHigh at bedtime but overnight insulin drop will still pull her low — tests conservative starchy suggestion with explanation. Evening injection 19:00 local.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 19:00", "reading": 11.3 },
+        { "time": "2026-04-10 19:10", "reading": 11.2 },
+        { "time": "2026-04-10 19:20", "reading": 11.1 },
+        { "time": "2026-04-10 19:30", "reading": 11.0 },
+        { "time": "2026-04-10 19:40", "reading": 11.0 },
+        { "time": "2026-04-10 19:50", "reading": 11.1 },
+        { "time": "2026-04-10 20:00", "reading": 11.0 },
+        { "time": "2026-04-10 20:10", "reading": 11.0 }
+    ]
+}

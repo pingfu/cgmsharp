@@ -708,3 +708,588 @@ test(`pre-dinner low: nudges for daytime low, no bedtime nudge`, async () =>
     assert.equal(bedtimeNudges.length, 0, `no bedtime nudges outside 21:00-22:00 window`);
     assert.ok(nudges.length >= 1, `should nudge for pre-dinner low`);
 });
+
+// ===========================================================================
+// ORPHANED SCENARIO REGRESSION TESTS
+//
+// these scenarios existed as JSON files with no automated assertions — they
+// were only exercised by the visual inspector. each now has at least one
+// clinically-grounded assertion to catch regressions.
+// ===========================================================================
+
+// helper: check if a reading time falls within quiet hours (midnight-6am local)
+function isInQuietHours(time, tzOffset)
+{
+    var local = moment(time).add(tzOffset || 0, `minutes`);
+    var hour = local.hour();
+    return hour >= 0 && hour < 6;
+}
+
+test(`post-injection hypo risk: silent during meal window`, async () =>
+{
+    // morning injection 07:30, meal window until 09:30 (120 min, inclusive via <=).
+    // BG drops from 9.0 to 5.0 during this window. the engine must stay silent —
+    // a meal is being digested and the drop may be the normal post-meal insulin
+    // effect on an undersized breakfast. first eligible reading is 09:40 (130 min).
+    var nudges = await runScenario(`post-injection-hypo-risk.json`);
+    var duringMealWindow = nudges.filter(n => n.time <= `2026-04-07 09:30`);
+    assert.equal(duringMealWindow.length, 0, `zero nudges during meal window (07:30-09:30)`);
+});
+
+test(`post-injection hypo risk: nudges after meal window expires`, async () =>
+{
+    // at 09:40 (130 min post-injection), meal window has expired. BG is 4.7
+    // and falling — a genuine hypo developing from an undersized breakfast.
+    var nudges = await runScenario(`post-injection-hypo-risk.json`);
+    assert.ok(nudges.length >= 1, `should nudge once meal window expires`);
+    assert.ok(nudges[0].time >= `2026-04-07 09:40`, `first nudge should be at or after 09:40`);
+});
+
+test(`post-injection hypo risk: emergency foods below hypo floor`, async () =>
+{
+    // BG at 4.7 and 4.5 is below hypoFloor (5.0) — emergency territory.
+    // slow carbs won't absorb fast enough at these levels.
+    var nudges = await runScenario(`post-injection-hypo-risk.json`);
+    var belowFloor = nudges.filter(n => n.reading <= 5.0);
+    belowFloor.forEach(function (n)
+    {
+        assert.ok(isEmergencyFood(n.message), `below hypo floor at ${n.reading} must use emergency foods, got: ${n.message}`);
+    });
+});
+
+test(`late morning accelerating drop: no nudges while descending from high`, async () =>
+{
+    // BG descends from 12.0 (above targetHigh) through target zone. while the
+    // readings buffer still contains above-target values, in-target nudges are
+    // suppressed — this is insulin working, not a new low to correct.
+    var nudges = await runScenario(`late-morning-accelerating-drop.json`);
+    var aboveTarget = nudges.filter(n => n.reading > 7.0);
+    assert.equal(aboveTarget.length, 0, `no nudges while descending from high`);
+});
+
+test(`late morning accelerating drop: nudges at low readings`, async () =>
+{
+    // once BG drops below target and the buffer no longer contains above-target
+    // readings, the engine should recognise a genuine low and act.
+    var nudges = await runScenario(`late-morning-accelerating-drop.json`);
+    assert.ok(nudges.length >= 1, `should nudge when BG reaches low territory`);
+});
+
+test(`post-meal descent: zero reactive nudges during normal dinner curve`, async () =>
+{
+    // normal post-dinner curve: BG rises from 6.5 to 10.5 then settles to 8.0.
+    // the meal window (19:00-21:00) covers the rise and descent. no reactive
+    // nudges should fire — this is food being digested normally.
+    var nudges = await runScenario(`post-meal-descent-no-intervention.json`);
+    var reactiveNudges = nudges.filter(n =>
+        n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveNudges.length, 0, `zero reactive nudges during normal dinner curve`);
+});
+
+test(`post-meal descent: at most one bedtime nudge`, async () =>
+{
+    // the scenario tail enters the bedtime window (21:00-22:00 local).
+    // a single bedtime nudge is acceptable but no more.
+    var nudges = await runScenario(`post-meal-descent-no-intervention.json`);
+    var bedtimeNudges = nudges.filter(n =>
+        n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
+    );
+    assert.ok(bedtimeNudges.length <= 1, `at most one bedtime nudge, got ${bedtimeNudges.length}`);
+});
+
+test(`late morning rollercoaster: no over-nudging despite oscillation`, async () =>
+{
+    // BG oscillates 10.0 → 7.5 → 9.5 → 6.8 → 8.0 with rapid direction changes.
+    // isDescendingFromHigh and absorption suppression should prevent the engine
+    // from firing on every swing.
+    var nudges = await runScenario(`late-morning-rollercoaster.json`);
+    assert.ok(nudges.length <= 3, `rollercoaster should not over-nudge, got ${nudges.length}`);
+});
+
+test(`gradual overnight rise: zero nudges for above-target rising BG through quiet hours`, async () =>
+{
+    // BG rises from 8.0 at 22:00 to 17.0 by 06:00. starts after bedtime window,
+    // enters quiet hours at midnight, then dawn window. rising above-target
+    // throughout — nothing for the nudge engine to act on.
+    var nudges = await runScenario(`gradual-overnight-rise.json`);
+    assert.equal(nudges.length, 0, `no nudges for rising above-target BG through overnight`);
+});
+
+test(`2026-04-06 evening: nudge count sanity for calibration session`, async () =>
+{
+    // chaotic overnight with multiple rescue jelly babies, 3.9 hypo, swings
+    // 3.9-11.1, morning spike. bounded number of nudges expected.
+    var nudges = await runScenario(`2026-04-06-evening.json`);
+    assert.ok(nudges.length >= 1 && nudges.length <= 8, `expected 1-8 nudges, got ${nudges.length}`);
+});
+
+test(`2026-04-06 evening: zero nudges during quiet hours`, async () =>
+{
+    var nudges = await runScenario(`2026-04-06-evening.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+});
+
+// ===========================================================================
+// HISTORICAL FULL-DAY REGRESSION TESTS
+//
+// real CGM data from 2025. each scenario spans ~24 hours. three standard
+// assertions: (a) zero nudges during quiet hours, (b) no reactive nudges
+// at readings above targetHigh, (c) reasonable total nudge count.
+// ===========================================================================
+
+test(`2025-04-20: regression — high day with overnight low`, async () =>
+{
+    var nudges = await runScenario(`2025-04-20-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-05-10: regression — evening drop to 5.9`, async () =>
+{
+    var nudges = await runScenario(`2025-05-10-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-05-16: regression — afternoon hypo to 3.2`, async () =>
+{
+    // prolonged below 4.0 for ~60 min. must catch the decline and use
+    // emergency foods as BG drops through hypo floor.
+    var nudges = await runScenario(`2025-05-16-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length >= 1, `must produce at least one nudge for 3.2 hypo`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-06-25: regression — overnight drop to 5.3 and late morning hypo`, async () =>
+{
+    var nudges = await runScenario(`2025-06-25-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-07-22: regression — volatile day with 2.9 hypo`, async () =>
+{
+    // afternoon drop to 6.7 should produce at least one nudge.
+    var nudges = await runScenario(`2025-07-22-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length >= 1, `volatile day with hypo should produce at least one nudge`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-07-26: regression — two daytime hypos`, async () =>
+{
+    // evening descent to 3.3 hypo, late morning drop to 4.1.
+    var nudges = await runScenario(`2025-07-26-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length >= 1, `day with two hypos should produce at least one nudge`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-08-12: regression — prolonged below-target with sensor artefacts`, async () =>
+{
+    // decline to 5.5, sensor flat 4.9 from 04:00-07:30 (compression low).
+    var nudges = await runScenario(`2025-08-12-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+test(`2025-09-15: regression — overnight drop to 2.8 hypo`, async () =>
+{
+    // afternoon decline to 5.6 should trigger nudges before quiet hours.
+    var nudges = await runScenario(`2025-09-15-full-day.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
+    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    var reactiveAboveTarget = nudges.filter(n =>
+        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
+});
+
+// ===========================================================================
+// BEDTIME CARB QUANTITIES
+//
+// clinical basis: the intermediate insulin component peaks 4-8 hours after
+// the evening injection (19:00), pulling BG down relentlessly overnight.
+// the bedtime nudge must recommend enough slow-release carbs to sustain BG
+// through this drop. the overnight drop estimate integrates the insulin
+// activity curve over 8 hours — at ~130 min post-injection (bedtime window
+// entry), this yields a substantial expected drop (~12-13 mmol/L).
+//
+// too few carbs = overnight hypo while asleep (dangerous).
+// too many carbs = morning high (suboptimal but not immediately dangerous).
+// wrong food type = wrong absorption rate for the overnight insulin profile.
+// ===========================================================================
+
+test(`bedtime: every starchy carb recommendation includes a gram amount`, async () =>
+{
+    // clinical basis: "have something starchy" without a quantity is not
+    // actionable. the user needs to know whether to eat 10g or 30g —
+    // the difference is a single oatcake vs two slices of toast. without
+    // a number, she'll guess, and guessing wrong means either overnight
+    // hypo (too little) or morning high (too much).
+    //
+    // this test runs all bedtime scenarios and asserts that any message
+    // mentioning starchy food also contains a "\d+g" gram amount.
+    var bedtimeScenarios = [
+        `bedtime-below-target-falling.json`,
+        `bedtime-bg-5.8-falling.json`,
+        `bedtime-bg-8-stable.json`,
+        `bedtime-bg-11-above-target.json`
+    ];
+
+    for (var i = 0; i < bedtimeScenarios.length; i++)
+    {
+        var nudges = await runScenario(bedtimeScenarios[i]);
+        var bedtime = nudges.find(n =>
+            n.title === `Bedtime top-up` || n.title === `Low at bedtime`
+        );
+        if (bedtime && /starchy|oatcake|toast|porridge/.test(bedtime.message))
+        {
+            assert.ok(/\d+g/.test(bedtime.message),
+                `bedtime starchy recommendation must include gram amount (${bedtimeScenarios[i]}): ${bedtime.message}`);
+        }
+    }
+});
+
+test(`bedtime at 5.8 falling: emergency sugar plus starchy carbs`, async () =>
+{
+    // BG 5.8, below targetLow (6.0), slowly falling at bedtime window entry.
+    // the engine should combine fast sugar to stop the immediate drop with
+    // starchy carbs for sustained overnight coverage.
+    var nudges = await runScenario(`bedtime-bg-5.8-falling.json`);
+    var bedtime = nudges.find(n => n.title === `Bedtime top-up`);
+    assert.ok(bedtime, `expected bedtime nudge`);
+    assert.ok(isEmergencyFood(bedtime.message), `below-target falling needs emergency sugar first`);
+    assert.ok(isBedtimeFood(bedtime.message), `should also recommend starchy food for overnight`);
+});
+
+test(`bedtime at 8.0 stable: substantial starchy carbs for overnight`, async () =>
+{
+    // BG 8.0, in-target, stable. the overnight insulin drop is ~12-13 mmol/L.
+    // without food, BG would crash to dangerous levels by 3am. the bedtime
+    // nudge should recommend substantial starchy carbs (20-30g).
+    var nudges = await runScenario(`bedtime-bg-8-stable.json`);
+    var bedtime = nudges.find(n => n.title === `Bedtime top-up`);
+    assert.ok(bedtime, `expected bedtime nudge`);
+    var carbs = extractCarbs(bedtime.message);
+    assert.ok(carbs >= 20 && carbs <= 30, `BG 8.0 with ~12 mmol/L overnight drop should suggest 20-30g, got ${carbs}g`);
+    assert.ok(isBedtimeFood(bedtime.message), `should use starchy bedtime food`);
+});
+
+test(`bedtime at 11.0 above target: conservative starchy with insulin explanation`, async () =>
+{
+    // BG 11.0, above targetHigh. looks comfortable now but the overnight
+    // insulin drop will still pull her dangerously low. the engine uses a
+    // conservative cap (15g) and explains why food is needed despite being high.
+    var nudges = await runScenario(`bedtime-bg-11-above-target.json`);
+    var bedtime = nudges.find(n => n.title === `Bedtime top-up`);
+    assert.ok(bedtime, `expected bedtime nudge — above target but overnight drop will cause hypo`);
+    assert.ok(bedtime.message.includes(`insulin`), `should explain that insulin will bring BG down`);
+});
+
+test(`bedtime at 19.0: looking good, no food needed`, async () =>
+{
+    // BG 19.0, high enough that the overnight insulin drop still leaves BG
+    // above targetLow. no food needed — the engine sends a reassuring message.
+    var nudges = await runScenario(`bedtime-bg-19-looking-good.json`);
+    var lookingGood = nudges.find(n => n.title === `Looking good for bed`);
+    assert.ok(lookingGood, `expected "looking good" message when BG survives overnight drop`);
+    assert.ok(lookingGood.message.includes(`no snack needed`), `should explicitly say no snack needed`);
+    var carbs = extractCarbs(lookingGood.message);
+    assert.equal(carbs, null, `looking good message should not contain carb amounts`);
+});
+
+// ===========================================================================
+// INSULIN CURVE UNIT TESTS
+//
+// the biphasic insulin model (30% rapid + 70% intermediate) drives every
+// carb adjustment and the bedtime overnight drop estimate. these tests
+// assert that the piecewise linear curve produces correct activity values
+// at key timepoints. a miscalibrated curve silently distorts every
+// recommendation the engine makes.
+// ===========================================================================
+
+test(`insulin curve: zero activity at injection time (0 min)`, async () =>
+{
+    // both rapid (onset 15 min) and intermediate (onset 90 min) have not
+    // started yet. total activity must be exactly zero.
+    var engine = createNudgeEngine(Object.assign({}, profile));
+    var activity = engine._test.getInsulinActivity(0);
+    assert.equal(activity, 0, `no insulin activity at injection time`);
+});
+
+test(`insulin curve: rapid peak at 75 min (~0.30)`, async () =>
+{
+    // rapid component: peakStart 60, peakEnd 90. at 75 min, rapid is at
+    // peak (1.0). intermediate: onset 90, not started yet (0).
+    // combined: 1.0 × 0.30 + 0 × 0.70 = 0.30.
+    var engine = createNudgeEngine(Object.assign({}, profile));
+    var activity = engine._test.getInsulinActivity(75);
+    assert.ok(Math.abs(activity - 0.30) < 0.01, `rapid peak at 75 min should be ~0.30, got ${activity.toFixed(3)}`);
+});
+
+test(`insulin curve: intermediate peak at 360 min (~0.70)`, async () =>
+{
+    // rapid: tail at 240 min, so at 360 it's 0. intermediate: peakStart 240,
+    // peakEnd 480, so at 360 it's at peak (1.0).
+    // combined: 0 × 0.30 + 1.0 × 0.70 = 0.70.
+    var engine = createNudgeEngine(Object.assign({}, profile));
+    var activity = engine._test.getInsulinActivity(360);
+    assert.ok(Math.abs(activity - 0.70) < 0.01, `intermediate peak at 360 min should be ~0.70, got ${activity.toFixed(3)}`);
+});
+
+test(`insulin curve: fully worn off at 960 min (16h)`, async () =>
+{
+    // rapid: tail at 240, long gone. intermediate: tail at 960 — the exact
+    // boundary where activity reaches 0. both components are zero.
+    var engine = createNudgeEngine(Object.assign({}, profile));
+    var activity = engine._test.getInsulinActivity(960);
+    assert.equal(activity, 0, `insulin fully worn off at 960 min`);
+});
+
+test(`insulin curve: meaningfully active at 120 min (meal window boundary)`, async () =>
+{
+    // at the meal window boundary (120 min), insulin must be "meaningfully
+    // active" (above 0.25 threshold). this validates that the meal window
+    // duration aligns with the insulin activity profile — suppressing carb
+    // nudges only while insulin is genuinely working on the meal.
+    var engine = createNudgeEngine(Object.assign({}, profile));
+    var activity = engine._test.getInsulinActivity(120);
+    assert.ok(activity > 0.25, `insulin should be meaningfully active at meal window boundary, got ${activity.toFixed(3)}`);
+});
+
+// ===========================================================================
+// isDescendingFromHigh BOUNDARY
+//
+// clinical basis: when BG was recently above targetHigh and is now falling
+// through the target range, the descent is insulin working — not a new low.
+// nudging during this descent would counteract the insulin. the gate checks
+// if any reading in the 6-reading buffer was above targetHigh.
+//
+// the risk: if BG was only marginally above target (10.5) 50 min ago, the
+// gate suppresses in-target nudges even as BG drops towards hypo. the
+// below-target branch bypasses this gate as a safety net.
+// ===========================================================================
+
+test(`descending from high: no in-target nudge while 10.5 is in buffer`, async () =>
+{
+    // BG drops from 10.5 to 6.5 over 50 min. at 6.5 (in-target, falling),
+    // the buffer still contains 10.5 (above targetHigh). the gate suppresses.
+    // at 6.0 the buffer has shifted out 10.5 (buffer is [9.8..6.0]) so the
+    // gate clears and the engine correctly fires an urgent nudge at 6.0.
+    // no nudges should fire at readings ABOVE 6.0 (where the gate is active).
+    var nudges = await runScenario(`descending-from-high-boundary.json`);
+    var suppressedRange = nudges.filter(n => n.reading > 6.0);
+    assert.equal(suppressedRange.length, 0, `in-target nudges suppressed while 10.5 is in buffer`);
+});
+
+test(`descending from high: below-target nudge fires despite recent high`, async () =>
+{
+    // once BG drops below targetLow, the below-target branch fires regardless
+    // of isDescendingFromHigh — this is the safety net. at 6.0/5.5, the
+    // engine must act even if the buffer recently contained 10.5.
+    var nudges = await runScenario(`descending-from-high-boundary.json`);
+    assert.ok(nudges.length >= 1, `must nudge when BG drops below target despite descending from high`);
+    assert.ok(nudges[0].reading <= 6.0, `first nudge should fire at or below targetLow, fired at ${nudges[0].reading}`);
+});
+
+// ===========================================================================
+// DATA GAP (known limitation)
+//
+// the engine assumes 10-min spacing between readings. a missed reading
+// (30-min gap) inflates the calculated rate by up to 3x, potentially
+// causing false urgent classification. this is documented, not fixed —
+// overcaution (nudging too early) is safer than undercaution for hypo
+// prevention.
+// ===========================================================================
+
+test(`data gap: inflated rate does not cause excessive nudging`, async () =>
+{
+    // a 30-min gap between readings (14:40 to 15:10) makes the engine
+    // calculate a steeper decline than reality. the engine may classify
+    // a moderate decline as urgent — this is acceptable behaviour.
+    var nudges = await runScenario(`data-gap-30min.json`);
+    assert.ok(nudges.length <= 2, `should not over-nudge despite inflated rate, got ${nudges.length}`);
+});
+
+// ===========================================================================
+// GMT (WINTER) QUIET HOURS
+//
+// all dated scenarios use timezoneOffsetMinutes: 60 (BST). this test
+// verifies that quiet hours work correctly with offset 0 (GMT, winter).
+// ===========================================================================
+
+test(`overnight quiet GMT: nudges before midnight, silent after`, async () =>
+{
+    // BG drops from 7.0 to 4.0 crossing midnight in GMT (offset 0).
+    // quiet hours (midnight-6am local) should engage at exactly 00:00.
+    var nudges = await runScenario(`overnight-quiet-gmt.json`);
+    var beforeMidnight = nudges.filter(n => n.time < `2025-12-16 00:00`);
+    var afterMidnight = nudges.filter(n => n.time >= `2025-12-16 00:00`);
+    assert.ok(beforeMidnight.length >= 1, `should nudge before midnight`);
+    assert.equal(afterMidnight.length, 0, `zero nudges after midnight (quiet hours)`);
+});
+
+// ===========================================================================
+// 2026-04-09 EVENING CONTINUATION SCENARIOS
+//
+// real CGM data from 19:00-21:00 UTC (20:00-22:00 BST) on 2026-04-09,
+// followed by four clinically distinct branches exploring what happens next.
+//
+// common preamble: dinner spike to 10.9, rapid descent through 7.3 to 6.8.
+// the engine fires a bedtime nudge (~20:10 UTC, BG 9.6) and a reactive
+// nudge (~20:50 UTC, BG 7.3, "worth a small snack"). the four branches
+// then test: did she eat? was it enough? what happens overnight?
+//
+// these scenarios test the engine's ability to re-engage after its initial
+// advice, handle recovery correctly, and respect quiet hours when the
+// overnight crash is beyond the nudge channel's scope.
+// ===========================================================================
+
+test(`2026-04-09 evening continued crash: escalates to emergency when snack not eaten`, async () =>
+{
+    // BG continues falling after the 20:50 nudge was ignored: 6.8 → 3.8.
+    // the absorption window from the reactive nudge (~35 min) expires around
+    // 21:25 UTC. after that, the engine should re-engage with emergency foods
+    // as BG drops through hypoFloor (5.0).
+    var nudges = await runScenario(`2026-04-09-evening-continued-crash.json`);
+    var postCrash = nudges.filter(n => n.time >= `2026-04-09 21:10`);
+    assert.ok(postCrash.length >= 1, `must nudge during continued crash after absorption window`);
+    var belowFloor = postCrash.filter(n => n.reading <= 5.0);
+    belowFloor.forEach(function (n)
+    {
+        assert.ok(isEmergencyFood(n.message), `below hypo floor at ${n.reading} must use emergency foods, got: ${n.message}`);
+    });
+});
+
+test(`2026-04-09 evening continued crash: bedtime nudge fires during real data`, async () =>
+{
+    // the bedtime nudge should fire during the 20:00-21:00 UTC window
+    // (21:00-22:00 BST) from the real data preamble, before the crash.
+    var nudges = await runScenario(`2026-04-09-evening-continued-crash.json`);
+    var bedtime = nudges.filter(n =>
+        n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
+    );
+    assert.ok(bedtime.length >= 1, `bedtime nudge should fire during real data portion`);
+});
+
+test(`2026-04-09 evening recovery: zero nudges during rising BG after snack`, async () =>
+{
+    // she ate the snack. BG recovers from 6.8 to 9.2 then settles to 8.0.
+    // the engine should stay completely silent during the recovery — rising
+    // in-target BG means the advice worked. nudging during recovery would
+    // cause unnecessary concern.
+    var nudges = await runScenario(`2026-04-09-evening-recovery.json`);
+    var recoveryNudges = nudges.filter(n => n.time >= `2026-04-09 21:10`);
+    assert.equal(recoveryNudges.length, 0, `zero nudges during successful recovery`);
+});
+
+test(`2026-04-09 evening recovery: total nudge count bounded`, async () =>
+{
+    // full evening including real data preamble: bedtime nudge + 1-2 reactive
+    // nudges during the drop. no more during recovery.
+    var nudges = await runScenario(`2026-04-09-evening-recovery.json`);
+    assert.ok(nudges.length >= 1 && nudges.length <= 4, `expected 1-4 nudges for the evening, got ${nudges.length}`);
+});
+
+test(`2026-04-09 evening overnight crash: zero nudges during quiet hours despite hypo`, async () =>
+{
+    // BG recovers to 9.0 after the snack, then crashes from 22:00 UTC onwards
+    // as the intermediate insulin peaks. by 23:00 UTC (midnight BST) BG is 5.5
+    // and falling to 3.5 — but quiet hours have begun. the nudge channel must
+    // stay silent. the alert channel handles overnight emergencies separately.
+    var nudges = await runScenario(`2026-04-09-evening-recovery-then-overnight-crash.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
+    assert.equal(quietNudges.length, 0, `zero nudges during quiet hours despite overnight crash to 3.5`);
+});
+
+test(`2026-04-09 evening overnight crash: re-nudges during steep pre-quiet decline`, async () =>
+{
+    // after recovery to 9.0 at 21:30, BG crashes steeply (9.0 → 4.5 in 40 min)
+    // as intermediate insulin overwhelms the insufficient snack. the steep
+    // descent pushes the carb estimate above the 3g suppression threshold from
+    // the earlier nudge (7g → 11g+ with "dropping fast" bonus), forcing the
+    // engine to re-engage before quiet hours (23:00 UTC = midnight BST).
+    var nudges = await runScenario(`2026-04-09-evening-recovery-then-overnight-crash.json`);
+    var preQuietLow = nudges.filter(n =>
+        n.time >= `2026-04-09 21:40` && n.time < `2026-04-09 23:00` && n.reading < 6.0
+    );
+    assert.ok(preQuietLow.length >= 1, `steep crash should break suppression threshold before quiet hours`);
+});
+
+test(`2026-04-09 evening double dip: re-engages on second drop`, async () =>
+{
+    // partial recovery from 6.8 to 8.0, then second drop as insulin overwhelms
+    // the undersized snack: 8.0 → 5.0. the recovery above the expected reading
+    // resets the suppression — the second dip is a new situation.
+    var nudges = await runScenario(`2026-04-09-evening-double-dip.json`);
+    var secondDip = nudges.filter(n => n.time >= `2026-04-09 21:30` && n.reading < 7.0);
+    assert.ok(secondDip.length >= 1, `must nudge on the second dip after recovery`);
+});
+
+test(`2026-04-09 evening double dip: emergency foods on deep second dip`, async () =>
+{
+    // at 5.0 (hypoFloor) with active insulin and falling, the engine must
+    // recommend fast-acting sugar. slow carbs failed on the first attempt.
+    var nudges = await runScenario(`2026-04-09-evening-double-dip.json`);
+    var deepLow = nudges.filter(n => n.time >= `2026-04-09 21:30` && n.reading <= 5.0);
+    deepLow.forEach(function (n)
+    {
+        assert.ok(isEmergencyFood(n.message), `deep second dip at ${n.reading} must use emergency foods, got: ${n.message}`);
+    });
+});
+
+// ===========================================================================
+// NOTE ON Math.random() IN TESTS
+//
+// getSuggestionFromTable() uses Math.random() to select food ideas within
+// a carb tier. tests assert on food CATEGORIES via regex (isEmergencyFood,
+// isSlowCarbs, isBedtimeFood), not specific food items. the gram amount is
+// deterministic (nearest tier to the calculated carbs). this means:
+//   - gram assertions are fully deterministic
+//   - food type assertions are deterministic (category regexes match all
+//     ideas within each table — audited against EMERGENCY_SUGGESTIONS,
+//     CARB_SUGGESTIONS, BEDTIME_SUGGESTIONS, BREAKFAST_SUGGESTIONS)
+//   - specific food item text is non-deterministic but never asserted
+// if new food items are added to the suggestion tables, the category
+// regexes (isEmergencyFood etc.) must be reviewed for completeness.
+// ===========================================================================

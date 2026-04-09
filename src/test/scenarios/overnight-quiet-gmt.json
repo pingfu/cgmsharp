@@ -1,0 +1,17 @@
+{
+    "name": "Overnight quiet (GMT, no offset)",
+    "description": "Winter time (GMT) with timezoneOffsetMinutes 0. BG drops from 7.0 to 4.0 crossing midnight. Tests that quiet hours (midnight-6am local) work correctly without BST offset. Nudges should fire before midnight, then silence at midnight.",
+    "timezoneOffsetMinutes": 0,
+    "readings": [
+        { "time": "2025-12-15 23:00", "reading": 7.0 },
+        { "time": "2025-12-15 23:10", "reading": 6.8 },
+        { "time": "2025-12-15 23:20", "reading": 6.5 },
+        { "time": "2025-12-15 23:30", "reading": 6.2 },
+        { "time": "2025-12-15 23:40", "reading": 5.8 },
+        { "time": "2025-12-15 23:50", "reading": 5.5 },
+        { "time": "2025-12-16 00:00", "reading": 5.2 },
+        { "time": "2025-12-16 00:10", "reading": 4.8 },
+        { "time": "2025-12-16 00:20", "reading": 4.5 },
+        { "time": "2025-12-16 00:30", "reading": 4.0 }
+    ]
+}

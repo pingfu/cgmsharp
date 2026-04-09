@@ -1,0 +1,14 @@
+{
+    "name": "Descending from high boundary",
+    "description": "BG starts just above targetHigh (10.5) and drops steadily to 5.5 over 80 minutes. Tests the isDescendingFromHigh gate: in-target nudges should be suppressed while the 10.5 reading remains in the 6-reading buffer, but below-target readings should still fire because the below-target branch does not check this gate.",
+    "readings": [
+        { "time": "2026-04-10 14:00", "reading": 10.5 },
+        { "time": "2026-04-10 14:10", "reading": 9.8 },
+        { "time": "2026-04-10 14:20", "reading": 9.0 },
+        { "time": "2026-04-10 14:30", "reading": 8.2 },
+        { "time": "2026-04-10 14:40", "reading": 7.4 },
+        { "time": "2026-04-10 14:50", "reading": 6.5 },
+        { "time": "2026-04-10 15:00", "reading": 6.0 },
+        { "time": "2026-04-10 15:10", "reading": 5.5 }
+    ]
+}
