@@ -127,7 +127,7 @@ const moment = require(`moment`);
 // and observed carb sensitivity (2026-04-06 evening session)
 const DEFAULTS = {
     // target range
-    targetLow: 7.0, // lower bound of "top half of green" (mmol/L). p25 of historical data is 7.4.
+    targetLow: 6.0, // lower bound of comfortable range (mmol/L). 6.0 is safe — gives 4 mmol/L of quiet zone (6-10) and reduces unnecessary nudges in the 6-7 range.
     hypoFloor: 5.0, // below this, always use emergency foods regardless of trend. clinical hypo territory for type 1.
     targetHigh: 10.0, // upper bound of target range. Median is 9.4.
     aboveThreshold: 11.0, // only nudge about high sugar above this. 43% of readings above 10.0 — nudging there would be constant noise.

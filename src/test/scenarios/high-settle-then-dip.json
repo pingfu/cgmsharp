@@ -1,6 +1,6 @@
 {
     "name": "High settle then dip",
-    "description": "BG comes down from a high (13+), settles in the green zone (7-10) for ~3 hours, then dips below target. Tests that suppression resets after a sustained stable period — expect exactly two nudges: one for each dip.",
+    "description": "BG comes down from a high (13+), settles in the green zone (6-10) for ~3 hours, then dips below target. Tests that suppression resets after a sustained stable period — expect exactly two nudges: one for each dip.",
     "readings": [
         { "time": "2026-04-10 08:00", "reading": 13.5 },
         { "time": "2026-04-10 08:10", "reading": 12.8 },
@@ -12,11 +12,11 @@
         { "time": "2026-04-10 09:10", "reading": 9.1 },
         { "time": "2026-04-10 09:20", "reading": 8.5 },
         { "time": "2026-04-10 09:30", "reading": 7.8 },
-        { "time": "2026-04-10 09:40", "reading": 7.2 },
-        { "time": "2026-04-10 09:50", "reading": 6.8 },
-        { "time": "2026-04-10 10:00", "reading": 6.4 },
-        { "time": "2026-04-10 10:10", "reading": 6.6 },
-        { "time": "2026-04-10 10:20", "reading": 7.2 },
+        { "time": "2026-04-10 09:40", "reading": 6.8 },
+        { "time": "2026-04-10 09:50", "reading": 5.8 },
+        { "time": "2026-04-10 10:00", "reading": 5.4 },
+        { "time": "2026-04-10 10:10", "reading": 5.8 },
+        { "time": "2026-04-10 10:20", "reading": 6.6 },
         { "time": "2026-04-10 10:30", "reading": 7.8 },
         { "time": "2026-04-10 10:40", "reading": 8.2 },
         { "time": "2026-04-10 10:50", "reading": 8.5 },
@@ -35,9 +35,9 @@
         { "time": "2026-04-10 13:00", "reading": 8.1 },
         { "time": "2026-04-10 13:10", "reading": 8.0 },
         { "time": "2026-04-10 13:20", "reading": 7.8 },
-        { "time": "2026-04-10 13:30", "reading": 7.5 },
-        { "time": "2026-04-10 13:40", "reading": 7.1 },
-        { "time": "2026-04-10 13:50", "reading": 6.7 },
-        { "time": "2026-04-10 14:00", "reading": 6.3 }
+        { "time": "2026-04-10 13:30", "reading": 7.1 },
+        { "time": "2026-04-10 13:40", "reading": 6.3 },
+        { "time": "2026-04-10 13:50", "reading": 5.6 },
+        { "time": "2026-04-10 14:00", "reading": 5.3 }
     ]
 }
