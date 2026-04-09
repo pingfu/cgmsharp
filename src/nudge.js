@@ -333,6 +333,18 @@ const BEDTIME_SUGGESTIONS = [
         `4 tablespoons of porridge oats made with semi-skimmed milk and 5 almonds`,
         `2 oatcakes with cheddar and half a slice of wholemeal toast with butter`,
         `half a cheese sandwich on wholemeal bread`
+    ]},
+    { grams: 25, ideas: [
+        `1 slice of wholemeal toast with cheddar and a tablespoon of peanut butter`,
+        `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`,
+        `4 tablespoons of porridge oats made with semi-skimmed milk and a tablespoon of peanut butter`,
+        `1 wholemeal pitta with 2 tablespoons of hummus and a slice of cheddar`
+    ]},
+    { grams: 30, ideas: [
+        `1 slice of wholemeal toast with cheddar and 2 oatcakes with peanut butter`,
+        `4 tablespoons of porridge oats made with semi-skimmed milk and 1 slice of wholemeal toast with butter`,
+        `2 slices of wholemeal toast with cheddar`,
+        `1 wholemeal pitta with cheddar and a tablespoon of peanut butter`
     ]}
 ];
 
@@ -839,7 +851,7 @@ function createNudgeEngine(config)
         {
             var carbs = Math.round(gap * p.carbsPerMmol);
             carbs = Math.max(carbs, 5);
-            carbs = Math.min(carbs, 20);
+            carbs = Math.min(carbs, 30);
 
             if (reading <= p.hypoFloor)
             {
@@ -862,13 +874,13 @@ function createNudgeEngine(config)
                 // below target but stable — starchy has time to absorb (bedtime window is 2h before insulin peak)
                 var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} — a bit low for bed (11pm). Have about ${food.grams}g of something starchy like ${food.suggestion}. Starchy beats sugary at bedtime — it lasts longer while your insulin works overnight.`;
+                message = `Your sugar is ${reading} — a bit low for bed (11pm). Have about ${food.grams}g of something starchy around half ten — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first — it helps the carbs absorb more slowly overnight.`;
             }
             else
             {
                 var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading towards bed (11pm). About ${food.grams}g of something starchy would help — ${food.suggestion}. Starchy over sugary at night — it keeps working longer while your insulin does.`;
+                message = `Your sugar is ${reading} heading towards bed (11pm). About ${food.grams}g of something starchy around half ten would help — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first — it slows everything down and keeps it working longer overnight.`;
             }
         }
 
