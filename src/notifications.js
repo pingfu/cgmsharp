@@ -36,7 +36,9 @@ function pushoverSend(title, message, priority)
 {
     return new Promise(function (resolve, reject)
     {
-        pusher.send({ title: title, message: message, priority: priority }, function (error)
+        var msg = { title: title, message: message, priority: priority };
+        if (priority === 2) { msg.retry = 30; msg.expire = 300; }
+        pusher.send(msg, function (error)
         {
             if (error) reject(error);
             else resolve();
@@ -63,10 +65,20 @@ async function SendAlert(title, message)
     await Promise.all(promises);
 }
 
-function SendCanary(title, message)
+async function SendCanary(title, message)
 {
     log(`pushing canary '${title}': '${message}'`);
-    return ntfySend(process.env.NTFY_TOPIC_CANARY, title, message, 2, `bird,green_circle`);
+
+    var promises = [];
+
+    promises.push(ntfySend(process.env.NTFY_TOPIC_CANARY, title, message, 2, `bird,green_circle`));
+
+    if (pusher)
+    {
+        promises.push(pushoverSend(title, message, -1));
+    }
+
+    await Promise.all(promises);
 }
 
 function SendNudge(title, message)

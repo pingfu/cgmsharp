@@ -46,6 +46,26 @@ Test scenarios live in `src/test/scenarios/` as JSON files. Each contains a name
 
 Dated scenarios (2025-*, 2026-*) use real InfluxDB data stored as UTC timestamps with `timezoneOffsetMinutes: 60` for BST conversion. Synthetic scenarios use local timestamps with no offset.
 
+## Manual Notification Tests
+
+Requires `src/.env` with the relevant credentials set. Build the test image first:
+
+```bash
+docker build --no-cache -t cgmsharp-test .
+```
+
+**ntfy** — `src/test-ntfy.js` sends a test notification to the first available `NTFY_TOPIC_*` in `.env` (`NTFY_TOPIC_ALERT`, `NTFY_TOPIC_CANARY`, or `NTFY_TOPIC_NUDGE`).
+
+```bash
+docker run --rm --env-file src/.env cgmsharp-test node test-ntfy.js
+```
+
+**Pushover** — `src/test-pushover.js` sends a test notification via Pushover. Requires `PUSHOVER_USER` and `PUSHOVER_TOKEN` in `.env`.
+
+```bash
+docker run --rm --env-file src/.env cgmsharp-test node test-pushover.js
+```
+
 ## CI/CD
 
 Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds and pushes a Docker image to `ghcr.io/pingfu/cgmsharp/cgmsharp:latest`.
@@ -67,10 +87,10 @@ Three scheduled loops:
 2. **Canary** (daily at 9 AM) - Sends a heartbeat notification to confirm the monitor is alive
 3. **Startup** - Runs one immediate Tick and sends a startup notification
 
-Three notification channels via ntfy.sh (each mapped to a separate ntfy topic):
-- **Alert** (priority 5/max) - Critical glucose alarms, API disruptions, fatal errors. Fans out to both ntfy and Pushover if configured.
-- **Canary** (priority 2/low) - Daily heartbeat, startup notification
-- **Nudge** (priority 3/default) - Proactive carb-guidance messages based on glucose trend, insulin activity, and time of day
+Three notification channels via ntfy.sh (each mapped to a separate ntfy topic). Alert and Canary also fan out to Pushover when configured:
+- **Alert** (ntfy priority 5/max, Pushover priority 2/emergency with retry=30s, expire=5min) - Critical glucose alarms, API disruptions, fatal errors
+- **Canary** (ntfy priority 2/low, Pushover priority -1/silent) - Daily heartbeat, startup notification
+- **Nudge** (ntfy priority 3/default, ntfy only) - Proactive carb-guidance messages based on glucose trend, insulin activity, and time of day
 
 Key behaviours:
 - `clientVersion` is passed to the LibreLinkUp client via `LIBRE_AGENT_VERSION` env var (not defaulted from the library)
@@ -111,7 +131,7 @@ Every message sent is actionable. The one exception is the bedtime nudge, which 
 | `LIBRE_USERNAME` | Yes | LibreLinkUp account |
 | `LIBRE_PASSWORD` | Yes | LibreLinkUp account |
 | `LIBRE_AGENT_VERSION` | Yes | API client version string |
-| `PUSHOVER_USER` | No | Pushover user ID (enables Pushover as joint alert channel) |
+| `PUSHOVER_USER` | No | Pushover user ID (enables Pushover for alert and canary channels) |
 | `PUSHOVER_TOKEN` | No | Pushover API token (both required to enable) |
 | `NTFY_TOPIC_ALERT` | No | ntfy topic for critical alarms |
 | `NTFY_TOPIC_CANARY` | Yes | ntfy topic for heartbeat/status |
