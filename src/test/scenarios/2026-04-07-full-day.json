@@ -1,8 +1,14 @@
 {
     "name": "2026-04-07 full day (real data)",
-    "description": "All times UTC. First full day with live monitoring and food diary. Food diary (BST): 07:30 injection, 07:52 porridge ~15g. 12:10 3 JBs + lentil soup ~25g total. 15:00 biscuit 10g. 15:51 small orange + yoghurt ~5g. 16:30 (corrected from 17:00) 10g snack. 18:00-19:00 glass of wine. 18:30 dinner ~20g. 21:00 4 crackers + cheese + PB ~20g. 22:30 biscuit 10g + another 10g. Overnight: 3 JB rescues (~15g each at ~01:50, ~03:00, ~05:00) + toast 20g at ~05:00. Observations: morning insulin consistently overshoots meals. Afternoon is constant grazing to stay above 6.0. Crackers at 21:00 give clean calibration: 20g from 5.7 peaked 10.7 = 4.0g/mmol.",
+    "description": "All times UTC. First full day with live monitoring and food diary. Overnight rescue carbs pushed BG to 10.1 (06:30 BST), then fell through 7.2 to 6.6 by 07:30 BST. Food diary (BST): 07:30 injection, 07:52 porridge ~15g. 12:10 3 JBs + lentil soup ~25g total. 15:00 biscuit 10g. 15:51 small orange + yoghurt ~5g. 16:30 (corrected from 17:00) 10g snack. 18:00-19:00 glass of wine. 18:30 dinner ~20g. 21:00 4 crackers + cheese + PB ~20g. 22:30 biscuit 10g + another 10g. Overnight: 3 JB rescues (~15g each at ~01:50, ~03:00, ~05:00) + toast 20g at ~05:00. Observations: morning insulin consistently overshoots meals. Afternoon is constant grazing to stay above 6.0. Crackers at 21:00 give clean calibration: 20g from 5.7 peaked 10.7 = 4.0g/mmol.",
     "timezoneOffsetMinutes": 60,
     "readings": [
+        { "time": "2026-04-07 05:30", "reading": 10.1 },
+        { "time": "2026-04-07 05:40", "reading": 8.4 },
+        { "time": "2026-04-07 05:50", "reading": 7.5 },
+        { "time": "2026-04-07 06:00", "reading": 7.2 },
+        { "time": "2026-04-07 06:10", "reading": 6.9 },
+        { "time": "2026-04-07 06:20", "reading": 6.8 },
         { "time": "2026-04-07 06:30", "reading": 6.6 },
         { "time": "2026-04-07 06:40", "reading": 6.4 },
         { "time": "2026-04-07 06:50", "reading": 6.4 },
