@@ -260,15 +260,25 @@ const CARB_SUGGESTIONS = [
 
 // emergency food suggestions — fast-acting carbs for rapid/accelerating drops.
 // these raise BG within 5-10 minutes. used when trend is urgent.
+// everything here must be fat-free and sugar-based — fat slows absorption.
+// no chocolate, biscuits, cereal bars, or milk.
 const EMERGENCY_SUGGESTIONS = [
     { grams: 5, ideas: [
-        `3 jelly babies`,
+        `1 jelly baby`,
+        `1 teaspoon of honey`,
+        `1 teaspoon of jam`,
+        `1 teaspoon of sugar dissolved in water`
     ]},
     { grams: 10, ideas: [
-        `5 jelly babies`,
+        `2 jelly babies`,
+        `2 teaspoons of honey`,
+        `1 tablespoon of jam`,
+        `2 teaspoons of sugar dissolved in water`
     ]},
     { grams: 15, ideas: [
-        `7 jelly babies`,
+        `3 jelly babies`,
+        `1 tablespoon of honey`,
+        `3 teaspoons of sugar dissolved in water`
     ]}
     // no 20g tier — rule of 15: treat with 15g fast-acting, wait 15 min, repeat if still low.
     // overtreating hypos causes rebound spikes. let the engine re-evaluate after absorption.
