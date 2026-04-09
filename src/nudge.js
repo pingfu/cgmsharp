@@ -246,7 +246,7 @@ const CARB_SUGGESTIONS = [
         `4 tablespoons of porridge oats made with water`,
         `about 10 grapes with 5 almonds`,
         `1 medium apple with a teaspoon of peanut butter`,
-        `2 oatcakes with 1 tablespoon of hummus`,
+        `2 oatcakes with a thin slice of cheddar`,
         `1 crumpet with butter`,
         `1 Weetabix with 100ml of semi-skimmed milk`,
         `2 tablespoons of trail mix`
@@ -301,6 +301,8 @@ const EMERGENCY_SUGGESTIONS = [
 // the goal is sustained glucose overnight, not a fast spike. starchy carbs with
 // protein or fat slow digestion and provide a trickle of glucose that matches
 // the intermediate insulin's sustained pull. no fruit, juice, or fast-acting sugar.
+// oatcake carb counts based on Nairn's Rough Oatcakes: 5.8g carb per oatcake.
+// 1 oatcake ≈ 6g, 2 oatcakes ≈ 12g, 3 oatcakes ≈ 18g.
 const BEDTIME_SUGGESTIONS = [
     { grams: 5, ideas: [
         `1 oatcake with a thin slice of cheddar`,
@@ -316,7 +318,7 @@ const BEDTIME_SUGGESTIONS = [
     ]},
     { grams: 10, ideas: [
         `1 slice of wholemeal toast with a thin slice of cheddar`,
-        `2 oatcakes with a teaspoon of peanut butter`,
+        `2 oatcakes with cheddar`,
         `3 tablespoons of porridge oats made with semi-skimmed milk`,
         `1 Weetabix with 100ml of semi-skimmed milk`,
         `1 slice of wholemeal toast with butter`
@@ -329,19 +331,19 @@ const BEDTIME_SUGGESTIONS = [
         `half a wholemeal pitta with 2 tablespoons of hummus and a slice of cheddar`
     ]},
     { grams: 20, ideas: [
+        `3 oatcakes with cheddar`,
         `1 slice of wholemeal toast with cheddar and a teaspoon of peanut butter`,
         `4 tablespoons of porridge oats made with semi-skimmed milk and 5 almonds`,
-        `2 oatcakes with cheddar and half a slice of wholemeal toast with butter`,
         `half a cheese sandwich on wholemeal bread`
     ]},
     { grams: 25, ideas: [
-        `1 slice of wholemeal toast with cheddar and a tablespoon of peanut butter`,
+        `3 oatcakes with cheddar and a teaspoon of peanut butter`,
         `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`,
         `4 tablespoons of porridge oats made with semi-skimmed milk and a tablespoon of peanut butter`,
         `1 wholemeal pitta with 2 tablespoons of hummus and a slice of cheddar`
     ]},
     { grams: 30, ideas: [
-        `1 slice of wholemeal toast with cheddar and 2 oatcakes with peanut butter`,
+        `3 oatcakes with cheddar and 1 slice of wholemeal toast with butter`,
         `4 tablespoons of porridge oats made with semi-skimmed milk and 1 slice of wholemeal toast with butter`,
         `2 slices of wholemeal toast with cheddar`,
         `1 wholemeal pitta with cheddar and a tablespoon of peanut butter`
