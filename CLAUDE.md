@@ -112,6 +112,11 @@ Key behaviours:
 
 Designed for a type 1 diabetic on twice-daily premixed (biphasic) insulin. The user produces no insulin of their own — the injected insulin is the only insulin in their system, which means no natural reduction when BG drops and acute overnight hypo risk.
 
+**Current patient regimen**:
+- **Morning**: 12 units at 07:30 BST (covers breakfast + lunch + dawn phenomenon)
+- **Evening**: 9 units at 19:00 BST (covers dinner + overnight)
+- **Total**: 21 units/day, premixed 30% rapid + 70% intermediate
+
 Extracted into its own module via `createNudgeEngine(config)` factory. App.js passes `SendNudge` as a callback so nudge.js has no dependency on the notification transport.
 
 The engine uses zone-based decision logic (below target / in target / quiet zone / above threshold) combined with:
