@@ -27,9 +27,14 @@ docker-compose -f docker-compose.prod.yml up
 
 There is no linter and no build step.
 
-## Tests
+## Tests and observations
 
-The nudge engine has two test tools. Both use the same scenario JSON files and share the same engine profile. No actual notifications are dispatched, no API calls are made.
+The project has a strict separation between two kinds of data:
+
+- **`src/test/scenarios/`** — synthetic crafted scenarios used by the automated test suite. These are named descriptively (not dated), and tests assert specific engine behaviors against them. Scenarios may be extracted from real observations but are renamed to indicate the clinical pattern, not the collection date.
+- **`src/observations/`** — raw CGM recordings from the real user. These are **never** used by automated tests. They exist for visual profiling of the engine against reality, clinical evaluation, and as source material from which synthetic scenarios can be extracted.
+
+No actual notifications are dispatched and no API calls are made by either tool.
 
 **Assertion tests** (`node:test`, built into Node 22 — zero dependencies):
 
@@ -37,23 +42,26 @@ The nudge engine has two test tools. Both use the same scenario JSON files and s
 # Build the test image (--no-cache ensures local source changes are picked up)
 docker build --no-cache -t cgmsharp-test .
 
-# Run assertion tests
+# Run assertion tests — reads src/test/scenarios/ only
 docker run --rm -e TZ=Europe/London cgmsharp-test node --test test/nudge.test.js
 ```
 
-**Scenario inspector** (visual debugging — prints every reading and marks which ones fired nudges):
+**Observation inspector** (`src/inspect-scenario.js`) — visual profiling tool. Default behavior runs all files in `src/observations/`. A file argument can also point at any scenario file (including the synthetic ones in `src/test/scenarios/`) for debugging engine behavior on crafted cases.
 
 ```bash
-# Inspect all scenarios
-docker run --rm -e TZ=Europe/London cgmsharp-test node test/inspect-scenario.js
+# Profile the engine against all real observations
+docker run --rm -e TZ=Europe/London cgmsharp-test node inspect-scenario.js
 
-# Inspect a single scenario
-docker run --rm -e TZ=Europe/London cgmsharp-test node test/inspect-scenario.js test/scenarios/2026-04-06-evening.json
+# Inspect a specific observation
+docker run --rm -e TZ=Europe/London cgmsharp-test node inspect-scenario.js 2026-04-10-full-day.json
+
+# Inspect a synthetic scenario for debugging
+docker run --rm -e TZ=Europe/London cgmsharp-test node inspect-scenario.js high-settle-then-dip.json
 ```
 
-Test scenarios live in `src/test/scenarios/` as JSON files. Each contains a name, description, optional `timezoneOffsetMinutes` (for converting stored UTC timestamps to local time), and an array of `{ time, reading }` pairs. Both tools create a fresh nudge engine per scenario with the individual's profile and feed each reading sequentially.
+Both tools expect JSON files with a name, description, optional `timezoneOffsetMinutes` (for converting stored UTC timestamps to local time), and an array of `{ time, reading }` pairs. They create a fresh nudge engine per scenario with the individual's profile and feed each reading sequentially.
 
-Dated scenarios (2025-*, 2026-*) use real InfluxDB data stored as UTC timestamps with `timezoneOffsetMinutes: 60` for BST conversion. Synthetic scenarios use local timestamps with no offset.
+**If a test needs to use a pattern that comes from real data**, extract the relevant portion into a new synthetic scenario in `src/test/scenarios/` with a descriptive non-dated name. Tests must never reference files in `src/observations/` directly — that would couple test outcomes to raw evidence and make the split meaningless.
 
 ## Manual Notification Tests
 
@@ -118,7 +126,9 @@ Designed for a type 1 diabetic on twice-daily premixed (biphasic) insulin. The u
 - **Evening**: 9 units at 19:00 BST (covers dinner + overnight)
 - **Total**: 21 units/day
 
-Note: Humulin M3 uses regular soluble insulin (not a rapid-acting analogue like NovoRapid/Humalog) as its short component. Regular soluble has slower onset (~30 min vs 15) and later peak (~2-4h vs 60-90 min) than rapid analogues. The engine's current insulin activity curve (`rapidOnset`, `rapidPeakStart`, `rapidPeakEnd`, `rapidTail` in `src/nudge.js`) is modelled on a rapid analogue and may need recalibrating to match Humulin M3's actual profile. Similarly NPH peaks 4-10h vs the intermediate curve's 4-8h. This is a known calibration gap — investigate against real data before changing.
+The engine's insulin activity curve (`rapidOnset` through `intermediateTail` in `src/nudge.js`) is calibrated to Humulin M3 literature timing: soluble onset 30 min / peak 120-180 min / tail 420 min; NPH onset 90 min / peak 240-600 min / tail 1080 min. The 30/70 weight split applies to both Humulin M3 and rapid-analogue premixes.
+
+**Known calibration gap**: the empirical constants `insulinCounterFactor` (3.2) and `overnightPullRate` (2.5) were fit against the OLD rapid-analogue curve and have NOT been recalibrated under the corrected Humulin M3 timing. The derived values depend on the curve they were fit against. Under the new curve, the observations (Apr 6 snack, Apr 20 / Jul 22 / Sep 15 overnight drops) would imply different constants. This recalibration is Phase 3 of the insulin curve correction and is deferred pending observational baseline data — see `todo.md`. Until recalibrated, the engine's overnight drop estimate is likely over-estimated (larger NPH integral × unchanged pullRate), meaning bedtime top-up recommendations are slightly conservative.
 
 Extracted into its own module via `createNudgeEngine(config)` factory. App.js passes `SendNudge` as a callback so nudge.js has no dependency on the notification transport.
 

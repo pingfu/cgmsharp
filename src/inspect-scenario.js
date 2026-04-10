@@ -18,14 +18,16 @@ const path = require(`path`);
 const moment = require(`moment`);
 const { createNudgeEngine, DEFAULTS } = require(`./nudge`);
 
-// individual's profile — override any DEFAULTS here to test different configurations
+// individual's profile — override any DEFAULTS here to test different configurations.
+// only specify per-user overrides; all other values come from DEFAULTS in nudge.js.
+// overnightPullRate is left unset so we use the engine's calibrated value (2.15
+// under the Humulin M3 curve).
 var profile = {
     interval: 10,
     insulinTimeMorning: `07:30`,
     insulinTimeEvening: `19:00`,
     carbsPerMmol: 4.4,
     insulinCounterFactor: 3.2,
-    overnightPullRate: 2.5,
     overnightDrop: 3.5
 };
 

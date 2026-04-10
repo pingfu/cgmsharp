@@ -215,6 +215,21 @@ const DEFAULTS = {
     breakfastWindowStart: 7, // 07:00 local
     breakfastWindowEnd: 7.5, // 07:30 local
 
+    // dinner nudge window — one proactive nudge to guide carb intake at the
+    // evening injection. the soluble component of Humulin M3 is committed at
+    // injection time and will pull BG down over the next 2-4 hours — without
+    // matching dinner carbs, a post-injection hypo is near-certain (observed
+    // 2026-04-10: zero-carb dinner → 5.1 hypo at 90 min post-injection).
+    dinnerWindowStart: 18.75, // 18:45 local (15 min before 19:00 injection)
+    dinnerWindowEnd: 19.25, // 19:15 local (15 min after)
+
+    // dinner carb target: minimum grams of carbs needed to cover the soluble
+    // component of the evening dose. derived from the observation that skipping
+    // dinner carbs produces a ~4-5 mmol/L drop in the first 2h post-injection
+    // — at 4.4g/mmol that's ~18-22g just to hold BG flat. base of 20g with
+    // adjustments in evaluateDinner() for starting BG.
+    dinnerCarbTarget: 20,
+
     bedtimeWindowStart: 21, // 21:00 local
     bedtimeWindowEnd: 22, // 22:00 local
 
@@ -225,16 +240,18 @@ const DEFAULTS = {
     //   Apr 20: 17.1 → 5.1 over ~7h (drop 12.0, avg ~1.7/h)
     //   Jul 22: 15.8 → 2.9 over ~6h (drop 12.9, avg ~2.2/h)
     //   Sep 15: 7.2 → 2.8 over ~3h (drop 4.4, avg ~1.5/h)
-    // accounting for insulin activity curve (not constant), 2.5/h at peak fits the data.
-    // 1.8 was too low — Apr 20 (17.1→5.1) and Jul 22 (15.8→2.9) show actual pulls of 12-13.
     //
-    // CALIBRATION CAVEAT (Humulin M3): the three historical drops are still valid
-    // observations, but the 2.5 value was derived by fitting to the integral of
-    // the rapid-analogue curve over the observed drop windows. Under Humulin M3's
-    // actual curve (NPH has a later, broader peak — 4-10h vs 4-8h), the integral
-    // over the same window would be different, so a different pullRate would fit
-    // the same observations. Needs refit once the curve timing is corrected.
-    overnightPullRate: 2.5, // mmol/L per hour at activity 1.0
+    // originally calibrated to 2.5 against a rapid-analogue curve. recalibrated
+    // to 2.15 against the Humulin M3 curve (Phase 3) so the 8-hour bedtime drop
+    // estimate remains consistent with the same historical observations. math:
+    //   old curve integral over 8h from bedtime (120→600 min post-inj): 306.3 min·activity
+    //   new curve integral over same window: 356.4 min·activity
+    //   ratio: 306.3/356.4 = 0.859
+    //   new pullRate = 2.5 × 0.859 = 2.15
+    // this is a 14% reduction to compensate for the 16% larger integral under
+    // the longer/later NPH curve. the drop estimate for a given bedtime is
+    // materially unchanged, so bedtime nudge decisions remain stable.
+    overnightPullRate: 2.15, // mmol/L per hour at activity 1.0 (recalibrated for Humulin M3)
 
     // fallback static overnight drop if insulin times not configured
     overnightDrop: 3.5, // mmol/L
@@ -447,6 +464,39 @@ const LOW_CARB_BREAKFAST_SUGGESTIONS = [
     `plain omelette`
 ];
 
+// dinner carb suggestions — dinner-appropriate carb sides keyed by gram target.
+// different from CARB_SUGGESTIONS (snacks) and BEDTIME_SUGGESTIONS (starchy +
+// fat/protein combos for sustained overnight absorption). dinner sides are
+// the carbs you'd eat ON THE PLATE alongside protein and veg.
+const DINNER_SUGGESTIONS = [
+    { grams: 10, ideas: [
+        `1 slice of wholemeal bread with your meal`,
+        `half a wholemeal pitta`,
+        `2 boiled new potatoes`,
+        `2 tablespoons of cooked rice`
+    ]},
+    { grams: 15, ideas: [
+        `1 small jacket potato`,
+        `3 tablespoons of cooked rice`,
+        `1 wholemeal pitta`,
+        `4 boiled new potatoes`,
+        `2 slices of wholemeal bread with your meal`
+    ]},
+    { grams: 20, ideas: [
+        `half a medium jacket potato with butter`,
+        `4 tablespoons of cooked rice`,
+        `a small portion of pasta (60g dry weight)`,
+        `1 small jacket potato plus a slice of bread`,
+        `5-6 boiled new potatoes`
+    ]},
+    { grams: 25, ideas: [
+        `1 medium jacket potato with butter`,
+        `5 tablespoons of cooked rice`,
+        `a medium portion of pasta (75g dry weight)`,
+        `1 small jacket potato plus 2 slices of bread`
+    ]}
+];
+
 function createNudgeEngine(config)
 {
     // merge config over defaults — config values win, missing values fall back to defaults
@@ -469,6 +519,7 @@ function createNudgeEngine(config)
         lastNudgeReading: null,
         lastNudgeExpectedReading: null, // where we expect BG to be once the suggested food absorbs
         breakfastNudgeSentDate: null, // date string (YYYY-MM-DD) of last breakfast nudge — one per morning
+        dinnerNudgeSentDate: null, // date string (YYYY-MM-DD) of last dinner nudge — one per evening
         bedtimeNudgeSentDate: null // date string (YYYY-MM-DD) of last bedtime nudge — one per evening
     };
 
@@ -785,6 +836,23 @@ function createNudgeEngine(config)
         return LOW_CARB_BREAKFAST_SUGGESTIONS[Math.floor(Math.random() * LOW_CARB_BREAKFAST_SUGGESTIONS.length)];
     }
 
+    function isInDinnerWindow(now)
+    {
+        var hour = now.hour() + (now.minute() / 60);
+        return hour >= p.dinnerWindowStart && hour < p.dinnerWindowEnd;
+    }
+
+    function hasDinnerNudgeBeenSentToday(now)
+    {
+        if (state.dinnerNudgeSentDate === null) return false;
+        return state.dinnerNudgeSentDate === now.format(`YYYY-MM-DD`);
+    }
+
+    function getDinnerSuggestion(grams)
+    {
+        return getSuggestionFromTable(DINNER_SUGGESTIONS, grams);
+    }
+
     function isInBedtimeWindow(now)
     {
         var hour = now.hour() + (now.minute() / 60);
@@ -877,6 +945,62 @@ function createNudgeEngine(config)
         return true;
     }
 
+    // dinner nudge: one proactive message per evening to guide carb intake at
+    // the evening injection (19:00 local). the soluble component of Humulin M3
+    // is committed at injection time and will pull BG down over 2-4 hours with
+    // whatever carbs are on board. without matching dinner carbs, a post-injection
+    // hypo is near-certain — observed 2026-04-10: zero-carb dinner → 5.1 hypo at
+    // 90 min post-injection. this nudge tells the user how much to eat based on
+    // current BG, so she can plan the meal before or as she injects.
+    // returns true if a dinner nudge was sent (so the regular evaluate can skip).
+    async function evaluateDinner(reading, trend, sendNudge, now)
+    {
+        if (!isInDinnerWindow(now)) return false;
+        if (hasDinnerNudgeBeenSentToday(now)) return false;
+
+        // wait until BG is stable — don't send while crashing
+        if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating`) return false;
+
+        var carbs = p.dinnerCarbTarget;
+        var title = null;
+        var message = null;
+
+        if (reading > 14.0)
+        {
+            // well above target — skip dinner carbs entirely, insulin has plenty to do
+            var lowCarbFood = getLowCarbBreakfastSuggestion();
+            title = `Dinner time`;
+            message = `Your sugar is ${reading} — no need for carbs at dinner tonight, your insulin will bring it down. A protein-heavy meal (${lowCarbFood}) works well.`;
+        }
+        else if (reading > p.targetHigh)
+        {
+            // above target — smaller dinner carbs
+            carbs = Math.max(10, carbs - 10);
+            var food = getDinnerSuggestion(carbs);
+            title = `Dinner time`;
+            message = `Your sugar is ${reading} — a bit above target. About ${food.grams}g of carbs with your dinner will cover your insulin without pushing the spike too high — try ${food.suggestion}.`;
+        }
+        else if (reading >= p.targetLow)
+        {
+            // in target — standard dinner carbs
+            var food = getDinnerSuggestion(carbs);
+            title = `Dinner time`;
+            message = `Your sugar is ${reading}. Your evening insulin needs about ${food.grams}g of carbs with dinner to keep your sugar steady through the evening — try ${food.suggestion}. Protein and veg alone won't cover the insulin.`;
+        }
+        else
+        {
+            // below target — larger dinner carbs to recover and cover insulin
+            carbs = carbs + 5;
+            var food = getDinnerSuggestion(carbs);
+            title = `Dinner time`;
+            message = `Your sugar is ${reading} — a bit low heading into dinner. About ${food.grams}g of carbs will lift it back to target and cover your evening insulin — try ${food.suggestion}.`;
+        }
+
+        await sendNudge(title, message);
+        state.dinnerNudgeSentDate = now.format(`YYYY-MM-DD`);
+        return true;
+    }
+
     // bedtime nudge: one proactive message per evening to position BG for overnight.
     // returns true if a bedtime nudge was sent (so the regular evaluate can skip).
     async function evaluateBedtime(reading, trend, sendNudge, now)
@@ -965,10 +1089,30 @@ function createNudgeEngine(config)
 
         if (isQuietHours(now)) return;
 
+        // state reset after recovery: if BG has reached or exceeded the expected
+        // level from the last nudge, the previous episode is resolved — the advice
+        // worked (or was irrelevant) and BG is back in a safe zone. clearing the
+        // state here means any future dip is evaluated fresh, not suppressed by
+        // the old carb estimate. without this reset, the engine silently carries
+        // the old nudge context forever and can suppress a legitimate new dip
+        // hours later just because the carb estimate hasn't jumped enough from
+        // the original.
+        if (state.lastNudgeExpectedReading !== null && reading >= state.lastNudgeExpectedReading)
+        {
+            state.lastNudgeSent = null;
+            state.lastNudgeCategory = null;
+            state.lastNudgeCarbs = null;
+            state.lastNudgeReading = null;
+            state.lastNudgeExpectedReading = null;
+        }
+
         var trend = getTrend(reading);
 
         // breakfast nudge — one proactive message per morning with carb guidance
         if (await evaluateBreakfast(reading, trend, sendNudge, now)) return;
+
+        // dinner nudge — one proactive message per evening at/near the 19:00 injection
+        if (await evaluateDinner(reading, trend, sendNudge, now)) return;
 
         // bedtime nudge — one proactive message per evening, takes priority over regular logic
         if (await evaluateBedtime(reading, trend, sendNudge, now)) return;
@@ -990,7 +1134,16 @@ function createNudgeEngine(config)
         {
             category = `below`;
 
-            if (mealWindow) return;
+            // meal window suppresses minor descents during digestion, but NOT clear
+            // clinical risk. if BG is at hypoFloor, trend is urgent, or we're
+            // projected to hypo soon, the "meal is digesting" assumption is wrong
+            // and the engine must nudge for safety. canonical case: zero-carb dinner
+            // — insulin injected, no carbs eaten, engine would otherwise stay silent
+            // because it thinks the meal is covering — until clinical hypo arrives.
+            var urgentDuringMeal = reading <= p.hypoFloor
+                                || trend.urgent
+                                || (projected !== null && projected <= p.hypoFloor);
+            if (mealWindow && !urgentDuringMeal) return;
             if (trend.direction === `rising`) return;
 
             carbs = estimateCarbsNeeded(reading, trend, insulinActivity);
@@ -1037,7 +1190,11 @@ function createNudgeEngine(config)
         }
         else if (reading <= p.targetHigh)
         {
-            if (mealWindow) return;
+            // meal window suppresses typical in-target descents during digestion,
+            // but NOT rapid/urgent descents or a projected hypo. same rationale
+            // as the below-target branch above.
+            var urgentInTargetDuringMeal = trend.urgent || (projected !== null && projected <= p.hypoFloor);
+            if (mealWindow && !urgentInTargetDuringMeal) return;
 
             // if BG was above target recently, this descent is insulin working — don't interrupt
             if (isDescendingFromHigh() && trend.direction === `falling`) return;
@@ -1103,4 +1260,4 @@ function createNudgeEngine(config)
     return { evaluate: evaluate, state: state, profile: p, _test: { getInsulinActivity: getInsulinActivity } };
 }
 
-module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS, BREAKFAST_SUGGESTIONS, LOW_CARB_BREAKFAST_SUGGESTIONS };
+module.exports = { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS, BREAKFAST_SUGGESTIONS, LOW_CARB_BREAKFAST_SUGGESTIONS, DINNER_SUGGESTIONS };
