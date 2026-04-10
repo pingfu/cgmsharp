@@ -128,7 +128,7 @@ test(`breakfast at 12.0: no carb number — low-carb food only`, async () =>
     var breakfast = nudges.find(n => n.title === `Good morning`);
     assert.ok(breakfast, `expected breakfast nudge`);
     assert.ok(breakfast.message.includes(`low-carb`), `above target should say low-carb`);
-    assert.ok(/eggs|yoghurt|cheese|omelette/.test(breakfast.message), `should suggest protein/fat foods`);
+    assert.ok(/egg|yoghurt|cheese|omelette/.test(breakfast.message), `should suggest protein/fat foods`);
 });
 
 test(`breakfast at 15.0: skip carbs entirely`, async () =>
