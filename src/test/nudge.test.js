@@ -94,7 +94,7 @@ test(`breakfast at 6.5: recommends ~15g — full room to targetHigh`, async () =
     // BG 6.5, room = 10.0 - 6.5 = 3.5 mmol/L × 4.4 = 15.4g → 15g
     // at this level there's headroom for a proper breakfast (porridge, toast)
     var nudges = await runScenario(`breakfast-low-starting-bg.json`);
-    var breakfast = nudges.find(n => n.title === `Good morning`);
+    var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     var carbs = extractCarbs(breakfast.message);
     assert.ok(carbs >= 13 && carbs <= 17, `BG 6.5 should suggest 13-17g (room for 3.5 mmol/L rise), got ${carbs}g`);
@@ -105,7 +105,7 @@ test(`breakfast at 8.0: recommends ~9g — limited room, smaller portion`, async
     // BG 8.0, room = 10.0 - 8.0 = 2.0 mmol/L × 4.4 = 8.8g → 9g
     // only room for a small portion — half a crumpet, not a full bowl of porridge
     var nudges = await runScenario(`breakfast-mid-target.json`);
-    var breakfast = nudges.find(n => n.title === `Good morning`);
+    var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     var carbs = extractCarbs(breakfast.message);
     assert.ok(carbs >= 7 && carbs <= 10, `BG 8.0 should suggest 7-10g (room for 2.0 mmol/L rise), got ${carbs}g`);
@@ -116,7 +116,7 @@ test(`breakfast at 9.2: recommends ~4g — very little room, just a taste`, asyn
     // BG 9.2, room = 10.0 - 9.2 = 0.8 mmol/L × 4.4 = 3.5g → 4g
     // barely any room — even a small banana would overshoot
     var nudges = await runScenario(`breakfast-high-starting-bg.json`);
-    var breakfast = nudges.find(n => n.title === `Good morning`);
+    var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     var carbs = extractCarbs(breakfast.message);
     assert.ok(carbs >= 3 && carbs <= 7, `BG 9.2 should suggest 3-7g (room for 0.8 mmol/L rise), got ${carbs}g`);
@@ -127,7 +127,7 @@ test(`breakfast at 12.0: no carb number — low-carb food only`, async () =>
     // BG 12.0, above targetHigh. any carbs would push BG higher.
     // should suggest protein/fat (eggs, yoghurt, cheese) with no gram target.
     var nudges = await runScenario(`breakfast-above-target.json`);
-    var breakfast = nudges.find(n => n.title === `Good morning`);
+    var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     assert.ok(breakfast.message.includes(`low-carb`), `above target should say low-carb`);
     assert.ok(/egg|yoghurt|cheese|omelette/.test(breakfast.message), `should suggest protein/fat foods`);
@@ -138,9 +138,9 @@ test(`breakfast at 15.0: skip carbs entirely`, async () =>
     // BG 15.0, well above target (>14). dawn phenomenon has pushed BG dangerously high.
     // carbs on top of this would compound the problem. insulin needs to bring it down first.
     var nudges = await runScenario(`breakfast-well-above-target.json`);
-    var breakfast = nudges.find(n => n.title === `Good morning`);
+    var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
-    assert.ok(breakfast.message.includes(`skip carbs`), `very high BG should say skip carbs`);
+    assert.ok(/skip carbs/i.test(breakfast.message), `very high BG should say skip carbs`);
 });
 
 // ===========================================================================
@@ -308,7 +308,7 @@ test(`descent-across-targetLow: crossing the boundary on same dip does not doubl
     // the test is specifically about reactive suppression, and the scenario's
     // time range happens to overlap the dinner window.
     var nudges = await runScenario(`descent-across-targetLow.json`);
-    var reactiveNudges = nudges.filter(n => n.title !== `Dinner time` && n.title !== `Good morning` && !n.title.toLowerCase().includes(`bed`));
+    var reactiveNudges = nudges.filter(n => n.title !== `Dinner` && n.title !== `Breakfast` && !n.title.toLowerCase().includes(`bed`));
     assert.equal(reactiveNudges.length, 1, `expected 1 reactive nudge on the continuous dip, got ${reactiveNudges.length}`);
     assert.equal(reactiveNudges[0].reading, 7.4, `reactive nudge should fire at 7.4 (first detection), not at 6.9 (same dip)`);
 });
@@ -444,14 +444,14 @@ test(`day-morning-insulin-overshoot: one breakfast nudge per morning`, async () 
     // this scenario spans 24h+, crossing two breakfast windows. each morning
     // gets exactly one nudge.
     var nudges = await runScenario(`day-morning-insulin-overshoot.json`);
-    var breakfastNudges = nudges.filter(n => n.title === `Good morning`);
+    var breakfastNudges = nudges.filter(n => n.title === `Breakfast`);
     assert.equal(breakfastNudges.length, 2, `one breakfast nudge per morning across 2-day span`);
 });
 
 test(`day-typical-with-overnight-hypo: breakfast nudge fires once in morning window`, async () =>
 {
     var nudges = await runScenario(`day-typical-with-overnight-hypo.json`);
-    var breakfastNudges = nudges.filter(n => n.title === `Good morning`);
+    var breakfastNudges = nudges.filter(n => n.title === `Breakfast`);
     assert.equal(breakfastNudges.length, 1, `exactly one breakfast nudge per day`);
 });
 
@@ -469,7 +469,7 @@ test(`day-typical-with-overnight-hypo: bedtime nudge fires at most once in eveni
 {
     var nudges = await runScenario(`day-typical-with-overnight-hypo.json`);
     var bedtimeNudges = nudges.filter(n =>
-        n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
+        n.title === `Bedtime top-up` || n.title === `Bedtime` || n.title === `Low at bedtime`
     );
     assert.ok(bedtimeNudges.length <= 1, `at most one bedtime nudge per evening, got ${bedtimeNudges.length}`);
 });
@@ -714,7 +714,7 @@ test(`pre-dinner low: nudges for daytime low, no bedtime nudge`, async () =>
     // daytime food suggestions, not bedtime starchy carbs.
     var nudges = await runScenario(`pre-dinner-low.json`);
     var bedtimeNudges = nudges.filter(n =>
-        n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
+        n.title === `Bedtime top-up` || n.title === `Bedtime` || n.title === `Low at bedtime`
     );
     assert.equal(bedtimeNudges.length, 0, `no bedtime nudges outside 21:00-22:00 window`);
     assert.ok(nudges.length >= 1, `should nudge for pre-dinner low`);
@@ -744,7 +744,7 @@ test(`dinner-zero-carbs: proactive dinner nudge fires at injection time`, async 
     // the scenario has readings starting at 17:50 UTC, in window. the engine
     // should fire a dinner nudge on one of those readings with carb guidance.
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge, got ${dinnerNudges.length}`);
     var carbs = extractCarbs(dinnerNudges[0].message);
     assert.ok(carbs >= 15 && carbs <= 25, `dinner nudge should suggest 15-25g carbs, got ${carbs}g`);
@@ -757,7 +757,7 @@ test(`dinner-zero-carbs: reactive nudge fires before/at hypoFloor despite meal w
     // meal window's safety override must let an urgent nudge through —
     // BG at/below hypoFloor with insulin active is non-negotiable.
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
-    var reactiveNudges = nudges.filter(n => n.title !== `Dinner time`);
+    var reactiveNudges = nudges.filter(n => n.title !== `Dinner`);
     assert.ok(reactiveNudges.length >= 1, `expected at least one reactive nudge during descent, got ${reactiveNudges.length}`);
     var firstReactive = reactiveNudges[0];
     assert.ok(firstReactive.reading <= 5.5, `reactive nudge should fire at or near hypoFloor (5.0), got ${firstReactive.reading}`);
@@ -775,7 +775,7 @@ test(`dinner-zero-carbs: reactive nudge is clearly actionable`, async () =>
     // that insulin is still active (via the "bridge your active insulin"
     // or "insulin is still working" phrasing).
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
-    var reactiveNudges = nudges.filter(n => n.title !== `Dinner time`);
+    var reactiveNudges = nudges.filter(n => n.title !== `Dinner`);
     assert.ok(reactiveNudges.length >= 1, `expected reactive nudge`);
     var firstReactive = reactiveNudges[0];
     assert.ok(/fast.acting sugar/.test(firstReactive.message), `reactive nudge should tell user to have fast-acting sugar, got: ${firstReactive.message}`);
@@ -798,7 +798,7 @@ test(`dinner at low BG (5.8): recommends larger portion (25g)`, async () =>
     // the low AND cover the evening insulin. dinner nudge should bump the
     // base 20g up by 5g to 25g.
     var nudges = await runScenario(`dinner-at-low-bg.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var carbs = extractCarbs(dinnerNudges[0].message);
     assert.ok(carbs >= 20 && carbs <= 30, `low-BG dinner should suggest 20-30g, got ${carbs}g`);
@@ -811,7 +811,7 @@ test(`dinner at mid-target BG (8.2): recommends base 20g`, async () =>
     // stable. the engine should recommend the base dinnerCarbTarget (20g)
     // to cover the evening insulin.
     var nudges = await runScenario(`dinner-at-mid-target-bg.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var carbs = extractCarbs(dinnerNudges[0].message);
     assert.ok(carbs >= 18 && carbs <= 22, `mid-target dinner should suggest ~20g, got ${carbs}g`);
@@ -823,7 +823,7 @@ test(`dinner at high BG (11.5): recommends reduced portion (10g)`, async () =>
     // BG above targetHigh. dinner carbs should be reduced — the insulin has
     // extra work to do bringing BG down without extra glucose to cover.
     var nudges = await runScenario(`dinner-at-high-bg.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var carbs = extractCarbs(dinnerNudges[0].message);
     assert.ok(carbs >= 8 && carbs <= 12, `high-BG dinner should suggest ~10g, got ${carbs}g`);
@@ -835,7 +835,7 @@ test(`dinner at very high BG (15.0): recommends skipping carbs entirely`, async 
     // glucose on top of an existing high is harmful. engine should recommend
     // a protein-heavy low-carb dinner.
     var nudges = await runScenario(`dinner-at-very-high-bg.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var message = dinnerNudges[0].message;
     assert.ok(/no need for carbs|skip carbs|protein.heavy/.test(message), `very high BG dinner should explicitly not recommend carbs, got: ${message}`);
@@ -851,7 +851,7 @@ test(`dinner while dropping fast: nudge waits for stable trend`, async () =>
     // and accelerating". once stable (or once the reactive path handles
     // the crash), the dinner nudge can fire.
     var nudges = await runScenario(`dinner-while-dropping-fast.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 0, `dinner nudge should not fire during crash, got ${dinnerNudges.length}`);
 });
 
@@ -860,7 +860,7 @@ test(`dinner outside window: no nudge`, async () =>
     // readings at 17:30-17:40 (BST, pre-window) and 19:00-19:20 (BST, post-window)
     // should not fire a dinner nudge. the window is 18:45-19:15 local.
     var nudges = await runScenario(`dinner-outside-window.json`);
-    var dinnerNudges = nudges.filter(n => n.title === `Dinner time`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 0, `dinner nudge should not fire outside 18:45-19:15 window, got ${dinnerNudges.length}`);
 });
 
@@ -870,7 +870,7 @@ test(`dinner nudge: food suggestion is a dinner side, not a snack`, async () =>
     // (rice, potato, bread, pasta) — NOT snacks like yoghurt or fruit.
     // the engine should pull from the dinner table, not CARB_SUGGESTIONS.
     var nudges = await runScenario(`dinner-at-mid-target-bg.json`);
-    var dinner = nudges.find(n => n.title === `Dinner time`);
+    var dinner = nudges.find(n => n.title === `Dinner`);
     assert.ok(dinner, `expected dinner nudge`);
     assert.ok(/potato|rice|bread|pasta|pitta/.test(dinner.message), `dinner should suggest a proper side (potato/rice/bread/pasta/pitta), got: ${dinner.message}`);
 });
@@ -976,10 +976,10 @@ test(`meal-window-normal-post-meal-no-override: normal post-meal rise does NOT t
     var nudges = await runScenario(`meal-window-normal-post-meal-no-override.json`);
     // filter to reactive nudges only (exclude proactive breakfast/dinner/bedtime)
     var reactiveNudges = nudges.filter(n =>
-        n.title !== `Good morning` &&
-        n.title !== `Dinner time` &&
+        n.title !== `Breakfast` &&
+        n.title !== `Dinner` &&
         n.title !== `Bedtime top-up` &&
-        n.title !== `Looking good for bed` &&
+        n.title !== `Bedtime` &&
         n.title !== `Low at bedtime`
     );
     assert.equal(reactiveNudges.length, 0, `safety override must NOT fire on normal post-meal curve, got ${reactiveNudges.length} reactive nudges`);
@@ -1025,7 +1025,7 @@ test(`post-meal descent: zero reactive nudges during normal dinner curve`, async
     // dinner nudge at 19:00 is expected and excluded from the count.
     var nudges = await runScenario(`post-meal-descent-no-intervention.json`);
     var reactiveNudges = nudges.filter(n =>
-        n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime` && n.title !== `Dinner time`
+        n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime` && n.title !== `Dinner`
     );
     assert.equal(reactiveNudges.length, 0, `zero reactive nudges during normal dinner curve`);
 });
@@ -1036,7 +1036,7 @@ test(`post-meal descent: at most one bedtime nudge`, async () =>
     // a single bedtime nudge is acceptable but no more.
     var nudges = await runScenario(`post-meal-descent-no-intervention.json`);
     var bedtimeNudges = nudges.filter(n =>
-        n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
+        n.title === `Bedtime top-up` || n.title === `Bedtime` || n.title === `Low at bedtime`
     );
     assert.ok(bedtimeNudges.length <= 1, `at most one bedtime nudge, got ${bedtimeNudges.length}`);
 });
@@ -1089,7 +1089,7 @@ test(`day-high-all-afternoon-overnight-low: regression — high day with overnig
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1101,7 +1101,7 @@ test(`day-with-evening-drop: regression — evening drop to 5.9`, async () =>
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1116,7 +1116,7 @@ test(`day-with-afternoon-hypo: regression — afternoon hypo to 3.2`, async () =
     assert.ok(nudges.length >= 1, `must produce at least one nudge for 3.2 hypo`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1128,7 +1128,7 @@ test(`day-with-overnight-and-morning-hypo: regression — overnight drop to 5.3 
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1142,7 +1142,7 @@ test(`day-volatile-with-severe-hypo: regression — volatile day with 2.9 hypo`,
     assert.ok(nudges.length >= 1, `volatile day with hypo should produce at least one nudge`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1156,7 +1156,7 @@ test(`day-with-two-daytime-hypos: regression — two daytime hypos`, async () =>
     assert.ok(nudges.length >= 1, `day with two hypos should produce at least one nudge`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1169,7 +1169,7 @@ test(`day-with-prolonged-below-target: regression — prolonged below-target wit
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1182,7 +1182,7 @@ test(`day-with-overnight-severe-hypo: regression — overnight drop to 2.8 hypo`
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
-        n.reading > 10.0 && n.title !== `Good morning` && n.title !== `Dinner time` && n.title !== `Bedtime top-up` && n.title !== `Looking good for bed` && n.title !== `Low at bedtime`
+        n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
@@ -1274,7 +1274,7 @@ test(`bedtime at 19.0: looking good, no food needed`, async () =>
     // BG 19.0, high enough that the overnight insulin drop still leaves BG
     // above targetLow. no food needed — the engine sends a reassuring message.
     var nudges = await runScenario(`bedtime-bg-19-looking-good.json`);
-    var lookingGood = nudges.find(n => n.title === `Looking good for bed`);
+    var lookingGood = nudges.find(n => n.title === `Bedtime`);
     assert.ok(lookingGood, `expected "looking good" message when BG survives overnight drop`);
     assert.ok(lookingGood.message.includes(`no snack needed`), `should explicitly say no snack needed`);
     var carbs = extractCarbs(lookingGood.message);
@@ -1460,7 +1460,7 @@ test(`evening-dinner-nudge-ignored-continued-crash: bedtime nudge fires during p
     // (21:00-22:00 BST) from the real data preamble, before the crash.
     var nudges = await runScenario(`evening-dinner-nudge-ignored-continued-crash.json`);
     var bedtime = nudges.filter(n =>
-        n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
+        n.title === `Bedtime top-up` || n.title === `Bedtime` || n.title === `Low at bedtime`
     );
     assert.ok(bedtime.length >= 1, `bedtime nudge should fire during real data portion`);
 });
