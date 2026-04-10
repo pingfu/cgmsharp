@@ -46,12 +46,12 @@ const moment = require(`moment`);
 //      - 30% soluble (regular human): peaks 2-4 hours, gone by 6-8 hours
 //      - 70% NPH (isophane): peaks 4-10 hours, tails off by 18 hours
 //      - piecewise linear interpolation, combined weighted activity 0.0-1.0
-//      - "meaningfully active" above 0.25 threshold
+//      - "meaningfully active" above 0.18 threshold
 //      - when insulin is active and BG is falling, carb suggestions are increased
 //        because the drop will likely continue
 //
 //   4. suppression gates — prevent noise and fatigue:
-//      - meal window (120 min after injection): assume a meal is being digested,
+//      - meal window (150 min after injection): assume a meal is being digested,
 //        don't suggest more food on top of dinner
 //      - overnight quiet hours (midnight-6am): fully silent, she's asleep
 //      - dawn phenomenon (4-10am): suppress nudges for rising BG that's normal
@@ -167,8 +167,15 @@ const DEFAULTS = {
     intermediateWeight: 0.70,
 
     // insulin is considered "meaningfully active" above this threshold (0.0-1.0 scale).
-    // at 0.25, creates distinct active/inactive windows with twice-daily dosing.
-    insulinActiveThreshold: 0.25,
+    // under the Humulin M3 curve, combined activity at 90 min post-injection is ~0.20
+    // (soluble ramping to peak, NPH barely onsetting), so a threshold of 0.25 would
+    // miss the ramp-up window where insulin is clearly working. 0.18 puts the
+    // active/inactive boundary at ~85 min post-injection — the first ~85 min stay
+    // inactive (soluble not yet measurable) and everything from there through the
+    // next injection counts as active. under twice-daily dosing this yields two
+    // ~85-minute inactive windows per day (07:30–08:55 and 19:00–20:25), with the
+    // rest of the day above threshold.
+    insulinActiveThreshold: 0.18,
 
     // dawn phenomenon window — historical mean BG 12.15 during 4-8 AM vs 9.1 overnight,
     // spike persists through late morning (8-noon mean 10.83), so window extends to 10 AM.
@@ -179,12 +186,14 @@ const DEFAULTS = {
     projectionMinutes: 30,
 
     // meal window — insulin is injected with a meal. suppress carb nudges for this period.
-    // observed eat-peak-settle cycle took ~2 hours on 2026-04-06.
-    // NOTE: 120 min was chosen against the old rapid-analogue curve. Under the
-    // corrected Humulin M3 timing (soluble peaks 2-4h), the real meal absorption +
-    // insulin action cycle is likely 150-180 min. Retuning is deferred with the
-    // other empirical constants — see todo.md.
-    mealWindowMinutes: 120,
+    // observed eat-peak-settle cycle took ~2 hours on 2026-04-06 under a rapid-analogue
+    // assumption. extended to 150 min under the Humulin M3 curve: soluble peaks 2-4h
+    // (midpoint 3h) so the real eat-peak-settle cycle runs closer to 2.5h. 150 is the
+    // conservative upper bound — 180 would completely eclipse the bedtime nudge window
+    // (19:00 injection + 180 = 22:00 = bedtime window end). at 150 the bedtime window
+    // still has 30 min (21:30-22:00) where proactive nudges can fire. safety override
+    // (see evaluateReactive) still lets clinical hypos through regardless.
+    mealWindowMinutes: 150,
 
     // observed carb sensitivity: 18g carbs raised BG by 4.1 mmol/L (4.7 → 8.8).
     // ~4.4g per 1 mmol/L. the single most important per-individual tuning knob.
@@ -282,56 +291,59 @@ const DEFAULTS = {
 // carb suggestion lookup: each tier has a gram target and food ideas to rotate through.
 // UK supermarket staples, healthy where possible, practical for an elderly person.
 // every suggestion is specific about food type and portion size.
+//
+// carb values sourced from: Warburtons wholemeal (14g/slice), Warburtons crumpet (20g),
+// Weetabix 18g biscuit (13g), Nairn's Rough Oatcake (5.8g), Ryvita Original (4.3g),
+// semi-skimmed milk (4.7g per 100ml), plain natural yoghurt (~6g per 125g pot),
+// bananas (small 80g ≈ 18g, half ≈ 9g), apples (small 100g ≈ 12g, medium 180g ≈ 20g),
+// satsumas (small 50g ≈ 7g), grapes (~0.16g each), raisins (~0.7g each, 14g tbsp ≈ 10g),
+// rice cakes plain (7g each), porridge oats dry (~0.6g carb per 1g dry ≈ 18g per 30g serving),
+// jacket potato (small 150g ≈ 30g carbs), pitta wholemeal (60g ≈ 27g carbs),
+// baked beans (30g tbsp ≈ 5g), hummus (2g per 15g tbsp), cottage cheese 100g (3g).
 const CARB_SUGGESTIONS = [
     // no 2g tier — amounts that small have no measurable BG effect. minimum useful correction is 5g.
     { grams: 5, ideas: [
-        `a 125g pot of plain natural yoghurt`,
-        `half a small banana`,
-        `3 strawberries with a tablespoon of natural yoghurt`,
-        `4 cherry tomatoes with a thin slice of cheddar`,
-        `a small glass (100ml) of semi-skimmed milk`,
-        `1 satsuma`,
-        `1 tablespoon of raisins`,
-        `2 plain rice cakes`,
-        `1 small pear`,
-        `10 cashew nuts`
+        { food: `a 125g pot of plain natural yoghurt`, carbs: 6 },
+        { food: `3 strawberries with a tablespoon of natural yoghurt`, carbs: 4 },
+        { food: `a small glass (100ml) of semi-skimmed milk`, carbs: 5 },
+        { food: `1 small satsuma`, carbs: 7 },
+        { food: `10 cashew nuts`, carbs: 4 },
+        { food: `a 125g pot of Greek natural yoghurt with 3 strawberries`, carbs: 7 }
     ]},
     { grams: 7, ideas: [
-        `1 small apple (about the size of a tennis ball)`,
-        `1 tablespoon of hummus with 3 carrot sticks`,
-        `a 125g pot of natural yoghurt with 5 or 6 blueberries`,
-        `1 oatcake with a thin slice of cheddar`,
-        `3 pieces of dried mango`,
-        `2 Ryvita with a tablespoon of cream cheese`,
-        `a 100g pot of cottage cheese with 2 tinned pineapple chunks`
+        { food: `1 small apple (about the size of a tennis ball)`, carbs: 8 },
+        { food: `1 tablespoon of hummus with 3 carrot sticks`, carbs: 5 },
+        { food: `a 125g pot of natural yoghurt with 5 or 6 blueberries`, carbs: 7 },
+        { food: `1 oatcake with a thin slice of cheddar`, carbs: 6 },
+        { food: `2 Ryvita with a tablespoon of cream cheese`, carbs: 9 },
+        { food: `a 100g pot of cottage cheese with 2 tinned pineapple chunks`, carbs: 6 }
     ]},
     { grams: 10, ideas: [
-        `1 slice of wholemeal toast with butter`,
-        `1 small banana (about 15cm long)`,
-        `4 tablespoons of porridge oats made with water`,
-        `about 10 grapes with 5 almonds`,
-        `1 medium apple with a teaspoon of peanut butter`,
-        `2 oatcakes with a thin slice of cheddar`,
-        `half a crumpet with butter`,
-        `1 Weetabix with 100ml of semi-skimmed milk`,
-        `2 tablespoons of trail mix`
+        { food: `half a small banana`, carbs: 9 },
+        { food: `1 tablespoon of raisins`, carbs: 10 },
+        { food: `about 12 grapes with 5 almonds`, carbs: 10 },
+        { food: `2 oatcakes with a thin slice of cheddar`, carbs: 12 },
+        { food: `half a crumpet with butter`, carbs: 10 },
+        { food: `2 tablespoons of trail mix`, carbs: 11 },
+        { food: `1 small satsuma and a 125g pot of natural yoghurt`, carbs: 12 }
     ]},
     { grams: 15, ideas: [
-        `1 slice of wholemeal toast with a teaspoon of peanut butter`,
-        `a glass (200ml) of semi-skimmed milk and 1 satsuma`,
-        `a 30g bowl of bran flakes with semi-skimmed milk`,
-        `2 oatcakes with cheddar and 1 small apple`,
-        `half a small jacket potato with a knob of butter`,
-        `4 tablespoons of porridge oats made with semi-skimmed milk and a drizzle of honey`,
-        `half a wholemeal pitta with 2 tablespoons of hummus`,
-        `3 tablespoons of baked beans on half a slice of wholemeal toast`
+        { food: `1 slice of wholemeal toast with butter`, carbs: 14 },
+        { food: `1 slice of wholemeal toast with a teaspoon of peanut butter`, carbs: 15 },
+        { food: `a glass (200ml) of semi-skimmed milk and 1 small satsuma`, carbs: 16 },
+        { food: `half a small jacket potato with a knob of butter`, carbs: 15 },
+        { food: `half a wholemeal pitta with 2 tablespoons of hummus`, carbs: 17 },
+        { food: `2 plain rice cakes with butter`, carbs: 14 },
+        { food: `1 small pear`, carbs: 15 },
+        { food: `a 20g bowl of bran flakes with 100ml semi-skimmed milk`, carbs: 17 }
     ]},
     { grams: 20, ideas: [
-        `half a cheese and pickle sandwich on wholemeal bread`,
-        `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
-        `half a small jacket potato with 3 tablespoons of baked beans`,
-        `1 crumpet with butter`,
-        `1 slice of wholemeal toast with 4 tablespoons of baked beans`
+        { food: `1 crumpet with butter`, carbs: 20 },
+        { food: `half a cheese and pickle sandwich on wholemeal bread`, carbs: 20 },
+        { food: `1 small banana (about 15cm long)`, carbs: 18 },
+        { food: `1 medium apple with a teaspoon of peanut butter`, carbs: 21 },
+        { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
+        { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 }
     ]}
 ];
 
@@ -339,23 +351,28 @@ const CARB_SUGGESTIONS = [
 // these raise BG within 5-10 minutes. used when trend is urgent.
 // everything here must be fat-free and sugar-based — fat slows absorption.
 // no chocolate, biscuits, cereal bars, or milk.
+//
+// carb values sourced from: Bassett's jelly baby ~5g, 1 level tsp honey ~6g,
+// 1 level tsp jam ~4g, 1 level tsp sugar ~4g. 1 level tbsp honey ~17g,
+// 1 level tbsp jam ~13g.
 const EMERGENCY_SUGGESTIONS = [
     { grams: 5, ideas: [
-        `1 jelly baby`,
-        `1 level teaspoon of honey`,
-        `1 level teaspoon of jam`,
-        `1 level teaspoon of sugar dissolved in water`
+        { food: `1 jelly baby`, carbs: 5 },
+        { food: `1 level teaspoon of honey`, carbs: 6 },
+        { food: `1 level teaspoon of jam`, carbs: 4 },
+        { food: `1 level teaspoon of sugar dissolved in water`, carbs: 4 }
     ]},
     { grams: 10, ideas: [
-        `2 jelly babies`,
-        `2 level teaspoons of honey`,
-        `1 level tablespoon of jam`,
-        `2 level teaspoons of sugar dissolved in water`
+        { food: `2 jelly babies`, carbs: 10 },
+        { food: `2 level teaspoons of honey`, carbs: 12 },
+        { food: `2 level teaspoons of jam`, carbs: 8 },
+        { food: `2 level teaspoons of sugar dissolved in water`, carbs: 8 }
     ]},
     { grams: 15, ideas: [
-        `3 jelly babies`,
-        `1 level tablespoon of honey`,
-        `3 level teaspoons of sugar dissolved in water`
+        { food: `3 jelly babies`, carbs: 15 },
+        { food: `1 level tablespoon of honey`, carbs: 17 },
+        { food: `1 level tablespoon of jam`, carbs: 13 },
+        { food: `4 level teaspoons of sugar dissolved in water`, carbs: 16 }
     ]}
     // no 20g tier — rule of 15: treat with 15g fast-acting, wait 15 min, repeat if still low.
     // overtreating hypos causes rebound spikes. let the engine re-evaluate after absorption.
@@ -366,51 +383,54 @@ const EMERGENCY_SUGGESTIONS = [
 // protein or fat slow digestion and provide a trickle of glucose that matches
 // the intermediate insulin's sustained pull. no fruit, juice, or fast-acting sugar.
 // oatcake carb counts based on Nairn's Rough Oatcakes: 5.8g carb per oatcake.
-// 1 oatcake ≈ 6g, 2 oatcakes ≈ 12g, 3 oatcakes ≈ 18g.
+// 1 oatcake ≈ 6g, 2 oatcakes ≈ 12g, 3 oatcakes ≈ 17g, 4 oatcakes ≈ 23g.
+// porridge oats dry: ~0.6g carb per 1g dry weight (18g per 30g serving).
+// wholemeal toast slice: ~14g. crumpet: ~20g. Weetabix biscuit: ~13g.
 const BEDTIME_SUGGESTIONS = [
     { grams: 5, ideas: [
-        `1 oatcake with a thin slice of cheddar`,
-        `half a slice of wholemeal toast with butter`,
-        `2 tablespoons of porridge oats made with water`,
-        `1 plain rice cake with a teaspoon of peanut butter`
+        { food: `1 oatcake with a thin slice of cheddar`, carbs: 6 },
+        { food: `half a slice of wholemeal toast with butter`, carbs: 7 },
+        { food: `1 tablespoon (10g dry) of porridge oats made with water`, carbs: 6 },
+        { food: `1 plain rice cake with butter`, carbs: 7 }
     ]},
     { grams: 7, ideas: [
-        `1 oatcake with a teaspoon of peanut butter`,
-        `half a slice of wholemeal toast with a thin slice of cheddar`,
-        `2 tablespoons of porridge oats made with semi-skimmed milk`,
-        `2 Ryvita with a tablespoon of cream cheese`
+        { food: `1 oatcake with a teaspoon of peanut butter`, carbs: 7 },
+        { food: `half a slice of wholemeal toast with a thin slice of cheddar`, carbs: 7 },
+        { food: `2 Ryvita with a tablespoon of cream cheese`, carbs: 9 },
+        { food: `1 plain rice cake with peanut butter`, carbs: 8 }
     ]},
     { grams: 10, ideas: [
-        `1 slice of wholemeal toast with a thin slice of cheddar`,
-        `2 oatcakes with cheddar`,
-        `3 tablespoons of porridge oats made with semi-skimmed milk`,
-        `1 Weetabix with 100ml of semi-skimmed milk`,
-        `1 slice of wholemeal toast with butter`
+        { food: `2 oatcakes with a thin slice of cheddar`, carbs: 12 },
+        { food: `half a crumpet with butter`, carbs: 10 },
+        { food: `2 tablespoons (20g dry) of porridge oats made with water`, carbs: 12 },
+        { food: `2 oatcakes with butter`, carbs: 12 }
     ]},
     { grams: 15, ideas: [
-        `1 slice of wholemeal toast with cheddar`,
-        `2 oatcakes with cheddar and a teaspoon of peanut butter`,
-        `4 tablespoons of porridge oats made with semi-skimmed milk`,
-        `1 slice of wholemeal toast with a tablespoon of peanut butter`,
-        `half a wholemeal pitta with 2 tablespoons of hummus and a slice of cheddar`
+        { food: `1 slice of wholemeal toast with a thin slice of cheddar`, carbs: 14 },
+        { food: `1 slice of wholemeal toast with butter`, carbs: 14 },
+        { food: `2 oatcakes with cheddar and a teaspoon of peanut butter`, carbs: 13 },
+        { food: `1 slice of wholemeal toast with a tablespoon of peanut butter`, carbs: 17 },
+        { food: `2 tablespoons (20g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 17 },
+        { food: `3 oatcakes with butter`, carbs: 17 }
     ]},
     { grams: 20, ideas: [
-        `3 oatcakes with cheddar`,
-        `1 slice of wholemeal toast with cheddar and a teaspoon of peanut butter`,
-        `4 tablespoons of porridge oats made with semi-skimmed milk and 5 almonds`,
-        `half a cheese sandwich on wholemeal bread`
+        { food: `1 crumpet with butter`, carbs: 20 },
+        { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
+        { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
+        { food: `3 oatcakes with a tablespoon of peanut butter`, carbs: 20 }
     ]},
     { grams: 25, ideas: [
-        `3 oatcakes with cheddar and a teaspoon of peanut butter`,
-        `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`,
-        `4 tablespoons of porridge oats made with semi-skimmed milk and a tablespoon of peanut butter`,
-        `1 wholemeal pitta with 2 tablespoons of hummus and a slice of cheddar`
+        { food: `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 26 },
+        { food: `3 tablespoons (30g dry) of porridge oats made with 100ml semi-skimmed milk`, carbs: 23 },
+        { food: `4 tablespoons (40g dry) of porridge oats made with water`, carbs: 24 },
+        { food: `1 Weetabix and 1 slice of wholemeal toast with butter`, carbs: 27 },
+        { food: `half a wholemeal bagel with butter`, carbs: 24 }
     ]},
     { grams: 30, ideas: [
-        `3 oatcakes with cheddar and 1 slice of wholemeal toast with butter`,
-        `4 tablespoons of porridge oats made with semi-skimmed milk and 1 slice of wholemeal toast with butter`,
-        `2 slices of wholemeal toast with cheddar`,
-        `1 wholemeal pitta with cheddar and a tablespoon of peanut butter`
+        { food: `3 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 31 },
+        { food: `2 slices of wholemeal toast with cheddar`, carbs: 28 },
+        { food: `4 tablespoons (40g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 29 },
+        { food: `1 slice of wholemeal toast and 1 Weetabix with 100ml semi-skimmed milk`, carbs: 32 }
     ]}
 ];
 
@@ -418,81 +438,85 @@ const BEDTIME_SUGGESTIONS = [
 // same tiered structure as CARB_SUGGESTIONS but only foods you'd eat at breakfast.
 const BREAKFAST_SUGGESTIONS = [
     { grams: 5, ideas: [
-        `half a small banana`,
-        `a 125g pot of plain natural yoghurt`,
-        `a small glass (100ml) of semi-skimmed milk`,
-        `1 tablespoon of raisins`,
-        `2 plain rice cakes with butter`
+        { food: `a small glass (100ml) of semi-skimmed milk`, carbs: 5 },
+        { food: `a 125g pot of plain natural yoghurt`, carbs: 6 },
+        { food: `a 125g pot of Greek natural yoghurt with a few blueberries`, carbs: 7 },
+        { food: `a 125g pot of natural yoghurt with 2 strawberries`, carbs: 5 }
     ]},
     { grams: 7, ideas: [
-        `a 125g pot of natural yoghurt with 5 or 6 blueberries`,
-        `2 tablespoons of porridge oats made with water`,
-        `1 oatcake with a thin slice of cheddar`
+        { food: `1 oatcake with a thin slice of cheddar`, carbs: 6 },
+        { food: `a 125g pot of natural yoghurt with 5 or 6 blueberries`, carbs: 7 },
+        { food: `1 oatcake with butter`, carbs: 6 },
+        { food: `1 small apple`, carbs: 8 }
     ]},
     { grams: 10, ideas: [
-        `1 slice of wholemeal toast with butter`,
-        `1 small banana (about 15cm long)`,
-        `4 tablespoons of porridge oats made with water`,
-        `half a crumpet with butter`,
-        `1 Weetabix with 100ml of semi-skimmed milk`
+        { food: `half a crumpet with butter`, carbs: 10 },
+        { food: `half a small banana`, carbs: 9 },
+        { food: `2 oatcakes with butter`, carbs: 12 },
+        { food: `1 tablespoon of raisins`, carbs: 10 }
     ]},
     { grams: 15, ideas: [
-        `1 slice of wholemeal toast with a teaspoon of peanut butter`,
-        `a 30g bowl of bran flakes with semi-skimmed milk`,
-        `4 tablespoons of porridge oats made with semi-skimmed milk and a drizzle of honey`,
-        `1 Weetabix with semi-skimmed milk and half a small banana`
+        { food: `1 slice of wholemeal toast with butter`, carbs: 14 },
+        { food: `1 slice of wholemeal toast with a teaspoon of peanut butter`, carbs: 15 },
+        { food: `2 tablespoons (20g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 17 },
+        { food: `2 plain rice cakes with peanut butter`, carbs: 17 }
     ]},
     { grams: 20, ideas: [
-        `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
-        `1 crumpet with butter`,
-        `1 slice of wholemeal toast with a teaspoon of peanut butter and half a banana`,
-        `2 Weetabix with semi-skimmed milk`
+        { food: `1 crumpet with butter`, carbs: 20 },
+        { food: `1 small banana (about 15cm long)`, carbs: 18 },
+        { food: `1 Weetabix with 100ml semi-skimmed milk`, carbs: 18 },
+        { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
+        { food: `a 20g bowl of bran flakes with 100ml semi-skimmed milk`, carbs: 19 }
     ]}
 ];
 
 // low-carb breakfast suggestions — for mornings when BG is already above target.
 // zero/minimal carb options to avoid stacking carbs on top of dawn phenomenon.
-// no gram tiers needed — these are used when carbs should be avoided entirely.
+// flat array (no gram tiers) — every entry must be at or below 5g carbs.
 const LOW_CARB_BREAKFAST_SUGGESTIONS = [
-    `scrambled eggs`,
-    `a boiled egg`,
-    `poached eggs on their own`,
-    `a 125g pot of plain natural yoghurt with a few berries`,
-    `a couple of slices of cheese`,
-    `scrambled eggs with a slice of cheese`,
-    `plain omelette`
+    { food: `scrambled eggs`, carbs: 1 },
+    { food: `a boiled egg`, carbs: 0 },
+    { food: `poached eggs on their own`, carbs: 1 },
+    { food: `a couple of slices of cheese`, carbs: 0 },
+    { food: `scrambled eggs with a slice of cheese`, carbs: 1 },
+    { food: `plain omelette`, carbs: 1 },
+    { food: `a 100g pot of cottage cheese`, carbs: 3 },
+    { food: `a 125g pot of full-fat Greek yoghurt`, carbs: 4 }
 ];
 
 // dinner carb suggestions — dinner-appropriate carb sides keyed by gram target.
 // different from CARB_SUGGESTIONS (snacks) and BEDTIME_SUGGESTIONS (starchy +
 // fat/protein combos for sustained overnight absorption). dinner sides are
 // the carbs you'd eat ON THE PLATE alongside protein and veg.
+//
+// carb values sourced from: NHS carb counting (medium baked jacket potato 180g ≈ 30g carbs),
+// boiled new potatoes (~6g each, 15g/100g flesh), cooked rice (~4-5g per tablespoon),
+// dry pasta (~73% carb by weight), Warburtons wholemeal pitta (27g), wholemeal bread (14g/slice).
 const DINNER_SUGGESTIONS = [
     { grams: 10, ideas: [
-        `1 slice of wholemeal bread with your meal`,
-        `half a wholemeal pitta`,
-        `2 boiled new potatoes`,
-        `2 tablespoons of cooked rice`
+        { food: `2 tablespoons of cooked rice`, carbs: 9 },
+        { food: `2 boiled new potatoes`, carbs: 11 },
+        { food: `half a small wholemeal pitta`, carbs: 9 },
+        { food: `1 small boiled potato`, carbs: 10 }
     ]},
     { grams: 15, ideas: [
-        `1 small jacket potato`,
-        `3 tablespoons of cooked rice`,
-        `1 wholemeal pitta`,
-        `4 boiled new potatoes`,
-        `2 slices of wholemeal bread with your meal`
+        { food: `1 slice of wholemeal bread with your meal`, carbs: 14 },
+        { food: `half a wholemeal pitta`, carbs: 14 },
+        { food: `3 tablespoons of cooked rice`, carbs: 13 },
+        { food: `3 boiled new potatoes`, carbs: 15 },
+        { food: `half a small jacket potato`, carbs: 15 }
     ]},
     { grams: 20, ideas: [
-        `half a medium jacket potato with butter`,
-        `4 tablespoons of cooked rice`,
-        `a small portion of pasta (60g dry weight)`,
-        `1 small jacket potato plus a slice of bread`,
-        `5-6 boiled new potatoes`
+        { food: `4 tablespoons of cooked rice`, carbs: 18 },
+        { food: `4 boiled new potatoes`, carbs: 21 },
+        { food: `a small portion of pasta (30g dry weight)`, carbs: 22 },
+        { food: `half a medium jacket potato with butter`, carbs: 18 }
     ]},
     { grams: 25, ideas: [
-        `1 medium jacket potato with butter`,
-        `5 tablespoons of cooked rice`,
-        `a medium portion of pasta (75g dry weight)`,
-        `1 small jacket potato plus 2 slices of bread`
+        { food: `1 small jacket potato with butter`, carbs: 25 },
+        { food: `1 wholemeal pitta`, carbs: 27 },
+        { food: `6 tablespoons of cooked rice`, carbs: 27 },
+        { food: `a small portion of pasta (35g dry weight)`, carbs: 25 }
     ]}
 ];
 
@@ -745,7 +769,7 @@ function createNudgeEngine(config)
         }
 
         var idea = best.ideas[Math.floor(Math.random() * best.ideas.length)];
-        return { grams: best.grams, suggestion: idea };
+        return { grams: best.grams, suggestion: idea.food, carbs: idea.carbs };
     }
 
     function getCarbSuggestion(grams)
@@ -828,7 +852,7 @@ function createNudgeEngine(config)
 
     function getLowCarbBreakfastSuggestion()
     {
-        return LOW_CARB_BREAKFAST_SUGGESTIONS[Math.floor(Math.random() * LOW_CARB_BREAKFAST_SUGGESTIONS.length)];
+        return LOW_CARB_BREAKFAST_SUGGESTIONS[Math.floor(Math.random() * LOW_CARB_BREAKFAST_SUGGESTIONS.length)].food;
     }
 
     function isInDinnerWindow(now)
@@ -970,14 +994,14 @@ function createNudgeEngine(config)
             carbs = Math.max(10, carbs - 10);
             var food = getDinnerSuggestion(carbs);
             title = `Dinner time`;
-            message = `Your sugar is ${reading} — a bit above target. About ${food.grams}g of carbs with your dinner will cover your insulin without pushing the spike too high — try ${food.suggestion}.`;
+            message = `Your sugar is ${reading} — a bit above target. Alongside your protein and veg, about ${food.grams}g of starchy carbs will cover your insulin without pushing the spike too high — try ${food.suggestion}.`;
         }
         else if (reading >= p.targetLow)
         {
             // in target — standard dinner carbs
             var food = getDinnerSuggestion(carbs);
             title = `Dinner time`;
-            message = `Your sugar is ${reading}. Your evening insulin needs about ${food.grams}g of carbs with dinner to keep your sugar steady through the evening — try ${food.suggestion}. Protein and veg alone won't cover the insulin.`;
+            message = `Your sugar is ${reading}. Alongside your protein and veg, your evening insulin needs about ${food.grams}g of starchy carbs to keep your sugar steady through the evening — try ${food.suggestion}. Protein and veg alone won't cover the insulin.`;
         }
         else
         {
@@ -985,7 +1009,7 @@ function createNudgeEngine(config)
             carbs = carbs + 5;
             var food = getDinnerSuggestion(carbs);
             title = `Dinner time`;
-            message = `Your sugar is ${reading} — a bit low heading into dinner. About ${food.grams}g of carbs will lift it back to target and cover your evening insulin — try ${food.suggestion}.`;
+            message = `Your sugar is ${reading} — a bit low heading into dinner. Alongside your protein and veg, about ${food.grams}g of starchy carbs will lift it back to target and cover your evening insulin — try ${food.suggestion}.`;
         }
 
         await sendNudge(title, message);

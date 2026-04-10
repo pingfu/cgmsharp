@@ -10,7 +10,7 @@ const assert = require(`node:assert/strict`);
 const fs = require(`fs`);
 const path = require(`path`);
 const moment = require(`moment`);
-const { createNudgeEngine, DEFAULTS } = require(`../nudge`);
+const { createNudgeEngine, DEFAULTS, CARB_SUGGESTIONS, EMERGENCY_SUGGESTIONS, BEDTIME_SUGGESTIONS, BREAKFAST_SUGGESTIONS, LOW_CARB_BREAKFAST_SUGGESTIONS, DINNER_SUGGESTIONS } = require(`../nudge`);
 
 // individual's profile — matches inspect-scenario.js
 // only specify per-user overrides here; all other values come from DEFAULTS
@@ -331,7 +331,7 @@ test(`bouncing near target: single nudge despite oscillation around 7.0`, async 
 // worsens glycaemic control). the alert channel handles genuine emergencies
 // (critical thresholds) with high-priority alarms that break through.
 //
-// meal window suppression (120 min post-injection) prevents suggesting more
+// meal window suppression (150 min post-injection) prevents suggesting more
 // food while a meal is being digested — the BG rise from the meal hasn't
 // peaked yet, so any correction would stack on top of it.
 // ===========================================================================
@@ -372,7 +372,7 @@ test(`slow hypo crossing midnight: nudges before quiet hours, silent after`, asy
 test(`post-breakfast-spike: zero nudges during meal window`, async () =>
 {
     // injection at 07:30, breakfast eaten, BG spikes to 14.2 then descends.
-    // the meal window (07:30-09:30) suppresses nudges because the food
+    // the meal window (07:30-10:00) suppresses nudges because the food
     // is still being digested — suggesting more carbs on top would worsen
     // the spike. the rapid insulin component handles the descent.
     var nudges = await runScenario(`post-breakfast-spike.json`);
@@ -733,7 +733,7 @@ test(`pre-dinner low: nudges for daytime low, no bedtime nudge`, async () =>
 //   2. reactive safety nudge if the proactive advice is ignored and BG
 //      descends into clinical risk (hypo floor or rapid crash)
 //
-// the meal window (120 min post-injection) is a noise-suppression heuristic,
+// the meal window (150 min post-injection) is a noise-suppression heuristic,
 // NOT a safety gate — it must allow urgent nudges through when BG is clearly
 // heading to hypo regardless of assumed meal digestion.
 // ===========================================================================
@@ -753,7 +753,7 @@ test(`dinner-zero-carbs: proactive dinner nudge fires at injection time`, async 
 test(`dinner-zero-carbs: reactive nudge fires before/at hypoFloor despite meal window`, async () =>
 {
     // the user ignores the dinner nudge and eats zero carbs. BG descends
-    // from 9 to 5.1 over 90 min, all within the 120-min meal window. the
+    // from 9 to 5.1 over 90 min, all within the 150-min meal window. the
     // meal window's safety override must let an urgent nudge through —
     // BG at/below hypoFloor with insulin active is non-negotiable.
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
@@ -769,17 +769,17 @@ test(`dinner-zero-carbs: reactive nudge is clearly actionable`, async () =>
     // the reactive nudge during a post-injection descent must give the user
     // a clear, immediate action. "Have [N]g of fast-acting sugar — [food]"
     // is the standard format and tells her exactly what to do in seconds.
-    // (we don't assert on insulin mention: at 90 min post-injection under
-    // the Humulin M3 curve, soluble is ramping to peak but combined activity
-    // is ~0.20 — below the 0.25 insulinActiveThreshold — so the engine's
-    // "insulin is still working" message path doesn't fire. The 0.25
-    // threshold is one of the Phase 3 empirical constants pending recalibration.)
+    // at 90 min post-injection under the Humulin M3 curve, combined activity
+    // is ~0.20 — above the 0.18 insulinActiveThreshold — so the engine's
+    // "insulin is still working" message path fires and the nudge must
+    // explicitly warn that insulin is still active.
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
     var reactiveNudges = nudges.filter(n => n.title !== `Dinner time`);
     assert.ok(reactiveNudges.length >= 1, `expected reactive nudge`);
     var firstReactive = reactiveNudges[0];
     assert.ok(/fast.acting sugar/.test(firstReactive.message), `reactive nudge should tell user to have fast-acting sugar, got: ${firstReactive.message}`);
     assert.ok(/\d+g/.test(firstReactive.message), `reactive nudge should specify a gram amount, got: ${firstReactive.message}`);
+    assert.ok(/insulin is still working/.test(firstReactive.message), `reactive nudge should mention active insulin at 90 min post-injection, got: ${firstReactive.message}`);
 });
 
 // ---------------------------------------------------------------------------
@@ -892,24 +892,24 @@ function isInQuietHours(time, tzOffset)
 
 test(`post-injection hypo risk: meal window allows urgent nudges through (safety override)`, async () =>
 {
-    // morning injection 07:30, meal window until 09:30 (120 min). BG drops from
+    // morning injection 07:30, meal window until 10:00 (150 min). BG drops from
     // 9.0 to 5.0 during this window. the meal window is a noise-suppression
     // heuristic — NOT a safety gate. if BG is at hypoFloor, urgent trend, or
     // projected to hypo in 30 min, the engine must nudge anyway. this is the
     // canonical undersized-breakfast case: insulin is pulling BG down faster
-    // than the food can counter, and staying silent until 09:30 (meal window
+    // than the food can counter, and staying silent until 10:00 (meal window
     // end) could mean she's unconscious by then.
     var nudges = await runScenario(`post-injection-hypo-risk.json`);
     assert.ok(nudges.length >= 1, `safety override must fire at least one nudge during descent`);
     // the nudge should fire DURING the meal window when the projection shows hypo
-    var withinMealWindow = nudges.filter(n => n.time <= `2026-04-07 09:30`);
+    var withinMealWindow = nudges.filter(n => n.time <= `2026-04-07 10:00`);
     assert.ok(withinMealWindow.length >= 1, `at least one nudge should fire during meal window via safety override`);
 });
 
 // ---------------------------------------------------------------------------
 // MEAL WINDOW SAFETY OVERRIDE — BREADTH COVERAGE
 // ---------------------------------------------------------------------------
-// clinical basis: the meal window (120 min post-injection) is a noise-
+// clinical basis: the meal window (150 min post-injection) is a noise-
 // suppression heuristic that assumes a meal is being digested. but the
 // assumption breaks in three clinically important cases:
 //   1. reading ≤ hypoFloor — she's already below clinical safety
@@ -926,7 +926,7 @@ test(`post-injection hypo risk: meal window allows urgent nudges through (safety
 
 test(`morning-meal-window-rapid-crash: projection triggers override in below-target branch`, async () =>
 {
-    // morning injection 07:30. BG descends gradually through the 120-min
+    // morning injection 07:30. BG descends gradually through the 150-min
     // meal window. at ~08:10 UTC (09:10 BST, 100 min post-injection), BG
     // crosses below targetLow (6.0) and the 30-min projection is at/below
     // hypoFloor — even though the current reading is still above 5.0 and
@@ -936,8 +936,8 @@ test(`morning-meal-window-rapid-crash: projection triggers override in below-tar
     var nudges = await runScenario(`morning-meal-window-rapid-crash.json`);
     assert.ok(nudges.length >= 1, `safety override must fire during meal window descent`);
     var firstNudge = nudges[0];
-    // first nudge must fire within the meal window (06:30 UTC injection + 120 min = 08:30 UTC end)
-    assert.ok(firstNudge.time <= `2026-04-10 08:30`, `first nudge should fire within meal window, got ${firstNudge.time}`);
+    // first nudge must fire within the meal window (06:30 UTC injection + 150 min = 09:00 UTC end)
+    assert.ok(firstNudge.time <= `2026-04-10 09:00`, `first nudge should fire within meal window, got ${firstNudge.time}`);
     // first nudge must fire via projection path — before BG reaches hypoFloor
     assert.ok(firstNudge.reading > 5.0, `first nudge should fire via projection before hypoFloor (not the hypoFloor path), got ${firstNudge.reading}`);
     assert.ok(firstNudge.reading < 6.5, `first nudge should fire at or below target, got ${firstNudge.reading}`);
@@ -967,7 +967,7 @@ test(`meal-window-normal-post-meal-no-override: normal post-meal rise does NOT t
 {
     // NEGATIVE test. breakfast eaten at 07:30 injection, BG rises normally
     // from 7.0 to 14.0 peak then descends as insulin catches up. during the
-    // entire meal window (07:30-09:30) none of the override conditions are
+    // entire meal window (07:30-10:00) none of the override conditions are
     // true — no hypoFloor, no urgent trend, no projected hypo. the override
     // must NOT fire. only the proactive breakfast nudge (07:00-07:30) is
     // expected. this is the guardrail that prevents the safety override from
@@ -1019,7 +1019,7 @@ test(`late morning accelerating drop: nudges at low readings`, async () =>
 test(`post-meal descent: zero reactive nudges during normal dinner curve`, async () =>
 {
     // normal post-dinner curve: BG rises from 6.5 to 10.5 then settles to 8.0.
-    // the meal window (19:00-21:00) covers the rise and descent. no reactive
+    // the meal window (19:00-21:30) covers the rise and descent. no reactive
     // nudges should fire — this is food being digested normally. the proactive
     // dinner nudge at 19:00 is expected and excluded from the count.
     var nudges = await runScenario(`post-meal-descent-no-intervention.json`);
@@ -1333,20 +1333,20 @@ test(`insulin curve: fully worn off at 1080 min (18h)`, async () =>
     assert.equal(activity, 0, `insulin fully worn off at 1080 min`);
 });
 
-test(`insulin curve: meaningfully active at 120 min (meal window boundary)`, async () =>
+test(`insulin curve: meaningfully active at 150 min (meal window boundary)`, async () =>
 {
-    // at the meal window boundary (120 min), insulin must be "meaningfully
-    // active" (above 0.25 threshold). this validates that the meal window
-    // duration aligns with the insulin activity profile — suppressing carb
-    // nudges only while insulin is genuinely working on the meal.
+    // at the meal window boundary (150 min), insulin must be "meaningfully
+    // active" (above the 0.18 insulinActiveThreshold). this validates that
+    // the meal window duration aligns with the insulin activity profile —
+    // suppressing carb nudges only while insulin is genuinely working on the meal.
     //
     // under Humulin M3 curve:
-    // soluble: at 120 min = peakStart, so activity = 1.0, weighted 0.30
-    // NPH: (120-90)/(240-90) = 30/150 = 0.2 of peak, weighted 0.2 × 0.70 = 0.14
-    // combined: 0.44 — comfortably above 0.25 threshold.
+    // soluble: at 150 min = inside peak plateau (120-180), activity = 1.0, weighted 0.30
+    // NPH: (150-90)/(240-90) = 60/150 = 0.4 of peak, weighted 0.4 × 0.70 = 0.28
+    // combined: 0.58 — comfortably above the 0.18 threshold.
     var engine = createNudgeEngine(Object.assign({}, profile));
-    var activity = engine._test.getInsulinActivity(120);
-    assert.ok(activity > 0.25, `insulin should be meaningfully active at meal window boundary, got ${activity.toFixed(3)}`);
+    var activity = engine._test.getInsulinActivity(150);
+    assert.ok(activity > 0.18, `insulin should be meaningfully active at meal window boundary, got ${activity.toFixed(3)}`);
 });
 
 // ===========================================================================
@@ -1528,6 +1528,77 @@ test(`evening-dinner-partial-recovery-second-dip: emergency foods on deep second
     {
         assert.ok(isEmergencyFood(n.message), `deep second dip at ${n.reading} must use emergency foods, got: ${n.message}`);
     });
+});
+
+// ===========================================================================
+// FOOD SUGGESTION CARB ACCURACY AUDIT
+//
+// every food idea in the tiered suggestion tables declares its own carb
+// content. this audit asserts each idea's carbs is within ±2g of its tier's
+// grams target. the purpose is to catch the "crumpet bug" class of error
+// where a food is slotted into the wrong tier and the engine ends up
+// recommending a dose materially different from what it calculated.
+//
+// tolerance is ±2g: tight enough to catch real miscategorisations but loose
+// enough to accommodate normal portion-size rounding in UK food labels.
+// if this test fails, the offending food needs its portion rewritten, its
+// carb value corrected, or to be moved to a different tier.
+// ===========================================================================
+
+function auditTieredTable(name, table, tolerance)
+{
+    for (var t = 0; t < table.length; t++)
+    {
+        var tier = table[t];
+        assert.ok(Array.isArray(tier.ideas), `${name} tier at index ${t} missing ideas array`);
+        for (var i = 0; i < tier.ideas.length; i++)
+        {
+            var idea = tier.ideas[i];
+            assert.equal(typeof idea.food, `string`, `${name} tier ${tier.grams}g idea ${i} missing food string`);
+            assert.equal(typeof idea.carbs, `number`, `${name} tier ${tier.grams}g idea "${idea.food}" missing carbs number`);
+            var diff = Math.abs(idea.carbs - tier.grams);
+            assert.ok(diff <= tolerance, `${name} tier ${tier.grams}g: "${idea.food}" has ${idea.carbs}g carbs (diff ${diff}g > tolerance ${tolerance}g)`);
+        }
+    }
+}
+
+test(`food suggestions: CARB_SUGGESTIONS within ±2g of tier`, () =>
+{
+    auditTieredTable(`CARB_SUGGESTIONS`, CARB_SUGGESTIONS, 2);
+});
+
+test(`food suggestions: EMERGENCY_SUGGESTIONS within ±2g of tier`, () =>
+{
+    auditTieredTable(`EMERGENCY_SUGGESTIONS`, EMERGENCY_SUGGESTIONS, 2);
+});
+
+test(`food suggestions: BEDTIME_SUGGESTIONS within ±2g of tier`, () =>
+{
+    auditTieredTable(`BEDTIME_SUGGESTIONS`, BEDTIME_SUGGESTIONS, 2);
+});
+
+test(`food suggestions: BREAKFAST_SUGGESTIONS within ±2g of tier`, () =>
+{
+    auditTieredTable(`BREAKFAST_SUGGESTIONS`, BREAKFAST_SUGGESTIONS, 2);
+});
+
+test(`food suggestions: DINNER_SUGGESTIONS within ±2g of tier`, () =>
+{
+    auditTieredTable(`DINNER_SUGGESTIONS`, DINNER_SUGGESTIONS, 2);
+});
+
+test(`food suggestions: LOW_CARB_BREAKFAST_SUGGESTIONS all at or below 5g`, () =>
+{
+    // low-carb breakfast is a flat array used when BG is already above target.
+    // every entry must be genuinely low-carb (≤5g) to avoid stacking carbs on
+    // top of an existing morning spike.
+    for (var i = 0; i < LOW_CARB_BREAKFAST_SUGGESTIONS.length; i++)
+    {
+        var idea = LOW_CARB_BREAKFAST_SUGGESTIONS[i];
+        assert.equal(typeof idea.food, `string`, `LOW_CARB_BREAKFAST idea ${i} missing food string`);
+        assert.equal(typeof idea.carbs, `number`, `LOW_CARB_BREAKFAST idea "${idea.food}" missing carbs number`);
+        assert.ok(idea.carbs <= 5, `LOW_CARB_BREAKFAST: "${idea.food}" has ${idea.carbs}g carbs (must be ≤5g)`);
+    }
 });
 
 // ===========================================================================

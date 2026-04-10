@@ -1,6 +1,6 @@
 {
     "name": "Meal window: normal post-meal rise should NOT trigger safety override",
-    "description": "Breakfast eaten at 07:30 local injection. BG rises normally from 7.0 to 14.0 peak around 08:30 then descends as insulin catches up. During the entire 07:30-09:30 meal window, BG is rising or above target — no risk of hypo, no reason for the engine to nudge. This is a NEGATIVE test: the safety override must NOT fire. The override's job is to break meal window suppression ONLY when there's clinical risk (hypoFloor, urgent trend, projected hypo). A normal post-meal curve has none of these. Only the proactive breakfast nudge at 07:00-07:30 is expected.",
+    "description": "Breakfast eaten at 07:30 local injection. BG rises normally from 7.0 to 14.0 peak around 08:30 then descends as insulin catches up. During the entire 07:30-10:00 meal window, BG is rising or above target — no risk of hypo, no reason for the engine to nudge. This is a NEGATIVE test: the safety override must NOT fire. The override's job is to break meal window suppression ONLY when there's clinical risk (hypoFloor, urgent trend, projected hypo). A normal post-meal curve has none of these. Only the proactive breakfast nudge at 07:00-07:30 is expected.",
     "timezoneOffsetMinutes": 60,
     "readings": [
         { "time": "2026-04-10 06:30", "reading": 7.0 },

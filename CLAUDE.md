@@ -134,8 +134,8 @@ Extracted into its own module via `createNudgeEngine(config)` factory. App.js pa
 
 The engine uses zone-based decision logic (below target / in target / quiet zone / above threshold) combined with:
 - **Trend** — two-timescale slope analysis (long-term 60 min + short-term 20 min) with acceleration detection
-- **Insulin activity** — biphasic curve model (30% rapid + 70% intermediate, piecewise linear, threshold 0.25). Insulin counter-factor scales carb suggestions proportionally by current activity level.
-- **Meal window** — suppresses carb suggestions for 120 min after injection times (covers eat-peak-settle cycle)
+- **Insulin activity** — biphasic curve model (30% rapid + 70% intermediate, piecewise linear, threshold 0.18). Insulin counter-factor scales carb suggestions proportionally by current activity level.
+- **Meal window** — suppresses carb suggestions for 150 min after injection times (covers eat-peak-settle cycle under Humulin M3's 2-4h soluble peak)
 - **Absorption awareness** — after recommending carbs, suppresses repeat nudges until the food has had time to show in BG (20 min for ≤7g, 35 min for >7g), unless the situation materially worsens
 - **Overnight quiet hours** — fully silent midnight–6 AM
 - **Dawn phenomenon** — suppresses nudges during 4–10 AM rising BG

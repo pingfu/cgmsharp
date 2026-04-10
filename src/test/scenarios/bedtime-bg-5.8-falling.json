@@ -1,6 +1,6 @@
 {
     "name": "Bedtime BG 5.8 and falling",
-    "description": "BG drifts from 7.4 to 5.8 by 21:10 BST (20:10 UTC). Below targetLow and falling at bedtime — tests that the bedtime nudge combines emergency sugar to stop the drop with starchy carbs for overnight. Evening injection 19:00 local, meal window expires at 21:00 local.",
+    "description": "BG drifts from 7.4 to 5.3 by 21:50 BST (20:50 UTC). Below targetLow and falling at bedtime — tests that the bedtime nudge combines emergency sugar to stop the drop with starchy carbs for overnight. Evening injection 19:00 local, meal window expires at 21:30 local (150 min).",
     "timezoneOffsetMinutes": 60,
     "readings": [
         { "time": "2026-04-10 19:00", "reading": 7.4 },
@@ -10,6 +10,10 @@
         { "time": "2026-04-10 19:40", "reading": 6.5 },
         { "time": "2026-04-10 19:50", "reading": 6.2 },
         { "time": "2026-04-10 20:00", "reading": 6.0 },
-        { "time": "2026-04-10 20:10", "reading": 5.8 }
+        { "time": "2026-04-10 20:10", "reading": 5.8 },
+        { "time": "2026-04-10 20:20", "reading": 5.7 },
+        { "time": "2026-04-10 20:30", "reading": 5.6 },
+        { "time": "2026-04-10 20:40", "reading": 5.5 },
+        { "time": "2026-04-10 20:50", "reading": 5.3 }
     ]
 }

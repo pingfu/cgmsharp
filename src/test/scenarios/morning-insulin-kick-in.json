@@ -1,6 +1,6 @@
 {
     "name": "morning-insulin-kick-in",
-    "description": "Dawn spike peaked at 15.0, morning injection at 07:30. BG at 15.0 at 07:30, drops steadily to ~7.0 by 10:30. Meal window active 07:30-09:30. Tests that the post-injection descent is not treated as a problem requiring intervention.",
+    "description": "Dawn spike peaked at 15.0, morning injection at 07:30. BG at 15.0 at 07:30, drops steadily to ~7.0 by 10:30. Meal window active 07:30-10:00. Tests that the post-injection descent is not treated as a problem requiring intervention.",
     "readings": [
         { "time": "2026-04-06 07:20", "reading": 14.8 },
         { "time": "2026-04-06 07:30", "reading": 15.0 },
