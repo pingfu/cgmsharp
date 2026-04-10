@@ -1,0 +1,27 @@
+{
+    "name": "Descent across targetLow boundary",
+    "description": "BG descends from 13 down through the targetLow boundary (6.0) over 3 hours. The critical section is 17:10-18:10 where BG crosses from 8.9 → 8.0 → 7.4 → 7.9 → 6.9 → 8.2 → 10.2. This tests that the engine does NOT double-nudge when BG dips to 7.4 (in-target) and then further to 6.9 (below-target) within the same continuous dip — the category changes from in-target-falling to below, but it's the same dip and the absorption window from the first nudge should suppress the second. Extracted from real 2026-04-09 data where this was a live bug (double-nudge caused user to eat 15g fast sugar total, overshooting).",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-09 15:00", "reading": 12.1 },
+        { "time": "2026-04-09 15:10", "reading": 11.9 },
+        { "time": "2026-04-09 15:20", "reading": 13.0 },
+        { "time": "2026-04-09 15:30", "reading": 11.8 },
+        { "time": "2026-04-09 15:40", "reading": 11.3 },
+        { "time": "2026-04-09 15:50", "reading": 10.4 },
+        { "time": "2026-04-09 16:00", "reading": 10.9 },
+        { "time": "2026-04-09 16:10", "reading": 11.7 },
+        { "time": "2026-04-09 16:20", "reading": 11.3 },
+        { "time": "2026-04-09 16:30", "reading": 10.2 },
+        { "time": "2026-04-09 16:40", "reading": 9.8 },
+        { "time": "2026-04-09 16:50", "reading": 9.8 },
+        { "time": "2026-04-09 17:00", "reading": 9.8 },
+        { "time": "2026-04-09 17:10", "reading": 8.9 },
+        { "time": "2026-04-09 17:20", "reading": 8.0 },
+        { "time": "2026-04-09 17:30", "reading": 7.4 },
+        { "time": "2026-04-09 17:40", "reading": 7.9 },
+        { "time": "2026-04-09 17:50", "reading": 6.9 },
+        { "time": "2026-04-09 18:00", "reading": 8.2 },
+        { "time": "2026-04-09 18:10", "reading": 10.2 }
+    ]
+}
