@@ -1,2313 +1,600 @@
 {
     "name": "2026 observations",
     "description": "Consolidated raw CGM data for 2026. Each day has its own annotation in the days[] array. Readings are deduplicated across source files. Times are UTC; timezoneOffsetMinutes applies at inspection time to convert to local.",
-    "timezoneOffsetMinutes": 60,
+    "timezoneOffsetMinutes":60,
     "days": [
         {
-            "date": "2026-04-06",
-            "notes": "All times UTC. First live monitoring session — only evening onwards captured for this calendar day. Pre-monitoring context: dinner ~18g at ~18:30, evening injection ~18:00. Recording started 19:10 with BG at 4.7. Rose to 8.8 by 20:00 (dinner settling). Bedtime snack ~22:15 BST (milk + banana ~20g fast carbs + toast with peanut butter) peaked 10.3 at 23:00 BST. Insulin consumed it in 40 min. Toast eaten too late to absorb before intermediate insulin peak — demonstrates fast carbs failing against overnight intermediate insulin peak. The overnight continuation and following morning are in 2026-04-07-full-day.json."
+            "date":"2026-04-06",
+            "notes":"All times UTC. First live monitoring session — only evening onwards captured for this calendar day. Pre-monitoring context: dinner ~18g at ~18:30, evening injection ~18:00. Recording started 19:10 with BG at 4.7. Rose to 8.8 by 20:00 (dinner settling). Bedtime snack ~22:15 BST (milk + banana ~20g fast carbs + toast with peanut butter) peaked 10.3 at 23:00 BST. Insulin consumed it in 40 min. Toast eaten too late to absorb before intermediate insulin peak — demonstrates fast carbs failing against overnight intermediate insulin peak. The overnight continuation and following morning are in 2026-04-07-full-day.json."
         },
         {
-            "date": "2026-04-07",
-            "notes": "All times UTC. First full day with live monitoring and food diary. Overnight from 6th (via live monitoring from 19:10 on 04-06): hypo 3.9 at 01:10 BST. Three JB rescues through the night 00:00-05:00 BST — each spiked briefly then crashed. Toast 20g around 05:00 BST brought BG to 10.1 by 06:30 BST. Food diary (BST): 07:30 injection, 07:52 porridge ~15g. 12:10 3 JBs + lentil soup ~25g total. 15:00 biscuit 10g. 15:51 small orange + yoghurt ~5g. 16:30 (corrected from 17:00) 10g snack. 18:00-19:00 glass of wine. 18:30 dinner ~20g. 21:00 4 crackers + cheese + PB ~20g. 22:30 biscuit 10g + another 10g. Overnight: 3 JB rescues (~15g each at ~01:50, ~03:00, ~05:00) + toast 20g at ~05:00. Observations: morning insulin consistently overshoots meals. Afternoon is constant grazing to stay above 6.0. Crackers at 21:00 give clean calibration: 20g from 5.7 peaked 10.7 = 4.0g/mmol."
+            "date":"2026-04-07",
+            "notes":"All times UTC. First full day with live monitoring and food diary. Overnight from 6th (via live monitoring from 19:10 on 04-06): hypo 3.9 at 01:10 BST. Three JB rescues through the night 00:00-05:00 BST — each spiked briefly then crashed. Toast 20g around 05:00 BST brought BG to 10.1 by 06:30 BST. Food diary (BST): 07:30 injection, 07:52 porridge ~15g. 12:10 3 JBs + lentil soup ~25g total. 15:00 biscuit 10g. 15:51 small orange + yoghurt ~5g. 16:30 (corrected from 17:00) 10g snack. 18:00-19:00 glass of wine. 18:30 dinner ~20g. 21:00 4 crackers + cheese + PB ~20g. 22:30 biscuit 10g + another 10g. Overnight: 3 JB rescues (~15g each at ~01:50, ~03:00, ~05:00) + toast 20g at ~05:00. Observations: morning insulin consistently overshoots meals. Afternoon is constant grazing to stay above 6.0. Crackers at 21:00 give clean calibration: 20g from 5.7 peaked 10.7 = 4.0g/mmol."
         },
         {
-            "date": "2026-04-08",
-            "notes": "All times UTC. Second full day. Hypo 4.3 at 06:00-06:10 BST. Dawn spike through 9.1 by 06:50 BST. Porridge breakfast ~06:52 (15g carbs est), peaked 16.9 at 09:00 BST. Morning insulin brings it down to 8.0 by 11:30 BST. Lunch spike to 13.9 at 14:20 BST, then steady descent. Pre-dinner drop to 6.8 at 17:20 BST. Dinner spike to 10.8 at 18:50 BST. Bedtime window: 7.4-9.3 BST. Overnight: gradual fall from 8.6 to hypo 4.9 at 02:10 BST, rescue carbs pushed to 10.8 by 04:00 BST, then settled 8-9 range."
+            "date":"2026-04-08",
+            "notes":"All times UTC. Second full day. Hypo 4.3 at 06:00-06:10 BST. Dawn spike through 9.1 by 06:50 BST. Porridge breakfast ~06:52 (15g carbs est), peaked 16.9 at 09:00 BST. Morning insulin brings it down to 8.0 by 11:30 BST. Lunch spike to 13.9 at 14:20 BST, then steady descent. Pre-dinner drop to 6.8 at 17:20 BST. Dinner spike to 10.8 at 18:50 BST. Bedtime window: 7.4-9.3 BST. Overnight: gradual fall from 8.6 to hypo 4.9 at 02:10 BST, rescue carbs pushed to 10.8 by 04:00 BST, then settled 8-9 range."
         },
         {
-            "date": "2026-04-09",
-            "notes": "All times UTC. Third full day — Humulin M3 + dinner-as-slow-carbs strategy. Overnight from 8th: gradual fall to hypo 4.9 at 02:10 BST, rescue carbs pushed to 10.8 by 04:00 BST, settled 8-9 range. Dawn rise from 8.2 to 9.2 by 07:40 BST. Breakfast window 08:00-08:20 BST: BG 8.7-8.5. Post-breakfast spike to 16.8 at 10:40-11:00 BST. Slow descent through afternoon, 13-12 range. Pre-dinner dip to 6.9 at 18:50 BST (bug: engine double-nudged 7.4 → 6.9 same dip, she ate 15g fast sugar total, spiked to 10.9). Dinner ~20:00 BST. Evening insulin 19:00 BST. Bedtime starchy carbs: 15g porridge 21:30 + 10g toast 22:30 (staggered, slow-release). Overnight to 10th: gentle fall from 8.2 at 01:00 BST to hypo 4.9 at 03:00 BST, rescue carbs (~25g JBs+toast) spiked to 11.1 by 04:00 BST, stable 7.7-8.2 through to dawn — the cleanest overnight so far. Best outcome of any night observed."
+            "date":"2026-04-09",
+            "notes":"All times UTC. Third full day — Humulin M3 + dinner-as-slow-carbs strategy. Overnight from 8th: gradual fall to hypo 4.9 at 02:10 BST, rescue carbs pushed to 10.8 by 04:00 BST, settled 8-9 range. Dawn rise from 8.2 to 9.2 by 07:40 BST. Breakfast window 08:00-08:20 BST: BG 8.7-8.5. Post-breakfast spike to 16.8 at 10:40-11:00 BST. Slow descent through afternoon, 13-12 range. Pre-dinner dip to 6.9 at 18:50 BST (bug: engine double-nudged 7.4 → 6.9 same dip, she ate 15g fast sugar total, spiked to 10.9). Dinner ~20:00 BST. Evening insulin 19:00 BST. Bedtime starchy carbs: 15g porridge 21:30 + 10g toast 22:30 (staggered, slow-release). Overnight to 10th: gentle fall from 8.2 at 01:00 BST to hypo 4.9 at 03:00 BST, rescue carbs (~25g JBs+toast) spiked to 11.1 by 04:00 BST, stable 7.7-8.2 through to dawn — the cleanest overnight so far. Best outcome of any night observed."
         },
         {
-            "date": "2026-04-10",
-            "notes": "All times UTC. Fourth full day — first clean overnight + morning following the dinner-as-slow-carbs + bedtime starchy strategy. Dawn holds 7.4-8.1 (cleanest morning so far vs previous days hitting 4.3-4.9). Morning insulin 07:30 BST = 06:30 UTC (12u). Breakfast peak only 11.3 at 09:00 BST — much better than previous days (16.8 on 04-09). Morning insulin brings it down well. Mid-morning through lunch shows defensive grazing pattern: multiple small dips (10:30 @ 6.9, 11:40 @ 6.2, 12:50 @ 6.9, 13:10 @ 6.2) each with small snack bounces. Lunch peak 11.3 at 14:10 BST. Afternoon plateau 9.5-10.4 for 2h. Late afternoon descent from ~10 down to 5.9 at 17:50 BST (morning insulin tail + no food = slow drift). Container restart at 17:53 BST (engine lost history mid-dip). Engine fired reactive nudge at 18:10 BST reading 5.8 — recommended 5g fast sugar + 10g starchy — user acted on it, BG rose 5.8 → 10.4 peak over 30 min. Evening insulin 19:00 BST (9u). Data stops ~19:20 BST (current time)."
+            "date":"2026-04-10",
+            "notes":"All times UTC. Fourth full day — first clean overnight + morning following the dinner-as-slow-carbs + bedtime starchy strategy. Dawn holds 7.4-8.1 (cleanest morning so far vs previous days hitting 4.3-4.9). Morning insulin 07:30 BST = 06:30 UTC (12u). Breakfast peak only 11.3 at 09:00 BST — much better than previous days (16.8 on 04-09). Morning insulin brings it down well. Mid-morning through lunch shows defensive grazing pattern: multiple small dips (10:30 @ 6.9, 11:40 @ 6.2, 12:50 @ 6.9, 13:10 @ 6.2) each with small snack bounces. Lunch peak 11.3 at 14:10 BST. Afternoon plateau 9.5-10.4 for 2h. Late afternoon descent from ~10 down to 5.9 at 17:50 BST (morning insulin tail + no food = slow drift). Container restart at 17:53 BST (engine lost history mid-dip). Engine fired reactive nudge at 18:10 BST reading 5.8 — recommended 5g fast sugar + 10g starchy — user acted on it, BG rose 5.8 → 10.4 peak over 30 min. Evening insulin 19:00 BST (9u). Data stops ~19:20 BST (current time)."
         }
     ],
     "readings": [
-        {
-            "time": "2026-04-06 19:10",
-            "reading": 4.7
-        },
-        {
-            "time": "2026-04-06 19:18",
-            "reading": 6
-        },
-        {
-            "time": "2026-04-06 19:20",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-06 19:30",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-06 19:40",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-06 19:50",
-            "reading": 7
-        },
-        {
-            "time": "2026-04-06 20:00",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-06 20:10",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-06 20:20",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-06 20:30",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-06 20:40",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-06 20:50",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-06 21:00",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-06 21:10",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-06 21:20",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-06 21:30",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-06 21:40",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-06 21:50",
-            "reading": 7.5
-        },
-        {
-            "time": "2026-04-06 22:00",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-06 22:10",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-06 22:20",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-06 22:30",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-06 22:40",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-06 22:50",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-06 23:00",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-06 23:10",
-            "reading": 9.6
-        },
-        {
-            "time": "2026-04-06 23:20",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-06 23:30",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-06 23:40",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-06 23:50",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-07 00:00",
-            "reading": 4.9
-        },
-        {
-            "time": "2026-04-07 00:10",
-            "reading": 3.9
-        },
-        {
-            "time": "2026-04-07 00:20",
-            "reading": 4.2
-        },
-        {
-            "time": "2026-04-07 00:30",
-            "reading": 4.6
-        },
-        {
-            "time": "2026-04-07 00:40",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-07 00:50",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-07 01:00",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-07 01:10",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-07 01:20",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-07 01:30",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-07 01:40",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-07 01:50",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-07 02:00",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-07 02:10",
-            "reading": 5.3
-        },
-        {
-            "time": "2026-04-07 02:20",
-            "reading": 5.7
-        },
-        {
-            "time": "2026-04-07 02:30",
-            "reading": 5.7
-        },
-        {
-            "time": "2026-04-07 02:40",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-07 02:50",
-            "reading": 10.8
-        },
-        {
-            "time": "2026-04-07 03:00",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-07 03:10",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-07 03:20",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-07 03:30",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-07 03:40",
-            "reading": 5.8
-        },
-        {
-            "time": "2026-04-07 03:50",
-            "reading": 5.8
-        },
-        {
-            "time": "2026-04-07 04:00",
-            "reading": 5.8
-        },
-        {
-            "time": "2026-04-07 04:10",
-            "reading": 5.4
-        },
-        {
-            "time": "2026-04-07 04:20",
-            "reading": 5.2
-        },
-        {
-            "time": "2026-04-07 04:30",
-            "reading": 5
-        },
-        {
-            "time": "2026-04-07 04:40",
-            "reading": 5.2
-        },
-        {
-            "time": "2026-04-07 04:50",
-            "reading": 4.7
-        },
-        {
-            "time": "2026-04-07 05:00",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-07 05:10",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-07 05:20",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-07 05:30",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-07 05:40",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-07 05:50",
-            "reading": 7.5
-        },
-        {
-            "time": "2026-04-07 06:00",
-            "reading": 7.2
-        },
-        {
-            "time": "2026-04-07 06:10",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-07 06:20",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-07 06:30",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-07 06:40",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-07 06:50",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-07 07:00",
-            "reading": 7
-        },
-        {
-            "time": "2026-04-07 07:10",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-07 07:20",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-07 07:30",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-07 07:40",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-07 07:50",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-07 08:00",
-            "reading": 10.6
-        },
-        {
-            "time": "2026-04-07 08:10",
-            "reading": 11.5
-        },
-        {
-            "time": "2026-04-07 08:20",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-07 08:30",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-07 08:40",
-            "reading": 10.9
-        },
-        {
-            "time": "2026-04-07 08:50",
-            "reading": 11.6
-        },
-        {
-            "time": "2026-04-07 09:00",
-            "reading": 12.2
-        },
-        {
-            "time": "2026-04-07 09:10",
-            "reading": 11.4
-        },
-        {
-            "time": "2026-04-07 09:20",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-07 09:30",
-            "reading": 10.9
-        },
-        {
-            "time": "2026-04-07 09:40",
-            "reading": 11
-        },
-        {
-            "time": "2026-04-07 09:50",
-            "reading": 10.7
-        },
-        {
-            "time": "2026-04-07 10:00",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-07 10:10",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-07 10:20",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-07 10:30",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-07 10:40",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-07 10:50",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-07 11:00",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-07 11:10",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-07 11:20",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-07 11:30",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-07 11:40",
-            "reading": 10.8
-        },
-        {
-            "time": "2026-04-07 11:50",
-            "reading": 13
-        },
-        {
-            "time": "2026-04-07 12:00",
-            "reading": 12.9
-        },
-        {
-            "time": "2026-04-07 12:10",
-            "reading": 11.8
-        },
-        {
-            "time": "2026-04-07 12:20",
-            "reading": 11.4
-        },
-        {
-            "time": "2026-04-07 12:30",
-            "reading": 10.5
-        },
-        {
-            "time": "2026-04-07 12:40",
-            "reading": 10.5
-        },
-        {
-            "time": "2026-04-07 12:50",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-07 13:00",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-07 13:10",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-07 13:20",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-07 13:30",
-            "reading": 6.5
-        },
-        {
-            "time": "2026-04-07 13:40",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-07 13:50",
-            "reading": 7
-        },
-        {
-            "time": "2026-04-07 14:00",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-07 14:10",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-07 14:20",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-07 14:30",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-07 14:40",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-07 14:50",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-07 15:00",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-07 15:10",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-07 15:20",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-07 15:30",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-07 15:40",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-07 15:50",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-07 16:00",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-07 16:10",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-07 16:20",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-07 16:30",
-            "reading": 5.7
-        },
-        {
-            "time": "2026-04-07 16:40",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-07 16:50",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-07 17:00",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-07 17:10",
-            "reading": 9.3
-        },
-        {
-            "time": "2026-04-07 17:20",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-07 17:30",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-07 17:40",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-07 17:50",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-07 18:00",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-07 18:10",
-            "reading": 11.2
-        },
-        {
-            "time": "2026-04-07 18:20",
-            "reading": 12.1
-        },
-        {
-            "time": "2026-04-07 18:30",
-            "reading": 12.8
-        },
-        {
-            "time": "2026-04-07 18:40",
-            "reading": 12.6
-        },
-        {
-            "time": "2026-04-07 18:50",
-            "reading": 12.7
-        },
-        {
-            "time": "2026-04-07 19:00",
-            "reading": 12.3
-        },
-        {
-            "time": "2026-04-07 19:10",
-            "reading": 13.4
-        },
-        {
-            "time": "2026-04-07 19:20",
-            "reading": 13.3
-        },
-        {
-            "time": "2026-04-07 19:30",
-            "reading": 13.4
-        },
-        {
-            "time": "2026-04-07 19:40",
-            "reading": 13
-        },
-        {
-            "time": "2026-04-07 19:50",
-            "reading": 12.3
-        },
-        {
-            "time": "2026-04-07 20:00",
-            "reading": 12.1
-        },
-        {
-            "time": "2026-04-07 20:10",
-            "reading": 12
-        },
-        {
-            "time": "2026-04-07 20:20",
-            "reading": 13.1
-        },
-        {
-            "time": "2026-04-07 20:30",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-07 20:40",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-07 20:50",
-            "reading": 9.3
-        },
-        {
-            "time": "2026-04-07 21:00",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-07 21:10",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-07 21:20",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-07 21:30",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-07 21:40",
-            "reading": 5.7
-        },
-        {
-            "time": "2026-04-07 21:50",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-07 22:00",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-07 22:10",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-07 22:20",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-07 22:30",
-            "reading": 10.7
-        },
-        {
-            "time": "2026-04-07 22:40",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-07 22:50",
-            "reading": 10
-        },
-        {
-            "time": "2026-04-07 23:00",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-07 23:10",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-07 23:20",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-07 23:30",
-            "reading": 10.7
-        },
-        {
-            "time": "2026-04-07 23:40",
-            "reading": 10.6
-        },
-        {
-            "time": "2026-04-07 23:50",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-08 00:00",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-08 00:10",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-08 00:20",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-08 00:30",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-08 00:40",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-08 00:50",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-08 01:00",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-08 01:10",
-            "reading": 5.6
-        },
-        {
-            "time": "2026-04-08 01:20",
-            "reading": 5.1
-        },
-        {
-            "time": "2026-04-08 01:30",
-            "reading": 5.5
-        },
-        {
-            "time": "2026-04-08 01:40",
-            "reading": 5.1
-        },
-        {
-            "time": "2026-04-08 01:50",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-08 02:00",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-08 02:10",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-08 02:20",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-08 02:30",
-            "reading": 5.4
-        },
-        {
-            "time": "2026-04-08 02:40",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-08 02:50",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-08 03:00",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-08 03:10",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-08 03:20",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-08 03:30",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-08 03:40",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-08 03:50",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-08 04:00",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-08 04:10",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-08 04:20",
-            "reading": 5.7
-        },
-        {
-            "time": "2026-04-08 04:30",
-            "reading": 5.4
-        },
-        {
-            "time": "2026-04-08 04:40",
-            "reading": 5.1
-        },
-        {
-            "time": "2026-04-08 04:50",
-            "reading": 4.6
-        },
-        {
-            "time": "2026-04-08 05:00",
-            "reading": 4.3
-        },
-        {
-            "time": "2026-04-08 05:10",
-            "reading": 4.3
-        },
-        {
-            "time": "2026-04-08 05:20",
-            "reading": 4.6
-        },
-        {
-            "time": "2026-04-08 05:30",
-            "reading": 5.4
-        },
-        {
-            "time": "2026-04-08 05:40",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-08 05:50",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-08 06:10",
-            "reading": 9.2
-        },
-        {
-            "time": "2026-04-08 06:20",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-08 06:30",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-08 06:40",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-08 06:50",
-            "reading": 12.9
-        },
-        {
-            "time": "2026-04-08 07:00",
-            "reading": 12.3
-        },
-        {
-            "time": "2026-04-08 07:10",
-            "reading": 12.1
-        },
-        {
-            "time": "2026-04-08 07:20",
-            "reading": 14.2
-        },
-        {
-            "time": "2026-04-08 07:30",
-            "reading": 14
-        },
-        {
-            "time": "2026-04-08 07:40",
-            "reading": 15.1
-        },
-        {
-            "time": "2026-04-08 07:50",
-            "reading": 15.8
-        },
-        {
-            "time": "2026-04-08 08:00",
-            "reading": 16.9
-        },
-        {
-            "time": "2026-04-08 08:10",
-            "reading": 15.1
-        },
-        {
-            "time": "2026-04-08 08:20",
-            "reading": 15.4
-        },
-        {
-            "time": "2026-04-08 08:30",
-            "reading": 14.8
-        },
-        {
-            "time": "2026-04-08 08:40",
-            "reading": 15.1
-        },
-        {
-            "time": "2026-04-08 08:50",
-            "reading": 13.3
-        },
-        {
-            "time": "2026-04-08 09:00",
-            "reading": 13.4
-        },
-        {
-            "time": "2026-04-08 09:10",
-            "reading": 13.9
-        },
-        {
-            "time": "2026-04-08 09:20",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-08 09:30",
-            "reading": 11
-        },
-        {
-            "time": "2026-04-08 09:40",
-            "reading": 11.4
-        },
-        {
-            "time": "2026-04-08 09:50",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-08 10:00",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-08 10:10",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-08 10:20",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-08 10:30",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-08 10:40",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-08 10:50",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-08 11:00",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-08 11:10",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-08 11:20",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-08 11:30",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-08 11:40",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-08 11:50",
-            "reading": 11.2
-        },
-        {
-            "time": "2026-04-08 12:00",
-            "reading": 11.9
-        },
-        {
-            "time": "2026-04-08 12:10",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-08 12:20",
-            "reading": 11.4
-        },
-        {
-            "time": "2026-04-08 12:30",
-            "reading": 10.9
-        },
-        {
-            "time": "2026-04-08 12:40",
-            "reading": 12.4
-        },
-        {
-            "time": "2026-04-08 12:50",
-            "reading": 12.6
-        },
-        {
-            "time": "2026-04-08 13:00",
-            "reading": 13.1
-        },
-        {
-            "time": "2026-04-08 13:10",
-            "reading": 13.1
-        },
-        {
-            "time": "2026-04-08 13:20",
-            "reading": 13.9
-        },
-        {
-            "time": "2026-04-08 13:30",
-            "reading": 13.3
-        },
-        {
-            "time": "2026-04-08 13:40",
-            "reading": 13.6
-        },
-        {
-            "time": "2026-04-08 13:50",
-            "reading": 13.2
-        },
-        {
-            "time": "2026-04-08 14:00",
-            "reading": 13.7
-        },
-        {
-            "time": "2026-04-08 14:10",
-            "reading": 13.7
-        },
-        {
-            "time": "2026-04-08 14:20",
-            "reading": 13.1
-        },
-        {
-            "time": "2026-04-08 14:30",
-            "reading": 12.1
-        },
-        {
-            "time": "2026-04-08 14:40",
-            "reading": 13.6
-        },
-        {
-            "time": "2026-04-08 14:50",
-            "reading": 12.6
-        },
-        {
-            "time": "2026-04-08 15:00",
-            "reading": 11.2
-        },
-        {
-            "time": "2026-04-08 15:20",
-            "reading": 10.6
-        },
-        {
-            "time": "2026-04-08 15:30",
-            "reading": 10.5
-        },
-        {
-            "time": "2026-04-08 15:40",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-08 15:50",
-            "reading": 9
-        },
-        {
-            "time": "2026-04-08 16:00",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-08 16:10",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-08 16:20",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-08 16:30",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-08 16:40",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-08 16:50",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-08 17:00",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-08 17:10",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-08 17:20",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-08 17:30",
-            "reading": 10.6
-        },
-        {
-            "time": "2026-04-08 17:40",
-            "reading": 10.6
-        },
-        {
-            "time": "2026-04-08 17:50",
-            "reading": 10.8
-        },
-        {
-            "time": "2026-04-08 18:00",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-08 18:10",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-08 18:20",
-            "reading": 7.8
-        },
-        {
-            "time": "2026-04-08 18:30",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-08 18:40",
-            "reading": 6.5
-        },
-        {
-            "time": "2026-04-08 18:50",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-08 19:00",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-08 19:10",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-08 19:20",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-08 19:30",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-08 19:40",
-            "reading": 7.5
-        },
-        {
-            "time": "2026-04-08 19:50",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-08 20:00",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-08 20:10",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-08 20:20",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-08 20:30",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-08 20:40",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-08 20:50",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-08 21:00",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-08 21:10",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-08 21:20",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-08 21:30",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-08 21:40",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-08 21:50",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-08 22:00",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-08 22:10",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-08 22:20",
-            "reading": 9.3
-        },
-        {
-            "time": "2026-04-08 22:30",
-            "reading": 7.8
-        },
-        {
-            "time": "2026-04-08 22:40",
-            "reading": 7.8
-        },
-        {
-            "time": "2026-04-08 22:50",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-08 23:00",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-08 23:10",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-08 23:20",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-08 23:30",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-08 23:40",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-08 23:50",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-09 00:00",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-09 00:10",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-09 00:20",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-09 00:30",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-09 00:40",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-09 00:50",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-09 01:00",
-            "reading": 5.8
-        },
-        {
-            "time": "2026-04-09 01:10",
-            "reading": 4.9
-        },
-        {
-            "time": "2026-04-09 01:20",
-            "reading": 5.6
-        },
-        {
-            "time": "2026-04-09 01:30",
-            "reading": 5.5
-        },
-        {
-            "time": "2026-04-09 01:40",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-09 01:50",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-09 02:00",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-09 02:10",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-09 02:20",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-09 02:30",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-09 02:40",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-09 02:50",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-09 03:00",
-            "reading": 10.8
-        },
-        {
-            "time": "2026-04-09 03:10",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-09 03:20",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-09 03:30",
-            "reading": 10
-        },
-        {
-            "time": "2026-04-09 03:40",
-            "reading": 10
-        },
-        {
-            "time": "2026-04-09 03:50",
-            "reading": 9
-        },
-        {
-            "time": "2026-04-09 04:00",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-09 04:10",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-09 04:20",
-            "reading": 9.3
-        },
-        {
-            "time": "2026-04-09 04:30",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-09 04:40",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-09 04:50",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-09 05:00",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-09 05:10",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-09 05:20",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-09 05:30",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-09 05:40",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-09 05:50",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-09 06:00",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-09 06:10",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-09 06:20",
-            "reading": 8.5
-        },
-        {
-            "time": "2026-04-09 06:30",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-09 06:40",
-            "reading": 9.2
-        },
-        {
-            "time": "2026-04-09 06:50",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-09 07:00",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-09 07:10",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-09 07:20",
-            "reading": 10.7
-        },
-        {
-            "time": "2026-04-09 07:30",
-            "reading": 12.4
-        },
-        {
-            "time": "2026-04-09 07:40",
-            "reading": 13.7
-        },
-        {
-            "time": "2026-04-09 07:50",
-            "reading": 14.8
-        },
-        {
-            "time": "2026-04-09 08:00",
-            "reading": 14.7
-        },
-        {
-            "time": "2026-04-09 08:10",
-            "reading": 15.9
-        },
-        {
-            "time": "2026-04-09 08:20",
-            "reading": 16.3
-        },
-        {
-            "time": "2026-04-09 08:30",
-            "reading": 15.7
-        },
-        {
-            "time": "2026-04-09 08:40",
-            "reading": 16.8
-        },
-        {
-            "time": "2026-04-09 08:50",
-            "reading": 15.8
-        },
-        {
-            "time": "2026-04-09 09:00",
-            "reading": 16.8
-        },
-        {
-            "time": "2026-04-09 09:10",
-            "reading": 16.1
-        },
-        {
-            "time": "2026-04-09 09:20",
-            "reading": 15.4
-        },
-        {
-            "time": "2026-04-09 09:30",
-            "reading": 16.1
-        },
-        {
-            "time": "2026-04-09 09:40",
-            "reading": 15.6
-        },
-        {
-            "time": "2026-04-09 09:50",
-            "reading": 15.4
-        },
-        {
-            "time": "2026-04-09 10:00",
-            "reading": 15.3
-        },
-        {
-            "time": "2026-04-09 10:10",
-            "reading": 15.1
-        },
-        {
-            "time": "2026-04-09 10:20",
-            "reading": 15.1
-        },
-        {
-            "time": "2026-04-09 10:30",
-            "reading": 15.6
-        },
-        {
-            "time": "2026-04-09 10:40",
-            "reading": 14.6
-        },
-        {
-            "time": "2026-04-09 10:50",
-            "reading": 14.2
-        },
-        {
-            "time": "2026-04-09 11:00",
-            "reading": 13.9
-        },
-        {
-            "time": "2026-04-09 11:10",
-            "reading": 13.6
-        },
-        {
-            "time": "2026-04-09 11:20",
-            "reading": 12.9
-        },
-        {
-            "time": "2026-04-09 11:30",
-            "reading": 12.3
-        },
-        {
-            "time": "2026-04-09 11:40",
-            "reading": 11.6
-        },
-        {
-            "time": "2026-04-09 11:50",
-            "reading": 11.6
-        },
-        {
-            "time": "2026-04-09 12:00",
-            "reading": 11
-        },
-        {
-            "time": "2026-04-09 12:10",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-09 12:20",
-            "reading": 11.4
-        },
-        {
-            "time": "2026-04-09 12:30",
-            "reading": 11.2
-        },
-        {
-            "time": "2026-04-09 12:40",
-            "reading": 11.5
-        },
-        {
-            "time": "2026-04-09 12:50",
-            "reading": 11.5
-        },
-        {
-            "time": "2026-04-09 13:00",
-            "reading": 12.2
-        },
-        {
-            "time": "2026-04-09 13:10",
-            "reading": 11.8
-        },
-        {
-            "time": "2026-04-09 13:20",
-            "reading": 12.3
-        },
-        {
-            "time": "2026-04-09 13:30",
-            "reading": 11.9
-        },
-        {
-            "time": "2026-04-09 13:40",
-            "reading": 12.1
-        },
-        {
-            "time": "2026-04-09 13:50",
-            "reading": 12.4
-        },
-        {
-            "time": "2026-04-09 14:00",
-            "reading": 12.8
-        },
-        {
-            "time": "2026-04-09 14:07",
-            "reading": 13
-        },
-        {
-            "time": "2026-04-09 14:10",
-            "reading": 12.8
-        },
-        {
-            "time": "2026-04-09 14:20",
-            "reading": 13.2
-        },
-        {
-            "time": "2026-04-09 14:30",
-            "reading": 12.9
-        },
-        {
-            "time": "2026-04-09 14:40",
-            "reading": 13.3
-        },
-        {
-            "time": "2026-04-09 14:50",
-            "reading": 12.7
-        },
-        {
-            "time": "2026-04-09 15:00",
-            "reading": 12.1
-        },
-        {
-            "time": "2026-04-09 15:10",
-            "reading": 11.9
-        },
-        {
-            "time": "2026-04-09 15:20",
-            "reading": 13
-        },
-        {
-            "time": "2026-04-09 15:24",
-            "reading": 12.3
-        },
-        {
-            "time": "2026-04-09 15:30",
-            "reading": 11.8
-        },
-        {
-            "time": "2026-04-09 15:40",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-09 15:50",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-09 16:00",
-            "reading": 10.9
-        },
-        {
-            "time": "2026-04-09 16:10",
-            "reading": 11.7
-        },
-        {
-            "time": "2026-04-09 16:20",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-09 16:30",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-09 16:40",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-09 16:50",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-09 17:00",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-09 17:10",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-09 17:20",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-09 17:30",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-09 17:40",
-            "reading": 7.9
-        },
-        {
-            "time": "2026-04-09 17:50",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-09 18:00",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-09 18:10",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-09 18:20",
-            "reading": 10.9
-        },
-        {
-            "time": "2026-04-09 18:30",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-09 18:40",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-09 18:50",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-09 19:00",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-09 19:10",
-            "reading": 9.6
-        },
-        {
-            "time": "2026-04-09 19:20",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-09 19:30",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-09 19:40",
-            "reading": 9
-        },
-        {
-            "time": "2026-04-09 19:50",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-09 20:00",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-09 20:10",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-09 20:20",
-            "reading": 5.5
-        },
-        {
-            "time": "2026-04-09 20:30",
-            "reading": 5.6
-        },
-        {
-            "time": "2026-04-09 20:50",
-            "reading": 6.6
-        },
-        {
-            "time": "2026-04-09 21:10",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-09 21:20",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-09 21:30",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-09 21:40",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-09 21:50",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-09 22:00",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-09 22:10",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-09 22:20",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-09 22:30",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-09 22:40",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-09 22:50",
-            "reading": 11.7
-        },
-        {
-            "time": "2026-04-09 23:00",
-            "reading": 11.8
-        },
-        {
-            "time": "2026-04-09 23:10",
-            "reading": 11.4
-        },
-        {
-            "time": "2026-04-09 23:20",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-09 23:30",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-09 23:40",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-09 23:50",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-10 00:00",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-10 00:10",
-            "reading": 7.8
-        },
-        {
-            "time": "2026-04-10 00:20",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-10 00:30",
-            "reading": 7.2
-        },
-        {
-            "time": "2026-04-10 00:40",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-10 00:50",
-            "reading": 7.1
-        },
-        {
-            "time": "2026-04-10 01:00",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-10 01:10",
-            "reading": 6.4
-        },
-        {
-            "time": "2026-04-10 01:20",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-10 01:30",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-10 01:40",
-            "reading": 5.7
-        },
-        {
-            "time": "2026-04-10 01:50",
-            "reading": 5.4
-        },
-        {
-            "time": "2026-04-10 02:00",
-            "reading": 4.9
-        },
-        {
-            "time": "2026-04-10 02:10",
-            "reading": 5.6
-        },
-        {
-            "time": "2026-04-10 02:20",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-10 02:30",
-            "reading": 7
-        },
-        {
-            "time": "2026-04-10 02:40",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-10 02:50",
-            "reading": 10.8
-        },
-        {
-            "time": "2026-04-10 03:00",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-10 03:10",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-10 03:20",
-            "reading": 10.6
-        },
-        {
-            "time": "2026-04-10 03:30",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-10 03:40",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-10 03:50",
-            "reading": 9.2
-        },
-        {
-            "time": "2026-04-10 04:00",
-            "reading": 8.9
-        },
-        {
-            "time": "2026-04-10 04:10",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-10 04:20",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-10 04:30",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-10 04:40",
-            "reading": 8.2
-        },
-        {
-            "time": "2026-04-10 04:50",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-10 05:00",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-10 05:10",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-10 05:20",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-10 05:30",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-10 05:40",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-10 05:50",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-10 06:00",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-10 06:10",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-10 06:20",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-10 06:30",
-            "reading": 7.7
-        },
-        {
-            "time": "2026-04-10 06:40",
-            "reading": 8.1
-        },
-        {
-            "time": "2026-04-10 06:50",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-10 07:00",
-            "reading": 8.3
-        },
-        {
-            "time": "2026-04-10 07:10",
-            "reading": 9
-        },
-        {
-            "time": "2026-04-10 07:20",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-10 07:30",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-10 07:40",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-10 07:50",
-            "reading": 9.9
-        },
-        {
-            "time": "2026-04-10 08:00",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-10 08:10",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-10 08:20",
-            "reading": 10.2
-        },
-        {
-            "time": "2026-04-10 08:30",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-10 08:40",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-10 08:50",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-10 09:00",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-10 09:10",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-10 09:20",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-10 09:30",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-10 09:40",
-            "reading": 7.2
-        },
-        {
-            "time": "2026-04-10 09:50",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-10 10:00",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-10 10:10",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-10 10:20",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-10 10:30",
-            "reading": 7
-        },
-        {
-            "time": "2026-04-10 10:40",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-10 10:50",
-            "reading": 7.3
-        },
-        {
-            "time": "2026-04-10 11:00",
-            "reading": 7.2
-        },
-        {
-            "time": "2026-04-10 11:10",
-            "reading": 8
-        },
-        {
-            "time": "2026-04-10 11:20",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-10 11:30",
-            "reading": 9.2
-        },
-        {
-            "time": "2026-04-10 11:40",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-10 11:50",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-10 12:00",
-            "reading": 6.7
-        },
-        {
-            "time": "2026-04-10 12:10",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-10 12:20",
-            "reading": 6.2
-        },
-        {
-            "time": "2026-04-10 12:30",
-            "reading": 7.6
-        },
-        {
-            "time": "2026-04-10 12:40",
-            "reading": 9.3
-        },
-        {
-            "time": "2026-04-10 12:50",
-            "reading": 9.3
-        },
-        {
-            "time": "2026-04-10 13:00",
-            "reading": 11.1
-        },
-        {
-            "time": "2026-04-10 13:10",
-            "reading": 11.3
-        },
-        {
-            "time": "2026-04-10 13:20",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-10 13:30",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-10 13:40",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-10 13:50",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-10 14:00",
-            "reading": 9.6
-        },
-        {
-            "time": "2026-04-10 14:10",
-            "reading": 9.4
-        },
-        {
-            "time": "2026-04-10 14:20",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-10 14:30",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-10 14:40",
-            "reading": 10.1
-        },
-        {
-            "time": "2026-04-10 14:50",
-            "reading": 10.3
-        },
-        {
-            "time": "2026-04-10 15:00",
-            "reading": 9.5
-        },
-        {
-            "time": "2026-04-10 15:10",
-            "reading": 8.8
-        },
-        {
-            "time": "2026-04-10 15:20",
-            "reading": 8.7
-        },
-        {
-            "time": "2026-04-10 15:30",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-10 15:40",
-            "reading": 8.6
-        },
-        {
-            "time": "2026-04-10 15:50",
-            "reading": 7.8
-        },
-        {
-            "time": "2026-04-10 16:00",
-            "reading": 7.4
-        },
-        {
-            "time": "2026-04-10 16:10",
-            "reading": 6.8
-        },
-        {
-            "time": "2026-04-10 16:20",
-            "reading": 6.9
-        },
-        {
-            "time": "2026-04-10 16:30",
-            "reading": 6.1
-        },
-        {
-            "time": "2026-04-10 16:40",
-            "reading": 6.3
-        },
-        {
-            "time": "2026-04-10 16:50",
-            "reading": 5.9
-        },
-        {
-            "time": "2026-04-10 17:00",
-            "reading": 6.3
-        },
-        {
-            "time": "2026-04-10 17:10",
-            "reading": 5.8
-        },
-        {
-            "time": "2026-04-10 17:20",
-            "reading": 8.4
-        },
-        {
-            "time": "2026-04-10 17:30",
-            "reading": 9.8
-        },
-        {
-            "time": "2026-04-10 17:40",
-            "reading": 10.4
-        },
-        {
-            "time": "2026-04-10 17:50",
-            "reading": 9.7
-        },
-        {
-            "time": "2026-04-10 18:00",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-10 18:10",
-            "reading": 9.1
-        },
-        {
-            "time": "2026-04-10 18:20",
-            "reading": 8.3
-        }
+        {"time":"2026-04-06 19:10","reading":4.7},
+        {"time":"2026-04-06 19:18","reading":6},
+        {"time":"2026-04-06 19:20","reading":6.1},
+        {"time":"2026-04-06 19:30","reading":6.2},
+        {"time":"2026-04-06 19:40","reading":6.7},
+        {"time":"2026-04-06 19:50","reading":7},
+        {"time":"2026-04-06 20:00","reading":8.8},
+        {"time":"2026-04-06 20:10","reading":8.7},
+        {"time":"2026-04-06 20:20","reading":8.7},
+        {"time":"2026-04-06 20:30","reading":7.7},
+        {"time":"2026-04-06 20:40","reading":8.3},
+        {"time":"2026-04-06 20:50","reading":7.9},
+        {"time":"2026-04-06 21:00","reading":7.3},
+        {"time":"2026-04-06 21:10","reading":7.9},
+        {"time":"2026-04-06 21:20","reading":7.4},
+        {"time":"2026-04-06 21:30","reading":8.6},
+        {"time":"2026-04-06 21:40","reading":7.9},
+        {"time":"2026-04-06 21:50","reading":7.5},
+        {"time":"2026-04-06 22:00","reading":7.4},
+        {"time":"2026-04-06 22:10","reading":7.7},
+        {"time":"2026-04-06 22:20","reading":7.6},
+        {"time":"2026-04-06 22:30","reading":7.9},
+        {"time":"2026-04-06 22:40","reading":7.7},
+        {"time":"2026-04-06 22:50","reading":10.1},
+        {"time":"2026-04-06 23:00","reading":10.3},
+        {"time":"2026-04-06 23:10","reading":9.6},
+        {"time":"2026-04-06 23:20","reading":8.7},
+        {"time":"2026-04-06 23:30","reading":8.1},
+        {"time":"2026-04-06 23:40","reading":7.1},
+        {"time":"2026-04-06 23:50","reading":7.6},
+        {"time":"2026-04-07 00:00","reading":4.9},
+        {"time":"2026-04-07 00:10","reading":3.9},
+        {"time":"2026-04-07 00:20","reading":4.2},
+        {"time":"2026-04-07 00:30","reading":4.6},
+        {"time":"2026-04-07 00:40","reading":6.1},
+        {"time":"2026-04-07 00:50","reading":7.9},
+        {"time":"2026-04-07 01:00","reading":8.1},
+        {"time":"2026-04-07 01:10","reading":8.9},
+        {"time":"2026-04-07 01:20","reading":8.9},
+        {"time":"2026-04-07 01:30","reading":8.5},
+        {"time":"2026-04-07 01:40","reading":7.7},
+        {"time":"2026-04-07 01:50","reading":6.9},
+        {"time":"2026-04-07 02:00","reading":6.4},
+        {"time":"2026-04-07 02:10","reading":5.3},
+        {"time":"2026-04-07 02:20","reading":5.7},
+        {"time":"2026-04-07 02:30","reading":5.7},
+        {"time":"2026-04-07 02:40","reading":8.9},
+        {"time":"2026-04-07 02:50","reading":10.8},
+        {"time":"2026-04-07 03:00","reading":11.1},
+        {"time":"2026-04-07 03:10","reading":9.7},
+        {"time":"2026-04-07 03:20","reading":8.3},
+        {"time":"2026-04-07 03:30","reading":6.4},
+        {"time":"2026-04-07 03:40","reading":5.8},
+        {"time":"2026-04-07 03:50","reading":5.8},
+        {"time":"2026-04-07 04:00","reading":5.8},
+        {"time":"2026-04-07 04:10","reading":5.4},
+        {"time":"2026-04-07 04:20","reading":5.2},
+        {"time":"2026-04-07 04:30","reading":5},
+        {"time":"2026-04-07 04:40","reading":5.2},
+        {"time":"2026-04-07 04:50","reading":4.7},
+        {"time":"2026-04-07 05:00","reading":6.7},
+        {"time":"2026-04-07 05:10","reading":8.9},
+        {"time":"2026-04-07 05:20","reading":8.9},
+        {"time":"2026-04-07 05:30","reading":10.1},
+        {"time":"2026-04-07 05:40","reading":8.4},
+        {"time":"2026-04-07 05:50","reading":7.5},
+        {"time":"2026-04-07 06:00","reading":7.2},
+        {"time":"2026-04-07 06:10","reading":6.9},
+        {"time":"2026-04-07 06:20","reading":6.8},
+        {"time":"2026-04-07 06:30","reading":6.6},
+        {"time":"2026-04-07 06:40","reading":6.4},
+        {"time":"2026-04-07 06:50","reading":6.4},
+        {"time":"2026-04-07 07:00","reading":7},
+        {"time":"2026-04-07 07:10","reading":7.1},
+        {"time":"2026-04-07 07:20","reading":6.6},
+        {"time":"2026-04-07 07:30","reading":7.4},
+        {"time":"2026-04-07 07:40","reading":8.6},
+        {"time":"2026-04-07 07:50","reading":11.1},
+        {"time":"2026-04-07 08:00","reading":10.6},
+        {"time":"2026-04-07 08:10","reading":11.5},
+        {"time":"2026-04-07 08:20","reading":9.8},
+        {"time":"2026-04-07 08:30","reading":10.4},
+        {"time":"2026-04-07 08:40","reading":10.9},
+        {"time":"2026-04-07 08:50","reading":11.6},
+        {"time":"2026-04-07 09:00","reading":12.2},
+        {"time":"2026-04-07 09:10","reading":11.4},
+        {"time":"2026-04-07 09:20","reading":11.3},
+        {"time":"2026-04-07 09:30","reading":10.9},
+        {"time":"2026-04-07 09:40","reading":11},
+        {"time":"2026-04-07 09:50","reading":10.7},
+        {"time":"2026-04-07 10:00","reading":9.8},
+        {"time":"2026-04-07 10:10","reading":9.8},
+        {"time":"2026-04-07 10:20","reading":8.7},
+        {"time":"2026-04-07 10:30","reading":8.4},
+        {"time":"2026-04-07 10:40","reading":8.1},
+        {"time":"2026-04-07 10:50","reading":6.9},
+        {"time":"2026-04-07 11:00","reading":6.6},
+        {"time":"2026-04-07 11:10","reading":5.9},
+        {"time":"2026-04-07 11:20","reading":6.7},
+        {"time":"2026-04-07 11:30","reading":8.7},
+        {"time":"2026-04-07 11:40","reading":10.8},
+        {"time":"2026-04-07 11:50","reading":13},
+        {"time":"2026-04-07 12:00","reading":12.9},
+        {"time":"2026-04-07 12:10","reading":11.8},
+        {"time":"2026-04-07 12:20","reading":11.4},
+        {"time":"2026-04-07 12:30","reading":10.5},
+        {"time":"2026-04-07 12:40","reading":10.5},
+        {"time":"2026-04-07 12:50","reading":9.4},
+        {"time":"2026-04-07 13:00","reading":8.3},
+        {"time":"2026-04-07 13:10","reading":7.3},
+        {"time":"2026-04-07 13:20","reading":6.7},
+        {"time":"2026-04-07 13:30","reading":6.5},
+        {"time":"2026-04-07 13:40","reading":6.6},
+        {"time":"2026-04-07 13:50","reading":7},
+        {"time":"2026-04-07 14:00","reading":6.1},
+        {"time":"2026-04-07 14:10","reading":6.4},
+        {"time":"2026-04-07 14:20","reading":7.4},
+        {"time":"2026-04-07 14:30","reading":7.6},
+        {"time":"2026-04-07 14:40","reading":7.7},
+        {"time":"2026-04-07 14:50","reading":7.3},
+        {"time":"2026-04-07 15:00","reading":7.6},
+        {"time":"2026-04-07 15:10","reading":8.1},
+        {"time":"2026-04-07 15:20","reading":8.2},
+        {"time":"2026-04-07 15:30","reading":8.2},
+        {"time":"2026-04-07 15:40","reading":7.9},
+        {"time":"2026-04-07 15:50","reading":6.1},
+        {"time":"2026-04-07 16:00","reading":6.8},
+        {"time":"2026-04-07 16:10","reading":7.1},
+        {"time":"2026-04-07 16:20","reading":6.2},
+        {"time":"2026-04-07 16:30","reading":5.7},
+        {"time":"2026-04-07 16:40","reading":5.9},
+        {"time":"2026-04-07 16:50","reading":6.7},
+        {"time":"2026-04-07 17:00","reading":8.5},
+        {"time":"2026-04-07 17:10","reading":9.3},
+        {"time":"2026-04-07 17:20","reading":10.3},
+        {"time":"2026-04-07 17:30","reading":10.4},
+        {"time":"2026-04-07 17:40","reading":10.1},
+        {"time":"2026-04-07 17:50","reading":10.1},
+        {"time":"2026-04-07 18:00","reading":11.1},
+        {"time":"2026-04-07 18:10","reading":11.2},
+        {"time":"2026-04-07 18:20","reading":12.1},
+        {"time":"2026-04-07 18:30","reading":12.8},
+        {"time":"2026-04-07 18:40","reading":12.6},
+        {"time":"2026-04-07 18:50","reading":12.7},
+        {"time":"2026-04-07 19:00","reading":12.3},
+        {"time":"2026-04-07 19:10","reading":13.4},
+        {"time":"2026-04-07 19:20","reading":13.3},
+        {"time":"2026-04-07 19:30","reading":13.4},
+        {"time":"2026-04-07 19:40","reading":13},
+        {"time":"2026-04-07 19:50","reading":12.3},
+        {"time":"2026-04-07 20:00","reading":12.1},
+        {"time":"2026-04-07 20:10","reading":12},
+        {"time":"2026-04-07 20:20","reading":13.1},
+        {"time":"2026-04-07 20:30","reading":10.3},
+        {"time":"2026-04-07 20:40","reading":9.4},
+        {"time":"2026-04-07 20:50","reading":9.3},
+        {"time":"2026-04-07 21:00","reading":8},
+        {"time":"2026-04-07 21:10","reading":7.9},
+        {"time":"2026-04-07 21:20","reading":7.1},
+        {"time":"2026-04-07 21:30","reading":6.1},
+        {"time":"2026-04-07 21:40","reading":5.7},
+        {"time":"2026-04-07 21:50","reading":6.8},
+        {"time":"2026-04-07 22:00","reading":6.8},
+        {"time":"2026-04-07 22:10","reading":8.8},
+        {"time":"2026-04-07 22:20","reading":9.9},
+        {"time":"2026-04-07 22:30","reading":10.7},
+        {"time":"2026-04-07 22:40","reading":10.1},
+        {"time":"2026-04-07 22:50","reading":10},
+        {"time":"2026-04-07 23:00","reading":10.3},
+        {"time":"2026-04-07 23:10","reading":10.4},
+        {"time":"2026-04-07 23:20","reading":10.1},
+        {"time":"2026-04-07 23:30","reading":10.7},
+        {"time":"2026-04-07 23:40","reading":10.6},
+        {"time":"2026-04-07 23:50","reading":10.4},
+        {"time":"2026-04-08 00:00","reading":9.9},
+        {"time":"2026-04-08 00:10","reading":9.4},
+        {"time":"2026-04-08 00:20","reading":9.1},
+        {"time":"2026-04-08 00:30","reading":8.5},
+        {"time":"2026-04-08 00:40","reading":7.9},
+        {"time":"2026-04-08 00:50","reading":6.8},
+        {"time":"2026-04-08 01:00","reading":6.2},
+        {"time":"2026-04-08 01:10","reading":5.6},
+        {"time":"2026-04-08 01:20","reading":5.1},
+        {"time":"2026-04-08 01:30","reading":5.5},
+        {"time":"2026-04-08 01:40","reading":5.1},
+        {"time":"2026-04-08 01:50","reading":6.4},
+        {"time":"2026-04-08 02:00","reading":7.4},
+        {"time":"2026-04-08 02:10","reading":7.3},
+        {"time":"2026-04-08 02:20","reading":6.6},
+        {"time":"2026-04-08 02:30","reading":5.4},
+        {"time":"2026-04-08 02:40","reading":5.9},
+        {"time":"2026-04-08 02:50","reading":5.9},
+        {"time":"2026-04-08 03:00","reading":8.5},
+        {"time":"2026-04-08 03:10","reading":11.1},
+        {"time":"2026-04-08 03:20","reading":11.3},
+        {"time":"2026-04-08 03:30","reading":8.9},
+        {"time":"2026-04-08 03:40","reading":7.1},
+        {"time":"2026-04-08 03:50","reading":6.7},
+        {"time":"2026-04-08 04:00","reading":6.2},
+        {"time":"2026-04-08 04:10","reading":5.9},
+        {"time":"2026-04-08 04:20","reading":5.7},
+        {"time":"2026-04-08 04:30","reading":5.4},
+        {"time":"2026-04-08 04:40","reading":5.1},
+        {"time":"2026-04-08 04:50","reading":4.6},
+        {"time":"2026-04-08 05:00","reading":4.3},
+        {"time":"2026-04-08 05:10","reading":4.3},
+        {"time":"2026-04-08 05:20","reading":4.6},
+        {"time":"2026-04-08 05:30","reading":5.4},
+        {"time":"2026-04-08 05:40","reading":6.4},
+        {"time":"2026-04-08 05:50","reading":9.1},
+        {"time":"2026-04-08 06:10","reading":9.2},
+        {"time":"2026-04-08 06:20","reading":8.8},
+        {"time":"2026-04-08 06:30","reading":9.4},
+        {"time":"2026-04-08 06:40","reading":10.2},
+        {"time":"2026-04-08 06:50","reading":12.9},
+        {"time":"2026-04-08 07:00","reading":12.3},
+        {"time":"2026-04-08 07:10","reading":12.1},
+        {"time":"2026-04-08 07:20","reading":14.2},
+        {"time":"2026-04-08 07:30","reading":14},
+        {"time":"2026-04-08 07:40","reading":15.1},
+        {"time":"2026-04-08 07:50","reading":15.8},
+        {"time":"2026-04-08 08:00","reading":16.9},
+        {"time":"2026-04-08 08:10","reading":15.1},
+        {"time":"2026-04-08 08:20","reading":15.4},
+        {"time":"2026-04-08 08:30","reading":14.8},
+        {"time":"2026-04-08 08:40","reading":15.1},
+        {"time":"2026-04-08 08:50","reading":13.3},
+        {"time":"2026-04-08 09:00","reading":13.4},
+        {"time":"2026-04-08 09:10","reading":13.9},
+        {"time":"2026-04-08 09:20","reading":11.1},
+        {"time":"2026-04-08 09:30","reading":11},
+        {"time":"2026-04-08 09:40","reading":11.4},
+        {"time":"2026-04-08 09:50","reading":10.4},
+        {"time":"2026-04-08 10:00","reading":10.1},
+        {"time":"2026-04-08 10:10","reading":11.3},
+        {"time":"2026-04-08 10:20","reading":8.8},
+        {"time":"2026-04-08 10:30","reading":8.1},
+        {"time":"2026-04-08 10:40","reading":8.1},
+        {"time":"2026-04-08 10:50","reading":8.2},
+        {"time":"2026-04-08 11:00","reading":8.2},
+        {"time":"2026-04-08 11:10","reading":8},
+        {"time":"2026-04-08 11:20","reading":8.2},
+        {"time":"2026-04-08 11:30","reading":8},
+        {"time":"2026-04-08 11:40","reading":8.9},
+        {"time":"2026-04-08 11:50","reading":11.2},
+        {"time":"2026-04-08 12:00","reading":11.9},
+        {"time":"2026-04-08 12:10","reading":11.3},
+        {"time":"2026-04-08 12:20","reading":11.4},
+        {"time":"2026-04-08 12:30","reading":10.9},
+        {"time":"2026-04-08 12:40","reading":12.4},
+        {"time":"2026-04-08 12:50","reading":12.6},
+        {"time":"2026-04-08 13:00","reading":13.1},
+        {"time":"2026-04-08 13:10","reading":13.1},
+        {"time":"2026-04-08 13:20","reading":13.9},
+        {"time":"2026-04-08 13:30","reading":13.3},
+        {"time":"2026-04-08 13:40","reading":13.6},
+        {"time":"2026-04-08 13:50","reading":13.2},
+        {"time":"2026-04-08 14:00","reading":13.7},
+        {"time":"2026-04-08 14:10","reading":13.7},
+        {"time":"2026-04-08 14:20","reading":13.1},
+        {"time":"2026-04-08 14:30","reading":12.1},
+        {"time":"2026-04-08 14:40","reading":13.6},
+        {"time":"2026-04-08 14:50","reading":12.6},
+        {"time":"2026-04-08 15:00","reading":11.2},
+        {"time":"2026-04-08 15:20","reading":10.6},
+        {"time":"2026-04-08 15:30","reading":10.5},
+        {"time":"2026-04-08 15:40","reading":10.3},
+        {"time":"2026-04-08 15:50","reading":9},
+        {"time":"2026-04-08 16:00","reading":8.4},
+        {"time":"2026-04-08 16:10","reading":7.6},
+        {"time":"2026-04-08 16:20","reading":6.8},
+        {"time":"2026-04-08 16:30","reading":7.3},
+        {"time":"2026-04-08 16:40","reading":8.2},
+        {"time":"2026-04-08 16:50","reading":8.7},
+        {"time":"2026-04-08 17:00","reading":9.7},
+        {"time":"2026-04-08 17:10","reading":10.3},
+        {"time":"2026-04-08 17:20","reading":10.1},
+        {"time":"2026-04-08 17:30","reading":10.6},
+        {"time":"2026-04-08 17:40","reading":10.6},
+        {"time":"2026-04-08 17:50","reading":10.8},
+        {"time":"2026-04-08 18:00","reading":10.1},
+        {"time":"2026-04-08 18:10","reading":8.4},
+        {"time":"2026-04-08 18:20","reading":7.8},
+        {"time":"2026-04-08 18:30","reading":7.7},
+        {"time":"2026-04-08 18:40","reading":6.5},
+        {"time":"2026-04-08 18:50","reading":6.6},
+        {"time":"2026-04-08 19:00","reading":6.9},
+        {"time":"2026-04-08 19:10","reading":8.3},
+        {"time":"2026-04-08 19:20","reading":8.4},
+        {"time":"2026-04-08 19:30","reading":7.4},
+        {"time":"2026-04-08 19:40","reading":7.5},
+        {"time":"2026-04-08 19:50","reading":8},
+        {"time":"2026-04-08 20:00","reading":7.9},
+        {"time":"2026-04-08 20:10","reading":8.1},
+        {"time":"2026-04-08 20:20","reading":7.7},
+        {"time":"2026-04-08 20:30","reading":8.1},
+        {"time":"2026-04-08 20:40","reading":8.9},
+        {"time":"2026-04-08 20:50","reading":8.3},
+        {"time":"2026-04-08 21:00","reading":8.3},
+        {"time":"2026-04-08 21:10","reading":8.4},
+        {"time":"2026-04-08 21:20","reading":7.4},
+        {"time":"2026-04-08 21:30","reading":6.8},
+        {"time":"2026-04-08 21:40","reading":6.9},
+        {"time":"2026-04-08 21:50","reading":7.6},
+        {"time":"2026-04-08 22:00","reading":7.4},
+        {"time":"2026-04-08 22:10","reading":7.9},
+        {"time":"2026-04-08 22:20","reading":9.3},
+        {"time":"2026-04-08 22:30","reading":7.8},
+        {"time":"2026-04-08 22:40","reading":7.8},
+        {"time":"2026-04-08 22:50","reading":8.1},
+        {"time":"2026-04-08 23:00","reading":8.3},
+        {"time":"2026-04-08 23:10","reading":8.5},
+        {"time":"2026-04-08 23:20","reading":8.7},
+        {"time":"2026-04-08 23:30","reading":8.8},
+        {"time":"2026-04-08 23:40","reading":8.6},
+        {"time":"2026-04-08 23:50","reading":7.9},
+        {"time":"2026-04-09 00:00","reading":7.6},
+        {"time":"2026-04-09 00:10","reading":7.1},
+        {"time":"2026-04-09 00:20","reading":6.8},
+        {"time":"2026-04-09 00:30","reading":6.6},
+        {"time":"2026-04-09 00:40","reading":6.4},
+        {"time":"2026-04-09 00:50","reading":6.2},
+        {"time":"2026-04-09 01:00","reading":5.8},
+        {"time":"2026-04-09 01:10","reading":4.9},
+        {"time":"2026-04-09 01:20","reading":5.6},
+        {"time":"2026-04-09 01:30","reading":5.5},
+        {"time":"2026-04-09 01:40","reading":7.1},
+        {"time":"2026-04-09 01:50","reading":8.3},
+        {"time":"2026-04-09 02:00","reading":8.7},
+        {"time":"2026-04-09 02:10","reading":7.7},
+        {"time":"2026-04-09 02:20","reading":7.4},
+        {"time":"2026-04-09 02:30","reading":7.9},
+        {"time":"2026-04-09 02:40","reading":9.1},
+        {"time":"2026-04-09 02:50","reading":9.9},
+        {"time":"2026-04-09 03:00","reading":10.8},
+        {"time":"2026-04-09 03:10","reading":10.3},
+        {"time":"2026-04-09 03:20","reading":10.2},
+        {"time":"2026-04-09 03:30","reading":10},
+        {"time":"2026-04-09 03:40","reading":10},
+        {"time":"2026-04-09 03:50","reading":9},
+        {"time":"2026-04-09 04:00","reading":8.9},
+        {"time":"2026-04-09 04:10","reading":8.7},
+        {"time":"2026-04-09 04:20","reading":9.3},
+        {"time":"2026-04-09 04:30","reading":8.8},
+        {"time":"2026-04-09 04:40","reading":8.6},
+        {"time":"2026-04-09 04:50","reading":9.4},
+        {"time":"2026-04-09 05:00","reading":8.5},
+        {"time":"2026-04-09 05:10","reading":8.8},
+        {"time":"2026-04-09 05:20","reading":9.4},
+        {"time":"2026-04-09 05:30","reading":8.3},
+        {"time":"2026-04-09 05:40","reading":8.9},
+        {"time":"2026-04-09 05:50","reading":8},
+        {"time":"2026-04-09 06:00","reading":7.9},
+        {"time":"2026-04-09 06:10","reading":8.2},
+        {"time":"2026-04-09 06:20","reading":8.5},
+        {"time":"2026-04-09 06:30","reading":8.8},
+        {"time":"2026-04-09 06:40","reading":9.2},
+        {"time":"2026-04-09 06:50","reading":8.4},
+        {"time":"2026-04-09 07:00","reading":8.7},
+        {"time":"2026-04-09 07:10","reading":9.8},
+        {"time":"2026-04-09 07:20","reading":10.7},
+        {"time":"2026-04-09 07:30","reading":12.4},
+        {"time":"2026-04-09 07:40","reading":13.7},
+        {"time":"2026-04-09 07:50","reading":14.8},
+        {"time":"2026-04-09 08:00","reading":14.7},
+        {"time":"2026-04-09 08:10","reading":15.9},
+        {"time":"2026-04-09 08:20","reading":16.3},
+        {"time":"2026-04-09 08:30","reading":15.7},
+        {"time":"2026-04-09 08:40","reading":16.8},
+        {"time":"2026-04-09 08:50","reading":15.8},
+        {"time":"2026-04-09 09:00","reading":16.8},
+        {"time":"2026-04-09 09:10","reading":16.1},
+        {"time":"2026-04-09 09:20","reading":15.4},
+        {"time":"2026-04-09 09:30","reading":16.1},
+        {"time":"2026-04-09 09:40","reading":15.6},
+        {"time":"2026-04-09 09:50","reading":15.4},
+        {"time":"2026-04-09 10:00","reading":15.3},
+        {"time":"2026-04-09 10:10","reading":15.1},
+        {"time":"2026-04-09 10:20","reading":15.1},
+        {"time":"2026-04-09 10:30","reading":15.6},
+        {"time":"2026-04-09 10:40","reading":14.6},
+        {"time":"2026-04-09 10:50","reading":14.2},
+        {"time":"2026-04-09 11:00","reading":13.9},
+        {"time":"2026-04-09 11:10","reading":13.6},
+        {"time":"2026-04-09 11:20","reading":12.9},
+        {"time":"2026-04-09 11:30","reading":12.3},
+        {"time":"2026-04-09 11:40","reading":11.6},
+        {"time":"2026-04-09 11:50","reading":11.6},
+        {"time":"2026-04-09 12:00","reading":11},
+        {"time":"2026-04-09 12:10","reading":11.1},
+        {"time":"2026-04-09 12:20","reading":11.4},
+        {"time":"2026-04-09 12:30","reading":11.2},
+        {"time":"2026-04-09 12:40","reading":11.5},
+        {"time":"2026-04-09 12:50","reading":11.5},
+        {"time":"2026-04-09 13:00","reading":12.2},
+        {"time":"2026-04-09 13:10","reading":11.8},
+        {"time":"2026-04-09 13:20","reading":12.3},
+        {"time":"2026-04-09 13:30","reading":11.9},
+        {"time":"2026-04-09 13:40","reading":12.1},
+        {"time":"2026-04-09 13:50","reading":12.4},
+        {"time":"2026-04-09 14:00","reading":12.8},
+        {"time":"2026-04-09 14:07","reading":13},
+        {"time":"2026-04-09 14:10","reading":12.8},
+        {"time":"2026-04-09 14:20","reading":13.2},
+        {"time":"2026-04-09 14:30","reading":12.9},
+        {"time":"2026-04-09 14:40","reading":13.3},
+        {"time":"2026-04-09 14:50","reading":12.7},
+        {"time":"2026-04-09 15:00","reading":12.1},
+        {"time":"2026-04-09 15:10","reading":11.9},
+        {"time":"2026-04-09 15:20","reading":13},
+        {"time":"2026-04-09 15:24","reading":12.3},
+        {"time":"2026-04-09 15:30","reading":11.8},
+        {"time":"2026-04-09 15:40","reading":11.3},
+        {"time":"2026-04-09 15:50","reading":10.4},
+        {"time":"2026-04-09 16:00","reading":10.9},
+        {"time":"2026-04-09 16:10","reading":11.7},
+        {"time":"2026-04-09 16:20","reading":11.3},
+        {"time":"2026-04-09 16:30","reading":10.2},
+        {"time":"2026-04-09 16:40","reading":9.8},
+        {"time":"2026-04-09 16:50","reading":9.8},
+        {"time":"2026-04-09 17:00","reading":9.8},
+        {"time":"2026-04-09 17:10","reading":8.9},
+        {"time":"2026-04-09 17:20","reading":8},
+        {"time":"2026-04-09 17:30","reading":7.4},
+        {"time":"2026-04-09 17:40","reading":7.9},
+        {"time":"2026-04-09 17:50","reading":6.9},
+        {"time":"2026-04-09 18:00","reading":8.2},
+        {"time":"2026-04-09 18:10","reading":10.2},
+        {"time":"2026-04-09 18:20","reading":10.9},
+        {"time":"2026-04-09 18:30","reading":9.9},
+        {"time":"2026-04-09 18:40","reading":8.3},
+        {"time":"2026-04-09 18:50","reading":7.7},
+        {"time":"2026-04-09 19:00","reading":8.2},
+        {"time":"2026-04-09 19:10","reading":9.6},
+        {"time":"2026-04-09 19:20","reading":9.9},
+        {"time":"2026-04-09 19:30","reading":9.8},
+        {"time":"2026-04-09 19:40","reading":9},
+        {"time":"2026-04-09 19:50","reading":7.3},
+        {"time":"2026-04-09 20:00","reading":6.8},
+        {"time":"2026-04-09 20:10","reading":6.1},
+        {"time":"2026-04-09 20:20","reading":5.5},
+        {"time":"2026-04-09 20:30","reading":5.6},
+        {"time":"2026-04-09 20:50","reading":6.6},
+        {"time":"2026-04-09 21:10","reading":8.4},
+        {"time":"2026-04-09 21:20","reading":9.7},
+        {"time":"2026-04-09 21:30","reading":9.8},
+        {"time":"2026-04-09 21:40","reading":10.1},
+        {"time":"2026-04-09 21:50","reading":9.9},
+        {"time":"2026-04-09 22:00","reading":9.4},
+        {"time":"2026-04-09 22:10","reading":10.2},
+        {"time":"2026-04-09 22:20","reading":9.7},
+        {"time":"2026-04-09 22:30","reading":10.2},
+        {"time":"2026-04-09 22:40","reading":11.3},
+        {"time":"2026-04-09 22:50","reading":11.7},
+        {"time":"2026-04-09 23:00","reading":11.8},
+        {"time":"2026-04-09 23:10","reading":11.4},
+        {"time":"2026-04-09 23:20","reading":10.3},
+        {"time":"2026-04-09 23:30","reading":9.7},
+        {"time":"2026-04-09 23:40","reading":8.9},
+        {"time":"2026-04-09 23:50","reading":8.6},
+        {"time":"2026-04-10 00:00","reading":8.2},
+        {"time":"2026-04-10 00:10","reading":7.8},
+        {"time":"2026-04-10 00:20","reading":7.4},
+        {"time":"2026-04-10 00:30","reading":7.2},
+        {"time":"2026-04-10 00:40","reading":7.1},
+        {"time":"2026-04-10 00:50","reading":7.1},
+        {"time":"2026-04-10 01:00","reading":6.7},
+        {"time":"2026-04-10 01:10","reading":6.4},
+        {"time":"2026-04-10 01:20","reading":6.1},
+        {"time":"2026-04-10 01:30","reading":5.9},
+        {"time":"2026-04-10 01:40","reading":5.7},
+        {"time":"2026-04-10 01:50","reading":5.4},
+        {"time":"2026-04-10 02:00","reading":4.9},
+        {"time":"2026-04-10 02:10","reading":5.6},
+        {"time":"2026-04-10 02:20","reading":5.9},
+        {"time":"2026-04-10 02:30","reading":7},
+        {"time":"2026-04-10 02:40","reading":9.1},
+        {"time":"2026-04-10 02:50","reading":10.8},
+        {"time":"2026-04-10 03:00","reading":11.1},
+        {"time":"2026-04-10 03:10","reading":11.1},
+        {"time":"2026-04-10 03:20","reading":10.6},
+        {"time":"2026-04-10 03:30","reading":10.3},
+        {"time":"2026-04-10 03:40","reading":9.7},
+        {"time":"2026-04-10 03:50","reading":9.2},
+        {"time":"2026-04-10 04:00","reading":8.9},
+        {"time":"2026-04-10 04:10","reading":8.7},
+        {"time":"2026-04-10 04:20","reading":8.4},
+        {"time":"2026-04-10 04:30","reading":8.2},
+        {"time":"2026-04-10 04:40","reading":8.2},
+        {"time":"2026-04-10 04:50","reading":8.1},
+        {"time":"2026-04-10 05:00","reading":7.7},
+        {"time":"2026-04-10 05:10","reading":7.7},
+        {"time":"2026-04-10 05:20","reading":7.6},
+        {"time":"2026-04-10 05:30","reading":7.4},
+        {"time":"2026-04-10 05:40","reading":7.4},
+        {"time":"2026-04-10 05:50","reading":8.1},
+        {"time":"2026-04-10 06:00","reading":7.7},
+        {"time":"2026-04-10 06:10","reading":7.7},
+        {"time":"2026-04-10 06:20","reading":7.7},
+        {"time":"2026-04-10 06:30","reading":7.7},
+        {"time":"2026-04-10 06:40","reading":8.1},
+        {"time":"2026-04-10 06:50","reading":7.6},
+        {"time":"2026-04-10 07:00","reading":8.3},
+        {"time":"2026-04-10 07:10","reading":9},
+        {"time":"2026-04-10 07:20","reading":9.1},
+        {"time":"2026-04-10 07:30","reading":9.4},
+        {"time":"2026-04-10 07:40","reading":10.1},
+        {"time":"2026-04-10 07:50","reading":9.9},
+        {"time":"2026-04-10 08:00","reading":11.3},
+        {"time":"2026-04-10 08:10","reading":9.4},
+        {"time":"2026-04-10 08:20","reading":10.2},
+        {"time":"2026-04-10 08:30","reading":10.4},
+        {"time":"2026-04-10 08:40","reading":9.4},
+        {"time":"2026-04-10 08:50","reading":9.7},
+        {"time":"2026-04-10 09:00","reading":9.1},
+        {"time":"2026-04-10 09:10","reading":8.6},
+        {"time":"2026-04-10 09:20","reading":7.4},
+        {"time":"2026-04-10 09:30","reading":6.9},
+        {"time":"2026-04-10 09:40","reading":7.2},
+        {"time":"2026-04-10 09:50","reading":6.7},
+        {"time":"2026-04-10 10:00","reading":6.8},
+        {"time":"2026-04-10 10:10","reading":8},
+        {"time":"2026-04-10 10:20","reading":7.6},
+        {"time":"2026-04-10 10:30","reading":7},
+        {"time":"2026-04-10 10:40","reading":6.2},
+        {"time":"2026-04-10 10:50","reading":7.3},
+        {"time":"2026-04-10 11:00","reading":7.2},
+        {"time":"2026-04-10 11:10","reading":8},
+        {"time":"2026-04-10 11:20","reading":8.8},
+        {"time":"2026-04-10 11:30","reading":9.2},
+        {"time":"2026-04-10 11:40","reading":8.4},
+        {"time":"2026-04-10 11:50","reading":6.9},
+        {"time":"2026-04-10 12:00","reading":6.7},
+        {"time":"2026-04-10 12:10","reading":6.2},
+        {"time":"2026-04-10 12:20","reading":6.2},
+        {"time":"2026-04-10 12:30","reading":7.6},
+        {"time":"2026-04-10 12:40","reading":9.3},
+        {"time":"2026-04-10 12:50","reading":9.3},
+        {"time":"2026-04-10 13:00","reading":11.1},
+        {"time":"2026-04-10 13:10","reading":11.3},
+        {"time":"2026-04-10 13:20","reading":10.4},
+        {"time":"2026-04-10 13:30","reading":10.3},
+        {"time":"2026-04-10 13:40","reading":10.1},
+        {"time":"2026-04-10 13:50","reading":10.4},
+        {"time":"2026-04-10 14:00","reading":9.6},
+        {"time":"2026-04-10 14:10","reading":9.4},
+        {"time":"2026-04-10 14:20","reading":10.3},
+        {"time":"2026-04-10 14:30","reading":9.8},
+        {"time":"2026-04-10 14:40","reading":10.1},
+        {"time":"2026-04-10 14:50","reading":10.3},
+        {"time":"2026-04-10 15:00","reading":9.5},
+        {"time":"2026-04-10 15:10","reading":8.8},
+        {"time":"2026-04-10 15:20","reading":8.7},
+        {"time":"2026-04-10 15:30","reading":9.1},
+        {"time":"2026-04-10 15:40","reading":8.6},
+        {"time":"2026-04-10 15:50","reading":7.8},
+        {"time":"2026-04-10 16:00","reading":7.4},
+        {"time":"2026-04-10 16:10","reading":6.8},
+        {"time":"2026-04-10 16:20","reading":6.9},
+        {"time":"2026-04-10 16:30","reading":6.1},
+        {"time":"2026-04-10 16:40","reading":6.3},
+        {"time":"2026-04-10 16:50","reading":5.9},
+        {"time":"2026-04-10 17:00","reading":6.3},
+        {"time":"2026-04-10 17:10","reading":5.8},
+        {"time":"2026-04-10 17:20","reading":8.4},
+        {"time":"2026-04-10 17:30","reading":9.8},
+        {"time":"2026-04-10 17:40","reading":10.4},
+        {"time":"2026-04-10 17:50","reading":9.7},
+        {"time":"2026-04-10 18:00","reading":9.1},
+        {"time":"2026-04-10 18:10","reading":9.1},
+        {"time":"2026-04-10 18:20","reading":8.3}
     ]
 }
