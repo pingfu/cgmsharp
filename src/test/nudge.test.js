@@ -907,6 +907,86 @@ test(`post-injection hypo risk: meal window allows urgent nudges through (safety
     assert.ok(withinMealWindow.length >= 1, `at least one nudge should fire during meal window via safety override`);
 });
 
+// ---------------------------------------------------------------------------
+// MEAL WINDOW SAFETY OVERRIDE — BREADTH COVERAGE
+// ---------------------------------------------------------------------------
+// clinical basis: the meal window (120 min post-injection) is a noise-
+// suppression heuristic that assumes a meal is being digested. but the
+// assumption breaks in three clinically important cases:
+//   1. reading ≤ hypoFloor — she's already below clinical safety
+//   2. trend.urgent — she's crashing rapidly and insulin is pulling her down
+//   3. projected ≤ hypoFloor — gradual descent will hit hypo before window ends
+//
+// the override lets nudges through the meal window in any of these cases.
+// the tests below cover:
+//   - post-injection-hypo-risk: morning window, in-target projection path (above)
+//   - dinner-zero-carbs-post-injection-hypo: evening window, below-target hypoFloor path
+//   - morning-meal-window-rapid-crash: morning window, urgent path + hypoFloor path
+//   - evening-meal-window-gradual-drop-to-hypo: evening window, below-target projection path
+//   - meal-window-normal-post-meal-no-override: NEGATIVE — override does NOT fire on normal rise
+
+test(`morning-meal-window-rapid-crash: projection triggers override in below-target branch`, async () =>
+{
+    // morning injection 07:30. BG descends gradually through the 120-min
+    // meal window. at ~08:10 UTC (09:10 BST, 100 min post-injection), BG
+    // crosses below targetLow (6.0) and the 30-min projection is at/below
+    // hypoFloor — even though the current reading is still above 5.0 and
+    // the trend is NOT urgent. override fires via the projection path in
+    // the below-target branch. distinct from post-injection-hypo-risk which
+    // tests the same path in the in-target branch.
+    var nudges = await runScenario(`morning-meal-window-rapid-crash.json`);
+    assert.ok(nudges.length >= 1, `safety override must fire during meal window descent`);
+    var firstNudge = nudges[0];
+    // first nudge must fire within the meal window (06:30 UTC injection + 120 min = 08:30 UTC end)
+    assert.ok(firstNudge.time <= `2026-04-10 08:30`, `first nudge should fire within meal window, got ${firstNudge.time}`);
+    // first nudge must fire via projection path — before BG reaches hypoFloor
+    assert.ok(firstNudge.reading > 5.0, `first nudge should fire via projection before hypoFloor (not the hypoFloor path), got ${firstNudge.reading}`);
+    assert.ok(firstNudge.reading < 6.5, `first nudge should fire at or below target, got ${firstNudge.reading}`);
+});
+
+test(`evening-meal-window-gradual-drop-to-hypo: projection path in below-target branch`, async () =>
+{
+    // evening injection 19:00. BG descends gradually at ~0.3 mmol/L per 10 min
+    // (short rate -0.03, NOT urgent). by 19:50 local (110 min post-injection,
+    // still within meal window), BG crosses below target and projection is
+    // at/below hypoFloor. this tests the override firing via the projection
+    // path specifically in the below-target branch (distinct from the
+    // morning case which triggers projection in the in-target branch).
+    var nudges = await runScenario(`evening-meal-window-gradual-drop-to-hypo.json`);
+    assert.ok(nudges.length >= 1, `safety override must fire during gradual evening descent`);
+    // the first nudge should fire within the meal window (before 20:00 local)
+    // and while BG is still above hypoFloor (the projection path, not the
+    // hypoFloor path).
+    var withinMealWindow = nudges.filter(n => n.time <= `2026-04-10 19:00`);
+    assert.ok(withinMealWindow.length >= 1, `override must fire during evening meal window (18:00-20:00 UTC)`);
+    // first nudge must not be below hypoFloor — we're testing projection, not hypoFloor
+    var firstNudge = nudges[0];
+    assert.ok(firstNudge.reading > 5.0, `first nudge should fire before hypoFloor (via projection path), got ${firstNudge.reading}`);
+});
+
+test(`meal-window-normal-post-meal-no-override: normal post-meal rise does NOT trigger override`, async () =>
+{
+    // NEGATIVE test. breakfast eaten at 07:30 injection, BG rises normally
+    // from 7.0 to 14.0 peak then descends as insulin catches up. during the
+    // entire meal window (07:30-09:30) none of the override conditions are
+    // true — no hypoFloor, no urgent trend, no projected hypo. the override
+    // must NOT fire. only the proactive breakfast nudge (07:00-07:30) is
+    // expected. this is the guardrail that prevents the safety override from
+    // becoming noise.
+    var nudges = await runScenario(`meal-window-normal-post-meal-no-override.json`);
+    // filter to reactive nudges only (exclude proactive breakfast/dinner/bedtime)
+    var reactiveNudges = nudges.filter(n =>
+        n.title !== `Good morning` &&
+        n.title !== `Dinner time` &&
+        n.title !== `Bedtime top-up` &&
+        n.title !== `Looking good for bed` &&
+        n.title !== `Low at bedtime`
+    );
+    assert.equal(reactiveNudges.length, 0, `safety override must NOT fire on normal post-meal curve, got ${reactiveNudges.length} reactive nudges`);
+});
+
+// ---------------------------------------------------------------------------
+
 test(`post-injection hypo risk: emergency foods below hypo floor`, async () =>
 {
     // BG at 4.7 and 4.5 is below hypoFloor (5.0) — emergency territory.

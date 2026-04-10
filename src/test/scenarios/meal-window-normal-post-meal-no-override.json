@@ -1,0 +1,26 @@
+{
+    "name": "Meal window: normal post-meal rise should NOT trigger safety override",
+    "description": "Breakfast eaten at 07:30 local injection. BG rises normally from 7.0 to 14.0 peak around 08:30 then descends as insulin catches up. During the entire 07:30-09:30 meal window, BG is rising or above target — no risk of hypo, no reason for the engine to nudge. This is a NEGATIVE test: the safety override must NOT fire. The override's job is to break meal window suppression ONLY when there's clinical risk (hypoFloor, urgent trend, projected hypo). A normal post-meal curve has none of these. Only the proactive breakfast nudge at 07:00-07:30 is expected.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 06:30", "reading": 7.0 },
+        { "time": "2026-04-10 06:40", "reading": 7.2 },
+        { "time": "2026-04-10 06:50", "reading": 7.5 },
+        { "time": "2026-04-10 07:00", "reading": 7.8 },
+        { "time": "2026-04-10 07:10", "reading": 8.2 },
+        { "time": "2026-04-10 07:20", "reading": 9.0 },
+        { "time": "2026-04-10 07:30", "reading": 10.2 },
+        { "time": "2026-04-10 07:40", "reading": 11.5 },
+        { "time": "2026-04-10 07:50", "reading": 12.8 },
+        { "time": "2026-04-10 08:00", "reading": 13.6 },
+        { "time": "2026-04-10 08:10", "reading": 14.0 },
+        { "time": "2026-04-10 08:20", "reading": 13.8 },
+        { "time": "2026-04-10 08:30", "reading": 13.2 },
+        { "time": "2026-04-10 08:40", "reading": 12.4 },
+        { "time": "2026-04-10 08:50", "reading": 11.5 },
+        { "time": "2026-04-10 09:00", "reading": 10.6 },
+        { "time": "2026-04-10 09:10", "reading": 9.8 },
+        { "time": "2026-04-10 09:20", "reading": 9.2 },
+        { "time": "2026-04-10 09:30", "reading": 8.8 }
+    ]
+}

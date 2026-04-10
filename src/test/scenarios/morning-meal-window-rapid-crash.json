@@ -1,0 +1,19 @@
+{
+    "name": "Morning meal window: gradual drop to below-target projection",
+    "description": "Small breakfast at 07:30 injection. BG enters target range (~8) and gradually descends through the morning meal window. By ~08:40 BST (70 min post-injection), BG crosses below target (6.0) while still within the 120-min meal window. Short-term rate is mild (-0.03/min, NOT urgent), but projection crosses hypoFloor — triggering the safety override via the projection path in the below-target branch. Distinct from post-injection-hypo-risk which tests the projection path in the IN-target branch; this tests the below-target variant of the same override.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 06:30", "reading": 8.0 },
+        { "time": "2026-04-10 06:40", "reading": 7.8 },
+        { "time": "2026-04-10 06:50", "reading": 7.6 },
+        { "time": "2026-04-10 07:00", "reading": 7.4 },
+        { "time": "2026-04-10 07:10", "reading": 7.2 },
+        { "time": "2026-04-10 07:20", "reading": 7.0 },
+        { "time": "2026-04-10 07:30", "reading": 6.8 },
+        { "time": "2026-04-10 07:40", "reading": 6.6 },
+        { "time": "2026-04-10 07:50", "reading": 6.3 },
+        { "time": "2026-04-10 08:00", "reading": 6.0 },
+        { "time": "2026-04-10 08:10", "reading": 5.7 },
+        { "time": "2026-04-10 08:20", "reading": 5.4 }
+    ]
+}
