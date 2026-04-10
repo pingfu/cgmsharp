@@ -286,7 +286,7 @@ test(`high-settle-then-dip: second nudge fires on the second dip (not suppressed
     assert.ok(nudges[1].time >= `2026-04-10 13:00`, `second nudge should fire after the stable period`);
 });
 
-test(`2026-04-09: crossing targetLow on same dip does not double-nudge`, async () =>
+test(`descent-across-targetLow: crossing the boundary on same dip does not double-nudge`, async () =>
 {
     // BG fell from 7.4 (in-target) to 6.9 (below-target) in 20 min.
     // crossing the 7.0 boundary changes the engine's internal category
@@ -424,51 +424,47 @@ test(`bedtime below target falling: starchy follow-up is appropriately sized`, a
 // with real CGM data, not just synthetic edge cases.
 // ===========================================================================
 
-test(`2026-04-07 full day: one breakfast nudge per morning`, async () =>
+test(`day-morning-insulin-overshoot: one breakfast nudge per morning`, async () =>
 {
-    // this scenario spans 24h+ (April 7th 05:30 UTC to April 8th 06:30 UTC),
-    // crossing two breakfast windows. each morning gets exactly one nudge.
-    var nudges = await runScenario(`2026-04-07-full-day.json`);
+    // this scenario spans 24h+, crossing two breakfast windows. each morning
+    // gets exactly one nudge.
+    var nudges = await runScenario(`day-morning-insulin-overshoot.json`);
     var breakfastNudges = nudges.filter(n => n.title === `Good morning`);
     assert.equal(breakfastNudges.length, 2, `one breakfast nudge per morning across 2-day span`);
 });
 
-test(`2026-04-08 full day: breakfast nudge fires once in morning window`, async () =>
+test(`day-typical-with-overnight-hypo: breakfast nudge fires once in morning window`, async () =>
 {
-    var nudges = await runScenario(`2026-04-08-full-day.json`);
+    var nudges = await runScenario(`day-typical-with-overnight-hypo.json`);
     var breakfastNudges = nudges.filter(n => n.title === `Good morning`);
     assert.equal(breakfastNudges.length, 1, `exactly one breakfast nudge per day`);
 });
 
-test(`2026-04-08 full day: zero nudges during quiet hours despite overnight hypo`, async () =>
+test(`day-typical-with-overnight-hypo: zero nudges during quiet hours despite overnight hypo`, async () =>
 {
-    // the overnight data includes a hypo to 4.9 at 02:10 BST (01:10 UTC).
-    // the engine must stay silent — nudging a sleeping person doesn't help.
-    // the alert channel handles this with high-priority alarms.
-    var nudges = await runScenario(`2026-04-08-full-day.json`);
-    var quietNudges = nudges.filter(function (n)
-    {
-        // quiet hours are midnight-6am LOCAL. with timezoneOffset 60, that's 23:00-05:00 UTC.
-        return n.time >= `2026-04-08 23:00` && n.time < `2026-04-09 05:00`;
-    });
+    // the overnight data includes a hypo to 4.9 at local 02:10. the engine
+    // must stay silent — nudging a sleeping person doesn't help. the alert
+    // channel handles this with high-priority alarms.
+    var nudges = await runScenario(`day-typical-with-overnight-hypo.json`);
+    var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
 });
 
-test(`2026-04-08 full day: bedtime nudge fires once in evening window`, async () =>
+test(`day-typical-with-overnight-hypo: bedtime nudge fires at most once in evening window`, async () =>
 {
-    var nudges = await runScenario(`2026-04-08-full-day.json`);
+    var nudges = await runScenario(`day-typical-with-overnight-hypo.json`);
     var bedtimeNudges = nudges.filter(n =>
         n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
     );
     assert.ok(bedtimeNudges.length <= 1, `at most one bedtime nudge per evening, got ${bedtimeNudges.length}`);
 });
 
-test(`2026-04-09 full day: total nudge count is reasonable for a full day`, async () =>
+test(`day-with-dinner-recovery-clean-overnight: total nudge count is reasonable for a full day`, async () =>
 {
-    // a well-calibrated engine should produce 1-4 nudges per day:
-    // breakfast + maybe 1-2 reactive + bedtime. more than 6 suggests
-    // over-nudging (notification fatigue). zero suggests under-sensitivity.
-    var nudges = await runScenario(`2026-04-09-full-day.json`);
+    // a well-calibrated engine should produce 1-6 nudges per day: breakfast
+    // + maybe 1-2 reactive + bedtime. more than 6 suggests over-nudging
+    // (notification fatigue). zero suggests under-sensitivity.
+    var nudges = await runScenario(`day-with-dinner-recovery-clean-overnight.json`);
     assert.ok(nudges.length >= 1 && nudges.length <= 6, `expected 1-6 nudges for a full day, got ${nudges.length}`);
 });
 
@@ -816,17 +812,17 @@ test(`gradual overnight rise: zero nudges for above-target rising BG through qui
     assert.equal(nudges.length, 0, `no nudges for rising above-target BG through overnight`);
 });
 
-test(`2026-04-06 evening: nudge count sanity for calibration session`, async () =>
+test(`chaotic-evening-multiple-rescues: nudge count bounded`, async () =>
 {
-    // chaotic overnight with multiple rescue jelly babies, 3.9 hypo, swings
+    // chaotic evening with multiple rescue jelly babies, 3.9 hypo, swings
     // 3.9-11.1, morning spike. bounded number of nudges expected.
-    var nudges = await runScenario(`2026-04-06-evening.json`);
+    var nudges = await runScenario(`chaotic-evening-multiple-rescues.json`);
     assert.ok(nudges.length >= 1 && nudges.length <= 8, `expected 1-8 nudges, got ${nudges.length}`);
 });
 
-test(`2026-04-06 evening: zero nudges during quiet hours`, async () =>
+test(`chaotic-evening-multiple-rescues: zero nudges during quiet hours`, async () =>
 {
-    var nudges = await runScenario(`2026-04-06-evening.json`);
+    var nudges = await runScenario(`chaotic-evening-multiple-rescues.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
 });
@@ -839,9 +835,9 @@ test(`2026-04-06 evening: zero nudges during quiet hours`, async () =>
 // at readings above targetHigh, (c) reasonable total nudge count.
 // ===========================================================================
 
-test(`2025-04-20: regression — high day with overnight low`, async () =>
+test(`day-high-all-afternoon-overnight-low: regression — high day with overnight low`, async () =>
 {
-    var nudges = await runScenario(`2025-04-20-full-day.json`);
+    var nudges = await runScenario(`day-high-all-afternoon-overnight-low.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
@@ -851,9 +847,9 @@ test(`2025-04-20: regression — high day with overnight low`, async () =>
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-05-10: regression — evening drop to 5.9`, async () =>
+test(`day-with-evening-drop: regression — evening drop to 5.9`, async () =>
 {
-    var nudges = await runScenario(`2025-05-10-full-day.json`);
+    var nudges = await runScenario(`day-with-evening-drop.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
@@ -863,11 +859,11 @@ test(`2025-05-10: regression — evening drop to 5.9`, async () =>
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-05-16: regression — afternoon hypo to 3.2`, async () =>
+test(`day-with-afternoon-hypo: regression — afternoon hypo to 3.2`, async () =>
 {
     // prolonged below 4.0 for ~60 min. must catch the decline and use
     // emergency foods as BG drops through hypo floor.
-    var nudges = await runScenario(`2025-05-16-full-day.json`);
+    var nudges = await runScenario(`day-with-afternoon-hypo.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length >= 1, `must produce at least one nudge for 3.2 hypo`);
@@ -878,9 +874,9 @@ test(`2025-05-16: regression — afternoon hypo to 3.2`, async () =>
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-06-25: regression — overnight drop to 5.3 and late morning hypo`, async () =>
+test(`day-with-overnight-and-morning-hypo: regression — overnight drop to 5.3 and late morning hypo`, async () =>
 {
-    var nudges = await runScenario(`2025-06-25-full-day.json`);
+    var nudges = await runScenario(`day-with-overnight-and-morning-hypo.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
@@ -890,10 +886,10 @@ test(`2025-06-25: regression — overnight drop to 5.3 and late morning hypo`, a
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-07-22: regression — volatile day with 2.9 hypo`, async () =>
+test(`day-volatile-with-severe-hypo: regression — volatile day with 2.9 hypo`, async () =>
 {
     // afternoon drop to 6.7 should produce at least one nudge.
-    var nudges = await runScenario(`2025-07-22-full-day.json`);
+    var nudges = await runScenario(`day-volatile-with-severe-hypo.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length >= 1, `volatile day with hypo should produce at least one nudge`);
@@ -904,10 +900,10 @@ test(`2025-07-22: regression — volatile day with 2.9 hypo`, async () =>
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-07-26: regression — two daytime hypos`, async () =>
+test(`day-with-two-daytime-hypos: regression — two daytime hypos`, async () =>
 {
     // evening descent to 3.3 hypo, late morning drop to 4.1.
-    var nudges = await runScenario(`2025-07-26-full-day.json`);
+    var nudges = await runScenario(`day-with-two-daytime-hypos.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length >= 1, `day with two hypos should produce at least one nudge`);
@@ -918,10 +914,10 @@ test(`2025-07-26: regression — two daytime hypos`, async () =>
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-08-12: regression — prolonged below-target with sensor artefacts`, async () =>
+test(`day-with-prolonged-below-target: regression — prolonged below-target with sensor artefacts`, async () =>
 {
     // decline to 5.5, sensor flat 4.9 from 04:00-07:30 (compression low).
-    var nudges = await runScenario(`2025-08-12-full-day.json`);
+    var nudges = await runScenario(`day-with-prolonged-below-target.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
@@ -931,10 +927,10 @@ test(`2025-08-12: regression — prolonged below-target with sensor artefacts`, 
     assert.equal(reactiveAboveTarget.length, 0, `no reactive nudges above targetHigh`);
 });
 
-test(`2025-09-15: regression — overnight drop to 2.8 hypo`, async () =>
+test(`day-with-overnight-severe-hypo: regression — overnight drop to 2.8 hypo`, async () =>
 {
     // afternoon decline to 5.6 should trigger nudges before quiet hours.
-    var nudges = await runScenario(`2025-09-15-full-day.json`);
+    var nudges = await runScenario(`day-with-overnight-severe-hypo.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
     assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
