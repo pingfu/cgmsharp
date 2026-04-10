@@ -132,21 +132,37 @@ const DEFAULTS = {
     targetHigh: 10.0, // upper bound of target range. Median is 9.4.
     aboveThreshold: 11.0, // only nudge about high sugar above this. 43% of readings above 10.0 — nudging there would be constant noise.
 
-    // biphasic insulin curve: rapid component (30% of premixed dose, e.g. NovoMix 30)
-    // manufacturer numbers — may need shifting for older patients who absorb more slowly
-    rapidOnset: 15, // minutes post-injection before rapid component begins
-    rapidPeakStart: 60, // start of peak rapid-acting effect
-    rapidPeakEnd: 90, // end of peak rapid-acting effect
-    rapidTail: 240, // rapid component fully worn off (4 hours)
+    // =========================================================================
+    // INSULIN ACTIVITY CURVE — HUMULIN M3 (30% SOLUBLE + 70% NPH/ISOPHANE)
+    // =========================================================================
+    // Timing parameters calibrated to Humulin M3 pharmacokinetics per NHS /
+    // manufacturer literature:
+    //   Soluble (regular human insulin): onset ~30 min, peak 2-4h, duration 6-8h
+    //   NPH (isophane):                  onset 1-2h, peak 4-10h, duration 12-18h
+    //
+    // The 30/70 weight split matches both Humulin M3 and NovoMix-style rapid
+    // analogue premixes. Only the timing differs between products.
+    //
+    // NOTE: the empirical constants `insulinCounterFactor` (3.2) and
+    // `overnightPullRate` (2.5) were originally fit against a rapid-analogue
+    // curve. They have NOT been recalibrated under this corrected timing —
+    // see todo.md "Recalibrate insulin empirical constants". The values may
+    // overestimate or underestimate the true effect until recalibration.
+    // =========================================================================
 
-    // biphasic insulin curve: intermediate component (70% of premixed dose)
-    // broader, slower curve — background coverage between meals
-    intermediateOnset: 90, // minutes post-injection before intermediate begins
-    intermediatePeakStart: 240, // start of peak intermediate effect (4 hours)
-    intermediatePeakEnd: 480, // end of peak intermediate effect (8 hours)
-    intermediateTail: 960, // intermediate fully worn off (16 hours)
+    // biphasic insulin curve: soluble component (30% of premixed dose) — regular human insulin
+    rapidOnset: 30, // minutes post-injection before soluble begins absorbing
+    rapidPeakStart: 120, // start of peak soluble effect (2 hours)
+    rapidPeakEnd: 180, // end of peak soluble effect (3 hours — midpoint of literature 2-4h range)
+    rapidTail: 420, // soluble fully worn off (7 hours — midpoint of literature 6-8h)
 
-    // component weights (must sum to 1.0) — reflects 30/70 split of premixed insulin
+    // biphasic insulin curve: NPH (isophane) component (70% of premixed dose)
+    intermediateOnset: 90, // minutes post-injection before NPH begins absorbing (within 60-120 min literature range)
+    intermediatePeakStart: 240, // start of peak NPH effect (4 hours)
+    intermediatePeakEnd: 600, // end of peak NPH effect (10 hours — upper literature bound)
+    intermediateTail: 1080, // NPH fully worn off (18 hours — upper literature bound)
+
+    // component weights (must sum to 1.0) — reflects 30/70 split of Humulin M3.
     rapidWeight: 0.30,
     intermediateWeight: 0.70,
 
@@ -164,6 +180,10 @@ const DEFAULTS = {
 
     // meal window — insulin is injected with a meal. suppress carb nudges for this period.
     // observed eat-peak-settle cycle took ~2 hours on 2026-04-06.
+    // NOTE: this 120-min window was chosen for a rapid analogue's onset/peak profile.
+    // Under Humulin M3 (soluble peaks 2-4h), the actual meal absorption + insulin
+    // action cycle may be longer (150-180 min). May need extending once the timing
+    // curve is corrected — see Humulin M3 notes above and todo.md.
     mealWindowMinutes: 120,
 
     // observed carb sensitivity: 18g carbs raised BG by 4.1 mmol/L (4.7 → 8.8).
@@ -175,6 +195,13 @@ const DEFAULTS = {
     // observed: 20g bedtime snack from 7.7 peaked at 10.3 (+2.6) vs expected +4.5.
     // insulin activity was ~0.6, so insulin counteracted ~1.9 mmol/L. at activity 1.0
     // that's ~3.2 mmol/L. we use this to add extra carbs when insulin is fighting the food.
+    //
+    // CALIBRATION CAVEAT (Humulin M3): the 1.9 mmol/L observation is still valid,
+    // but the "activity was ~0.6" was calculated using the rapid-analogue curve that
+    // mis-models Humulin M3. Under corrected Humulin M3 timing, activity at the same
+    // moment would be different — probably lower (soluble insulin onsets at 30 min,
+    // not 15) — which would mean the derived counter-factor is larger than 3.2.
+    // Needs recalculation once the curve timing is corrected. See todo.md.
     insulinCounterFactor: 3.2,
 
     // bedtime nudge window — one proactive nudge to position BG for the overnight insulin peak.
@@ -200,6 +227,13 @@ const DEFAULTS = {
     //   Sep 15: 7.2 → 2.8 over ~3h (drop 4.4, avg ~1.5/h)
     // accounting for insulin activity curve (not constant), 2.5/h at peak fits the data.
     // 1.8 was too low — Apr 20 (17.1→5.1) and Jul 22 (15.8→2.9) show actual pulls of 12-13.
+    //
+    // CALIBRATION CAVEAT (Humulin M3): the three historical drops are still valid
+    // observations, but the 2.5 value was derived by fitting to the integral of
+    // the rapid-analogue curve over the observed drop windows. Under Humulin M3's
+    // actual curve (NPH has a later, broader peak — 4-10h vs 4-8h), the integral
+    // over the same window would be different, so a different pullRate would fit
+    // the same observations. Needs refit once the curve timing is corrected.
     overnightPullRate: 2.5, // mmol/L per hour at activity 1.0
 
     // fallback static overnight drop if insulin times not configured
@@ -786,6 +820,15 @@ function createNudgeEngine(config)
     // is determined by starting BG — same food from different starting BGs produces
     // wildly different peaks. this nudge tells the user how much room they have.
     // returns true if a breakfast nudge was sent (so the regular evaluate can skip).
+    //
+    // CALIBRATION CAVEAT (Humulin M3): messages below reference "your morning rise
+    // is already underway" and assume the morning injection's fast component has
+    // started working by 07:30. Under the current rapid-analogue curve model,
+    // activity at 07:30 (15-30 min post 07:15-07:30 injection) is ~0.15-0.3.
+    // Under Humulin M3 reality, soluble insulin has a 30-min onset — activity at
+    // 07:30 would be ~0.0-0.1 (just starting). The "rise is underway" framing is
+    // based on dawn phenomenon + food, not on insulin action. This message content
+    // may need review once the curve timing is corrected — see todo.md.
     async function evaluateBreakfast(reading, trend, sendNudge, now)
     {
         if (!isInBreakfastWindow(now)) return false;
