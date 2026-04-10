@@ -42,9 +42,9 @@ const moment = require(`moment`);
 //        this distinguishes "been gently falling all hour" from "was stable,
 //        now suddenly crashing" — the latter needs emergency sugar, not yoghurt.
 //
-//   3. insulin activity — biphasic curve model of premixed insulin (e.g. NovoMix 30):
-//      - 30% rapid-acting: peaks 60-90 min, gone by 4 hours
-//      - 70% intermediate: peaks 4-8 hours, tails off by 16 hours
+//   3. insulin activity — biphasic curve model of premixed insulin (Humulin M3):
+//      - 30% soluble (regular human): peaks 2-4 hours, gone by 6-8 hours
+//      - 70% NPH (isophane): peaks 4-10 hours, tails off by 18 hours
 //      - piecewise linear interpolation, combined weighted activity 0.0-1.0
 //      - "meaningfully active" above 0.25 threshold
 //      - when insulin is active and BG is falling, carb suggestions are increased
@@ -180,10 +180,10 @@ const DEFAULTS = {
 
     // meal window — insulin is injected with a meal. suppress carb nudges for this period.
     // observed eat-peak-settle cycle took ~2 hours on 2026-04-06.
-    // NOTE: this 120-min window was chosen for a rapid analogue's onset/peak profile.
-    // Under Humulin M3 (soluble peaks 2-4h), the actual meal absorption + insulin
-    // action cycle may be longer (150-180 min). May need extending once the timing
-    // curve is corrected — see Humulin M3 notes above and todo.md.
+    // NOTE: 120 min was chosen against the old rapid-analogue curve. Under the
+    // corrected Humulin M3 timing (soluble peaks 2-4h), the real meal absorption +
+    // insulin action cycle is likely 150-180 min. Retuning is deferred with the
+    // other empirical constants — see todo.md.
     mealWindowMinutes: 120,
 
     // observed carb sensitivity: 18g carbs raised BG by 4.1 mmol/L (4.7 → 8.8).
@@ -196,12 +196,11 @@ const DEFAULTS = {
     // insulin activity was ~0.6, so insulin counteracted ~1.9 mmol/L. at activity 1.0
     // that's ~3.2 mmol/L. we use this to add extra carbs when insulin is fighting the food.
     //
-    // CALIBRATION CAVEAT (Humulin M3): the 1.9 mmol/L observation is still valid,
-    // but the "activity was ~0.6" was calculated using the rapid-analogue curve that
-    // mis-models Humulin M3. Under corrected Humulin M3 timing, activity at the same
-    // moment would be different — probably lower (soluble insulin onsets at 30 min,
-    // not 15) — which would mean the derived counter-factor is larger than 3.2.
-    // Needs recalculation once the curve timing is corrected. See todo.md.
+    // CALIBRATION CAVEAT: the 1.9 mmol/L observation is still valid, but the
+    // "activity was ~0.6" was originally computed against the rapid-analogue curve.
+    // Under the corrected Humulin M3 curve, activity at the same moment would be
+    // lower (soluble onsets at 30 min, not 15), meaning the true counter-factor
+    // is larger than 3.2. Not yet recalculated — see todo.md.
     insulinCounterFactor: 3.2,
 
     // bedtime nudge window — one proactive nudge to position BG for the overnight insulin peak.
@@ -532,8 +531,7 @@ function createNudgeEngine(config)
         return (newest - oldest) / ((readings.length - 1) * interval);
     }
 
-    // short-term rate: slope across last 3 readings (~20 min). what's happening right now.
-    // uses 3 readings to smooth out single-tick CGM noise.
+    // 3 readings rather than 2 to smooth single-tick CGM noise.
     function getShortTermRate()
     {
         if (readings.length < 3) return null;
@@ -542,8 +540,7 @@ function createNudgeEngine(config)
         return (newest - recent) / (2 * interval);
     }
 
-    // acceleration: difference between short-term and long-term rate.
-    // negative = drop is getting steeper. positive = drop is levelling off (or rise accelerating).
+    // negative = drop getting steeper. positive = drop levelling off (or rise accelerating).
     function getAcceleration()
     {
         var longRate = getLongTermRate();
@@ -693,7 +690,6 @@ function createNudgeEngine(config)
         return hour >= p.dawnStartHour && hour < p.dawnEndHour;
     }
 
-    // projection uses short-term rate + acceleration for more accurate forecasting.
     // if drop is accelerating, the projection is worse than linear — basic kinematics.
     function projectGlucose(reading, trend)
     {
@@ -799,9 +795,8 @@ function createNudgeEngine(config)
             // reading has reached or exceeded expected level — advice worked, stay quiet
             if (reading >= state.lastNudgeExpectedReading) return true;
 
-            // reading is below expected — but only re-nudge if the carb estimate has jumped
-            // meaningfully (at least 3g more). small increases from 5→6→7 are estimation noise,
-            // not a materially worse situation.
+            // only re-nudge on a meaningful jump (3g+). increases of 5→6→7 are
+            // estimation noise, not a materially worse situation.
             if (carbs < state.lastNudgeCarbs + 3) return true;
         }
 
@@ -889,14 +884,11 @@ function createNudgeEngine(config)
     // wildly different peaks. this nudge tells the user how much room they have.
     // returns true if a breakfast nudge was sent (so the regular evaluate can skip).
     //
-    // CALIBRATION CAVEAT (Humulin M3): messages below reference "your morning rise
-    // is already underway" and assume the morning injection's fast component has
-    // started working by 07:30. Under the current rapid-analogue curve model,
-    // activity at 07:30 (15-30 min post 07:15-07:30 injection) is ~0.15-0.3.
-    // Under Humulin M3 reality, soluble insulin has a 30-min onset — activity at
-    // 07:30 would be ~0.0-0.1 (just starting). The "rise is underway" framing is
-    // based on dawn phenomenon + food, not on insulin action. This message content
-    // may need review once the curve timing is corrected — see todo.md.
+    // note: the "your morning rise is already underway" phrasing in the messages
+    // below refers to dawn phenomenon, not insulin action. Under the Humulin M3
+    // curve, soluble onset is 30 min — insulin activity during the 07:00-07:30
+    // window is effectively zero, so any upward drift at that hour is cortisol-
+    // driven liver glucose output, not food or insulin.
     async function evaluateBreakfast(reading, trend, sendNudge, now)
     {
         if (!isInBreakfastWindow(now)) return false;

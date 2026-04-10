@@ -773,8 +773,7 @@ test(`dinner-zero-carbs: reactive nudge is clearly actionable`, async () =>
     // the Humulin M3 curve, soluble is ramping to peak but combined activity
     // is ~0.20 — below the 0.25 insulinActiveThreshold — so the engine's
     // "insulin is still working" message path doesn't fire. The 0.25
-    // threshold may need recalibration under the new curve, but that's a
-    // Phase 3 concern.)
+    // threshold is one of the Phase 3 empirical constants pending recalibration.)
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
     var reactiveNudges = nudges.filter(n => n.title !== `Dinner time`);
     assert.ok(reactiveNudges.length >= 1, `expected reactive nudge`);
