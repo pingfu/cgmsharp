@@ -1,18 +1,22 @@
-// scenario inspector — visual debugging tool
-// usage: node test/inspect-scenario.js [scenario-file]
+// observation inspector — visual profiling tool for real CGM data
+// usage: node inspect-scenario.js [file-path]
 //
 // prints every reading and marks which ones fired nudges, with full message
-// text and engine state. use this to eyeball a scenario's behaviour when
-// developing or investigating a specific case.
+// text and engine state. use this to eyeball the engine's behaviour on real
+// user observations (primary use case) or any scenario file.
+//
+// default: runs all files in observations/ (real raw CGM data). pass a path
+// to inspect a specific file — can be any JSON scenario file including the
+// synthetic ones in test/scenarios/ for debugging engine behavior on crafted
+// cases.
 //
 // this is NOT the test suite — see test/nudge.test.js for assertions.
-// runs all scenarios in test/scenarios/ or a single file if specified.
 // no actual notifications are dispatched.
 
 const fs = require(`fs`);
 const path = require(`path`);
 const moment = require(`moment`);
-const { createNudgeEngine, DEFAULTS } = require(`../nudge`);
+const { createNudgeEngine, DEFAULTS } = require(`./nudge`);
 
 // individual's profile — override any DEFAULTS here to test different configurations
 var profile = {
@@ -74,27 +78,30 @@ async function runScenario(scenario)
 
 async function main()
 {
-    var scenariosDir = path.join(__dirname, `scenarios`);
+    var observationsDir = path.join(__dirname, `observations`);
+    var scenariosDir = path.join(__dirname, `test`, `scenarios`);
     var specificFile = process.argv[2];
     var files;
 
     if (specificFile)
     {
-        // resolve relative to cwd or scenarios dir
+        // resolve relative to cwd or try observations/ then test/scenarios/
         var resolved = path.isAbsolute(specificFile) ? specificFile : path.resolve(specificFile);
+        if (!fs.existsSync(resolved)) resolved = path.join(observationsDir, specificFile);
         if (!fs.existsSync(resolved)) resolved = path.join(scenariosDir, specificFile);
         files = [resolved];
     }
     else
     {
-        files = fs.readdirSync(scenariosDir)
+        // default: run all observations (real data)
+        files = fs.readdirSync(observationsDir)
             .filter(f => f.endsWith(`.json`))
             .sort()
-            .map(f => path.join(scenariosDir, f));
+            .map(f => path.join(observationsDir, f));
     }
 
-    console.log(`Nudge Engine Test Runner`);
-    console.log(`Scenarios: ${files.length}`);
+    console.log(`Nudge Engine Observation Inspector`);
+    console.log(`Files: ${files.length}`);
 
     for (var i = 0; i < files.length; i++)
     {
