@@ -1069,7 +1069,7 @@ function createNudgeEngine(config)
                 // below target but stable — starchy has time to absorb (bedtime window is 2h before insulin peak)
                 var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} — below target for bed. Have about ${food.grams}g of something starchy around half ten — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first — it helps the carbs absorb more slowly overnight.`;
+                message = `Your sugar is ${reading} — below target for bed. Have about ${food.grams}g of something starchy around 10:30pm — ${food.suggestion}.`;
             }
             else if (reading > p.targetHigh)
             {
@@ -1078,13 +1078,13 @@ function createNudgeEngine(config)
                 var conservativeCarbs = Math.min(carbs, 15);
                 var food = getBedtimeSuggestion(conservativeCarbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading towards bed. That's above target now but your overnight insulin will bring it down. Have about ${food.grams}g of something starchy around half ten to carry you through to morning — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first.`;
+                message = `Your sugar is ${reading} heading towards bed. That's above target now but your overnight insulin will bring it down. Have about ${food.grams}g of something starchy around 10:30pm to carry you through to morning — ${food.suggestion}.`;
             }
             else
             {
                 var food = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading towards bed. Have about ${food.grams}g of something starchy around half ten — ${food.suggestion}. If there's cheese or peanut butter, eat that bit first — it slows everything down and keeps it working longer overnight.`;
+                message = `Your sugar is ${reading} heading towards bed. Have about ${food.grams}g of something starchy around 10:30pm — ${food.suggestion}.`;
             }
         }
 
