@@ -113,9 +113,12 @@ Key behaviours:
 Designed for a type 1 diabetic on twice-daily premixed (biphasic) insulin. The user produces no insulin of their own — the injected insulin is the only insulin in their system, which means no natural reduction when BG drops and acute overnight hypo risk.
 
 **Current patient regimen**:
+- **Product**: Humulin M3 — premixed 30% soluble (regular human insulin) + 70% isophane (NPH)
 - **Morning**: 12 units at 07:30 BST (covers breakfast + lunch + dawn phenomenon)
 - **Evening**: 9 units at 19:00 BST (covers dinner + overnight)
-- **Total**: 21 units/day, premixed 30% rapid + 70% intermediate
+- **Total**: 21 units/day
+
+Note: Humulin M3 uses regular soluble insulin (not a rapid-acting analogue like NovoRapid/Humalog) as its short component. Regular soluble has slower onset (~30 min vs 15) and later peak (~2-4h vs 60-90 min) than rapid analogues. The engine's current insulin activity curve (`rapidOnset`, `rapidPeakStart`, `rapidPeakEnd`, `rapidTail` in `src/nudge.js`) is modelled on a rapid analogue and may need recalibrating to match Humulin M3's actual profile. Similarly NPH peaks 4-10h vs the intermediate curve's 4-8h. This is a known calibration gap — investigate against real data before changing.
 
 Extracted into its own module via `createNudgeEngine(config)` factory. App.js passes `SendNudge` as a callback so nudge.js has no dependency on the notification transport.
 
