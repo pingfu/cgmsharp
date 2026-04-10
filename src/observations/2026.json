@@ -21,7 +21,7 @@
         },
         {
             "date":"2026-04-10",
-            "notes":"All times UTC. Fourth full day — first clean overnight + morning following the dinner-as-slow-carbs + bedtime starchy strategy. Dawn holds 7.4-8.1 (cleanest morning so far vs previous days hitting 4.3-4.9). Morning insulin 07:30 BST = 06:30 UTC (12u). Breakfast peak only 11.3 at 09:00 BST — much better than previous days (16.8 on 04-09). Morning insulin brings it down well. Mid-morning through lunch shows defensive grazing pattern: multiple small dips (10:30 @ 6.9, 11:40 @ 6.2, 12:50 @ 6.9, 13:10 @ 6.2) each with small snack bounces. Lunch peak 11.3 at 14:10 BST. Afternoon plateau 9.5-10.4 for 2h. Late afternoon descent from ~10 down to 5.9 at 17:50 BST (morning insulin tail + no food = slow drift). Container restart at 17:53 BST (engine lost history mid-dip). Engine fired reactive nudge at 18:10 BST reading 5.8 — recommended 5g fast sugar + 10g starchy — user acted on it, BG rose 5.8 → 10.4 peak over 30 min. Evening insulin 19:00 BST (9u). Data stops ~19:20 BST (current time)."
+            "notes":"All times UTC. Fourth full day — first clean overnight + morning following the dinner-as-slow-carbs + bedtime starchy strategy. Dawn holds 7.4-8.1 (cleanest morning so far vs previous days hitting 4.3-4.9). Morning insulin 07:30 BST = 06:30 UTC (12u). Breakfast peak only 11.3 at 09:00 BST — much better than previous days (16.8 on 04-09). Morning insulin brings it down well. Mid-morning through lunch shows defensive grazing pattern: multiple small dips (10:30 @ 6.9, 11:40 @ 6.2, 12:50 @ 6.9, 13:10 @ 6.2) each with small snack bounces. Lunch peak 11.3 at 14:10 BST. Afternoon plateau 9.5-10.4 for 2h. Late afternoon descent from ~10 down to 5.9 at 17:50 BST (morning insulin tail + no food = slow drift). Container restart at 17:53 BST (engine lost history mid-dip). Engine fired reactive nudge at 18:10 BST reading 5.8 — recommended 5g fast sugar + 10g starchy — user acted on it, BG rose 5.8 → 10.4 peak over 30 min. Evening insulin 19:00 BST (9u). Dinner ~19:00 BST: steak + asparagus, ZERO CARBS (not intentional as strategy — she just didn't have any). Post-dinner descent from 10.4 peak: 9.1 → 8.3 → 7.8 → 7.5 → 7.1 → 6.6 → 6.9 → 6.6 → 5.1 hypo at 20:30 BST (rapid insulin tail pulling unchecked with nothing to digest). Rescue snack around 20:30-20:40 — BG recovers 5.1 → 6.1 → 7.7 by 20:50 BST. Demonstrates cleanly: injecting Humulin M3 without matching dinner carbs = guaranteed post-dinner hypo, because the soluble component has no meal to cover."
         }
     ],
     "readings": [
@@ -595,6 +595,15 @@
         {"time":"2026-04-10 17:50","reading":9.7},
         {"time":"2026-04-10 18:00","reading":9.1},
         {"time":"2026-04-10 18:10","reading":9.1},
-        {"time":"2026-04-10 18:20","reading":8.3}
+        {"time":"2026-04-10 18:20","reading":8.3},
+        {"time":"2026-04-10 18:30","reading":7.8},
+        {"time":"2026-04-10 18:40","reading":7.5},
+        {"time":"2026-04-10 18:50","reading":7.1},
+        {"time":"2026-04-10 19:00","reading":6.6},
+        {"time":"2026-04-10 19:10","reading":6.9},
+        {"time":"2026-04-10 19:20","reading":6.6},
+        {"time":"2026-04-10 19:30","reading":5.1},
+        {"time":"2026-04-10 19:40","reading":6.1},
+        {"time":"2026-04-10 19:50","reading":7.7}
     ]
 }

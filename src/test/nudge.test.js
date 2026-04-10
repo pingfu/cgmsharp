@@ -416,12 +416,13 @@ test(`bedtime below target falling: starchy follow-up is appropriately sized`, a
 });
 
 // ===========================================================================
-// FULL-DAY REAL DATA REGRESSION
+// FULL-DAY SYNTHETIC SCENARIOS
 //
-// clinical basis: real-world glucose traces are messy — rescue snacks,
-// missed meals, overnight hypos, dawn spikes. these full-day scenarios
-// ensure the engine behaves correctly across a complete 24-hour cycle
-// with real CGM data, not just synthetic edge cases.
+// these test the engine against full-day clinical patterns extracted from
+// real observations (dates stripped to keep tests independent of collection
+// history). invariant assertions: breakfast nudge fires once per morning,
+// bedtime nudge fires once per evening, quiet hours are silent, bounded
+// total nudge count.
 // ===========================================================================
 
 test(`day-morning-insulin-overshoot: one breakfast nudge per morning`, async () =>
@@ -1046,40 +1047,45 @@ test(`bedtime at 19.0: looking good, no food needed`, async () =>
 
 test(`insulin curve: zero activity at injection time (0 min)`, async () =>
 {
-    // both rapid (onset 15 min) and intermediate (onset 90 min) have not
-    // started yet. total activity must be exactly zero.
+    // both soluble (onset 30 min) and NPH (onset 90 min) have not started yet.
+    // total activity must be exactly zero.
     var engine = createNudgeEngine(Object.assign({}, profile));
     var activity = engine._test.getInsulinActivity(0);
     assert.equal(activity, 0, `no insulin activity at injection time`);
 });
 
-test(`insulin curve: rapid peak at 75 min (~0.30)`, async () =>
+test(`insulin curve: soluble ramping at 75 min (~0.15)`, async () =>
 {
-    // rapid component: peakStart 60, peakEnd 90. at 75 min, rapid is at
-    // peak (1.0). intermediate: onset 90, not started yet (0).
-    // combined: 1.0 × 0.30 + 0 × 0.70 = 0.30.
+    // Humulin M3 soluble: onset 30, peakStart 120. at 75 min, soluble is at
+    // (75-30)/(120-30) = 0.5 of peak. NPH: onset 90, not started yet (0).
+    // combined: 0.5 × 0.30 + 0 × 0.70 = 0.15.
+    // this test exists to catch regressions to the old rapid-analogue curve
+    // (which would show 0.30 at 75 min because the analogue peaks 60-90).
     var engine = createNudgeEngine(Object.assign({}, profile));
     var activity = engine._test.getInsulinActivity(75);
-    assert.ok(Math.abs(activity - 0.30) < 0.01, `rapid peak at 75 min should be ~0.30, got ${activity.toFixed(3)}`);
+    assert.ok(Math.abs(activity - 0.15) < 0.01, `soluble ramping at 75 min should be ~0.15, got ${activity.toFixed(3)}`);
 });
 
-test(`insulin curve: intermediate peak at 360 min (~0.70)`, async () =>
+test(`insulin curve: NPH near peak at 360 min (~0.78)`, async () =>
 {
-    // rapid: tail at 240 min, so at 360 it's 0. intermediate: peakStart 240,
-    // peakEnd 480, so at 360 it's at peak (1.0).
-    // combined: 0 × 0.30 + 1.0 × 0.70 = 0.70.
+    // at 360 min (6h post-injection):
+    // soluble: tail phase, 1.0 - (360-180)/(420-180) = 1.0 - 0.75 = 0.25
+    // NPH: peakStart 240, peakEnd 600, so at 360 it's at peak plateau (1.0)
+    // combined: 0.25 × 0.30 + 1.0 × 0.70 = 0.075 + 0.70 = 0.775
+    // note: under Humulin M3, soluble is still meaningfully active at 6h
+    // (NPH's peak window overlaps significantly with soluble's tail).
     var engine = createNudgeEngine(Object.assign({}, profile));
     var activity = engine._test.getInsulinActivity(360);
-    assert.ok(Math.abs(activity - 0.70) < 0.01, `intermediate peak at 360 min should be ~0.70, got ${activity.toFixed(3)}`);
+    assert.ok(Math.abs(activity - 0.775) < 0.01, `combined activity at 360 min should be ~0.775, got ${activity.toFixed(3)}`);
 });
 
-test(`insulin curve: fully worn off at 960 min (16h)`, async () =>
+test(`insulin curve: fully worn off at 1080 min (18h)`, async () =>
 {
-    // rapid: tail at 240, long gone. intermediate: tail at 960 — the exact
-    // boundary where activity reaches 0. both components are zero.
+    // soluble: tail at 420, long gone. NPH: tail at 1080 — the exact boundary
+    // where activity reaches 0. both components are zero.
     var engine = createNudgeEngine(Object.assign({}, profile));
-    var activity = engine._test.getInsulinActivity(960);
-    assert.equal(activity, 0, `insulin fully worn off at 960 min`);
+    var activity = engine._test.getInsulinActivity(1080);
+    assert.equal(activity, 0, `insulin fully worn off at 1080 min`);
 });
 
 test(`insulin curve: meaningfully active at 120 min (meal window boundary)`, async () =>
@@ -1088,6 +1094,11 @@ test(`insulin curve: meaningfully active at 120 min (meal window boundary)`, asy
     // active" (above 0.25 threshold). this validates that the meal window
     // duration aligns with the insulin activity profile — suppressing carb
     // nudges only while insulin is genuinely working on the meal.
+    //
+    // under Humulin M3 curve:
+    // soluble: at 120 min = peakStart, so activity = 1.0, weighted 0.30
+    // NPH: (120-90)/(240-90) = 30/150 = 0.2 of peak, weighted 0.2 × 0.70 = 0.14
+    // combined: 0.44 — comfortably above 0.25 threshold.
     var engine = createNudgeEngine(Object.assign({}, profile));
     var activity = engine._test.getInsulinActivity(120);
     assert.ok(activity > 0.25, `insulin should be meaningfully active at meal window boundary, got ${activity.toFixed(3)}`);
@@ -1166,19 +1177,19 @@ test(`overnight quiet GMT: nudges before midnight, silent after`, async () =>
 });
 
 // ===========================================================================
-// 2026-04-09 EVENING CONTINUATION SCENARIOS
+// EVENING DINNER CONTINUATION SCENARIOS
 //
-// real CGM data from 19:00-21:00 UTC (20:00-22:00 BST) on 2026-04-09,
-// followed by four clinically distinct branches exploring what happens next.
-//
-// common preamble: dinner spike to 10.9, rapid descent through 7.3 to 6.8.
-// the engine fires a bedtime nudge (~20:10 UTC, BG 9.6) and a reactive
-// nudge (~20:50 UTC, BG 7.3, "worth a small snack"). the four branches
-// then test: did she eat? was it enough? what happens overnight?
+// four branching synthetic scenarios sharing a common preamble: dinner
+// spike to 10.9, rapid descent through 7.3 to 6.8. the engine fires a
+// bedtime nudge at BG 9.6 and a reactive nudge at BG 7.3 ("worth a small
+// snack"). the four branches then test: did she eat? was it enough? what
+// happens overnight?
 //
 // these scenarios test the engine's ability to re-engage after its initial
 // advice, handle recovery correctly, and respect quiet hours when the
-// overnight crash is beyond the nudge channel's scope.
+// overnight crash is beyond the nudge channel's scope. the preamble data is
+// extracted from a real evening observation; the four continuations are
+// synthetic branches.
 // ===========================================================================
 
 test(`evening-dinner-nudge-ignored-continued-crash: escalates to emergency when snack not eaten`, async () =>

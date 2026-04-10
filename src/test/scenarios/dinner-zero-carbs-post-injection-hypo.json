@@ -1,0 +1,20 @@
+{
+    "name": "Zero-carb dinner: predictable post-injection hypo",
+    "description": "Humulin M3 evening injection (19:00 local) covers a dinner with zero carbs — steak and green vegetables only, no rice/potato/bread. BG at injection time is around 9. The soluble component (~2.7u of a 9u dose) pulls BG down over the next 2-3 hours with no meal carbs to cover, producing a clean unchecked descent to hypo around 20:30 local (1.5h post injection, near the start of soluble peak). Demonstrates why dinner carbs aren't optional on biphasic insulin — the dose is committed at injection time regardless of what's eaten. The engine should fire a reactive nudge during the descent, preferably before BG crosses hypoFloor, warning about active insulin and recommending emergency carbs. Extracted from real 2026-04-10 evening.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 17:50", "reading": 9.7 },
+        { "time": "2026-04-10 18:00", "reading": 9.1 },
+        { "time": "2026-04-10 18:10", "reading": 9.1 },
+        { "time": "2026-04-10 18:20", "reading": 8.3 },
+        { "time": "2026-04-10 18:30", "reading": 7.8 },
+        { "time": "2026-04-10 18:40", "reading": 7.5 },
+        { "time": "2026-04-10 18:50", "reading": 7.1 },
+        { "time": "2026-04-10 19:00", "reading": 6.6 },
+        { "time": "2026-04-10 19:10", "reading": 6.9 },
+        { "time": "2026-04-10 19:20", "reading": 6.6 },
+        { "time": "2026-04-10 19:30", "reading": 5.1 },
+        { "time": "2026-04-10 19:40", "reading": 6.1 },
+        { "time": "2026-04-10 19:50", "reading": 7.7 }
+    ]
+}
