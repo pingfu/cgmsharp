@@ -252,7 +252,6 @@ const CARB_SUGGESTIONS = [
         `a 125g pot of natural yoghurt with 5 or 6 blueberries`,
         `1 oatcake with a thin slice of cheddar`,
         `3 pieces of dried mango`,
-        `half a crumpet with a scrape of butter`,
         `2 Ryvita with a tablespoon of cream cheese`,
         `a 100g pot of cottage cheese with 2 tinned pineapple chunks`
     ]},
@@ -263,7 +262,7 @@ const CARB_SUGGESTIONS = [
         `about 10 grapes with 5 almonds`,
         `1 medium apple with a teaspoon of peanut butter`,
         `2 oatcakes with a thin slice of cheddar`,
-        `1 crumpet with butter`,
+        `half a crumpet with butter`,
         `1 Weetabix with 100ml of semi-skimmed milk`,
         `2 tablespoons of trail mix`
     ]},
@@ -272,7 +271,6 @@ const CARB_SUGGESTIONS = [
         `a glass (200ml) of semi-skimmed milk and 1 satsuma`,
         `a 30g bowl of bran flakes with semi-skimmed milk`,
         `2 oatcakes with cheddar and 1 small apple`,
-        `1 crumpet with a teaspoon of strawberry jam`,
         `half a small jacket potato with a knob of butter`,
         `4 tablespoons of porridge oats made with semi-skimmed milk and a drizzle of honey`,
         `half a wholemeal pitta with 2 tablespoons of hummus`,
@@ -282,7 +280,7 @@ const CARB_SUGGESTIONS = [
         `half a cheese and pickle sandwich on wholemeal bread`,
         `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
         `half a small jacket potato with 3 tablespoons of baked beans`,
-        `2 crumpets with butter`,
+        `1 crumpet with butter`,
         `1 slice of wholemeal toast with 4 tablespoons of baked beans`
     ]}
 ];
@@ -377,7 +375,6 @@ const BREAKFAST_SUGGESTIONS = [
         `2 plain rice cakes with butter`
     ]},
     { grams: 7, ideas: [
-        `half a crumpet with a scrape of butter`,
         `a 125g pot of natural yoghurt with 5 or 6 blueberries`,
         `2 tablespoons of porridge oats made with water`,
         `1 oatcake with a thin slice of cheddar`
@@ -386,19 +383,18 @@ const BREAKFAST_SUGGESTIONS = [
         `1 slice of wholemeal toast with butter`,
         `1 small banana (about 15cm long)`,
         `4 tablespoons of porridge oats made with water`,
-        `1 crumpet with butter`,
+        `half a crumpet with butter`,
         `1 Weetabix with 100ml of semi-skimmed milk`
     ]},
     { grams: 15, ideas: [
         `1 slice of wholemeal toast with a teaspoon of peanut butter`,
         `a 30g bowl of bran flakes with semi-skimmed milk`,
-        `1 crumpet with a teaspoon of strawberry jam`,
         `4 tablespoons of porridge oats made with semi-skimmed milk and a drizzle of honey`,
         `1 Weetabix with semi-skimmed milk and half a small banana`
     ]},
     { grams: 20, ideas: [
         `4 tablespoons of porridge oats with semi-skimmed milk and half a banana`,
-        `2 crumpets with butter`,
+        `1 crumpet with butter`,
         `1 slice of wholemeal toast with a teaspoon of peanut butter and half a banana`,
         `2 Weetabix with semi-skimmed milk`
     ]}
