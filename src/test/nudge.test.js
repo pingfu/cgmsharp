@@ -288,15 +288,15 @@ test(`high-settle-then-dip: second nudge fires on the second dip (not suppressed
 
 test(`descent-across-targetLow: crossing the boundary on same dip does not double-nudge`, async () =>
 {
-    // BG fell from 7.4 (in-target) to 6.9 (below-target) in 20 min.
-    // crossing the 7.0 boundary changes the engine's internal category
-    // but it's the same dip — the food from the first nudge is still absorbing.
-    // a second nudge risks the user eating both recommendations: 10g + 5g + 10g = 25g,
-    // which would spike BG to ~12.6 from 6.9.
-    var nudges = await runScenario(`2026-04-09-full-day.json`);
-    var eveningNudges = nudges.filter(n => n.time >= `2026-04-09 16:00`);
-    assert.equal(eveningNudges.length, 1, `expected 1 evening nudge, got ${eveningNudges.length}`);
-    assert.equal(eveningNudges[0].reading, 7.4, `nudge should fire at 7.4 (first detection), not at 6.9 (same dip)`);
+    // BG descends continuously from 13 down through target, passing through 7.4
+    // (in-target-falling) and then 6.9 (below). the category changes at the
+    // boundary but it's the same dip — the food from the first nudge is still
+    // absorbing. a second nudge would risk the user eating both recommendations.
+    // this scenario is extracted from a real live bug where the engine double-nudged
+    // and the user ate 15g fast sugar total, overshooting into an unnecessary spike.
+    var nudges = await runScenario(`descent-across-targetLow.json`);
+    assert.equal(nudges.length, 1, `expected 1 nudge on the continuous dip, got ${nudges.length}`);
+    assert.equal(nudges[0].reading, 7.4, `nudge should fire at 7.4 (first detection), not at 6.9 (same dip)`);
 });
 
 test(`bouncing near target: single nudge despite oscillation around 7.0`, async () =>
