@@ -1,0 +1,12 @@
+{
+    "name": "Dinner window boundaries",
+    "description": "Readings both OUTSIDE the dinner window (18:45-19:15 local = 17:45-18:15 UTC with offset 60) should not fire a dinner nudge. Readings at 17:40 BST (16:40 UTC) and 20:00 BST (19:00 UTC) are well outside the window. No dinner nudge expected.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 16:30", "reading": 8.5 },
+        { "time": "2026-04-10 16:40", "reading": 8.4 },
+        { "time": "2026-04-10 19:00", "reading": 8.2 },
+        { "time": "2026-04-10 19:10", "reading": 8.1 },
+        { "time": "2026-04-10 19:20", "reading": 8.0 }
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "name": "Dinner at mid-target BG (8.2)",
+    "description": "BG is comfortably mid-target (8.2) entering the dinner window. Standard scenario — the dinner nudge should recommend the base 20g of carbs to cover the evening insulin. This is the 'normal' dinner case.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 17:30", "reading": 8.5 },
+        { "time": "2026-04-10 17:40", "reading": 8.3 },
+        { "time": "2026-04-10 17:50", "reading": 8.2 },
+        { "time": "2026-04-10 18:00", "reading": 8.2 },
+        { "time": "2026-04-10 18:10", "reading": 8.2 }
+    ]
+}

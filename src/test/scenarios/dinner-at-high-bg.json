@@ -1,0 +1,12 @@
+{
+    "name": "Dinner at high BG (11.5)",
+    "description": "BG is above targetHigh (11.5) entering the dinner window. Probably she snacked too much or her lunch is still spiking. The dinner nudge should recommend REDUCED carbs (10g) because the insulin has extra work to do bringing BG back down — full dinner carbs would push her higher before insulin catches up.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 17:30", "reading": 12.0 },
+        { "time": "2026-04-10 17:40", "reading": 11.8 },
+        { "time": "2026-04-10 17:50", "reading": 11.6 },
+        { "time": "2026-04-10 18:00", "reading": 11.5 },
+        { "time": "2026-04-10 18:10", "reading": 11.5 }
+    ]
+}
