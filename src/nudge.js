@@ -1077,52 +1077,18 @@ function createNudgeEngine(config)
         return true;
     }
 
-    // now is optional — defaults to moment(). pass a moment instance to control time in tests.
-    async function evaluate(reading, sendNudge, now)
+    // reactive nudge: the fourth kind of nudge, fired when BG is drifting below
+    // target or crashing in-target. unlike the three proactive nudges (breakfast,
+    // dinner, bedtime) this fires at any time of day in response to the trend
+    // and current reading. handles below-target, in-target-falling, and the
+    // meal window safety override.
+    async function evaluateReactive(reading, trend, sendNudge, now)
     {
-        if (readings.length >= p.maxReadings) readings.shift();
-        readings.push(reading);
-
-        if (readings.length < 2) return;
-
-        now = now || moment();
-
-        if (isQuietHours(now)) return;
-
-        // state reset after recovery: if BG has reached or exceeded the expected
-        // level from the last nudge, the previous episode is resolved — the advice
-        // worked (or was irrelevant) and BG is back in a safe zone. clearing the
-        // state here means any future dip is evaluated fresh, not suppressed by
-        // the old carb estimate. without this reset, the engine silently carries
-        // the old nudge context forever and can suppress a legitimate new dip
-        // hours later just because the carb estimate hasn't jumped enough from
-        // the original.
-        if (state.lastNudgeExpectedReading !== null && reading >= state.lastNudgeExpectedReading)
-        {
-            state.lastNudgeSent = null;
-            state.lastNudgeCategory = null;
-            state.lastNudgeCarbs = null;
-            state.lastNudgeReading = null;
-            state.lastNudgeExpectedReading = null;
-        }
-
-        var trend = getTrend(reading);
-
-        // breakfast nudge — one proactive message per morning with carb guidance
-        if (await evaluateBreakfast(reading, trend, sendNudge, now)) return;
-
-        // dinner nudge — one proactive message per evening at/near the 19:00 injection
-        if (await evaluateDinner(reading, trend, sendNudge, now)) return;
-
-        // bedtime nudge — one proactive message per evening, takes priority over regular logic
-        if (await evaluateBedtime(reading, trend, sendNudge, now)) return;
-
         var minutesSinceInjection = getMinutesSinceLastInjection(now);
         var insulinActivity = getInsulinActivity(minutesSinceInjection);
         var insulinActive = insulinActivity !== null && insulinActivity >= p.insulinActiveThreshold;
         var mealWindow = isInMealWindow(now);
         var projected = projectGlucose(reading, trend);
-        var isDawn = isDawnPhenomenonWindow(now);
 
         var title = null;
         var message = null;
@@ -1255,6 +1221,49 @@ function createNudgeEngine(config)
         state.lastNudgeReading = reading;
         // calculate where we expect BG to be if she eats the suggested carbs
         state.lastNudgeExpectedReading = carbs !== null ? reading + (carbs / p.carbsPerMmol) : null;
+    }
+
+    // main entry point. dispatches to one of the four nudge types — three
+    // proactive (breakfast, dinner, bedtime) which fire once per day in their
+    // respective windows, and one reactive which catches anything else.
+    // now is optional — defaults to moment(). pass a moment instance to
+    // control time in tests.
+    async function evaluate(reading, sendNudge, now)
+    {
+        if (readings.length >= p.maxReadings) readings.shift();
+        readings.push(reading);
+
+        if (readings.length < 2) return;
+
+        now = now || moment();
+
+        if (isQuietHours(now)) return;
+
+        // state reset after recovery: if BG has reached or exceeded the expected
+        // level from the last nudge, the previous episode is resolved — the advice
+        // worked (or was irrelevant) and BG is back in a safe zone. clearing the
+        // state here means any future dip is evaluated fresh, not suppressed by
+        // the old carb estimate. without this reset, the engine silently carries
+        // the old nudge context forever and can suppress a legitimate new dip
+        // hours later just because the carb estimate hasn't jumped enough from
+        // the original.
+        if (state.lastNudgeExpectedReading !== null && reading >= state.lastNudgeExpectedReading)
+        {
+            state.lastNudgeSent = null;
+            state.lastNudgeCategory = null;
+            state.lastNudgeCarbs = null;
+            state.lastNudgeReading = null;
+            state.lastNudgeExpectedReading = null;
+        }
+
+        var trend = getTrend(reading);
+
+        // the four nudge types. proactive windows take priority — if any fire,
+        // we're done. reactive catches any descent outside those windows.
+        if (await evaluateBreakfast(reading, trend, sendNudge, now)) return;
+        if (await evaluateDinner(reading, trend, sendNudge, now)) return;
+        if (await evaluateBedtime(reading, trend, sendNudge, now)) return;
+        await evaluateReactive(reading, trend, sendNudge, now);
     }
 
     return { evaluate: evaluate, state: state, profile: p, _test: { getInsulinActivity: getInsulinActivity } };
