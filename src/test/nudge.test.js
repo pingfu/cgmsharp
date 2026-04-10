@@ -1185,13 +1185,13 @@ test(`overnight quiet GMT: nudges before midnight, silent after`, async () =>
 // overnight crash is beyond the nudge channel's scope.
 // ===========================================================================
 
-test(`2026-04-09 evening continued crash: escalates to emergency when snack not eaten`, async () =>
+test(`evening-dinner-nudge-ignored-continued-crash: escalates to emergency when snack not eaten`, async () =>
 {
     // BG continues falling after the 20:50 nudge was ignored: 6.8 → 3.8.
     // the absorption window from the reactive nudge (~35 min) expires around
     // 21:25 UTC. after that, the engine should re-engage with emergency foods
     // as BG drops through hypoFloor (5.0).
-    var nudges = await runScenario(`2026-04-09-evening-continued-crash.json`);
+    var nudges = await runScenario(`evening-dinner-nudge-ignored-continued-crash.json`);
     var postCrash = nudges.filter(n => n.time >= `2026-04-09 21:10`);
     assert.ok(postCrash.length >= 1, `must nudge during continued crash after absorption window`);
     var belowFloor = postCrash.filter(n => n.reading <= 5.0);
@@ -1201,76 +1201,76 @@ test(`2026-04-09 evening continued crash: escalates to emergency when snack not 
     });
 });
 
-test(`2026-04-09 evening continued crash: bedtime nudge fires during real data`, async () =>
+test(`evening-dinner-nudge-ignored-continued-crash: bedtime nudge fires during preamble`, async () =>
 {
     // the bedtime nudge should fire during the 20:00-21:00 UTC window
     // (21:00-22:00 BST) from the real data preamble, before the crash.
-    var nudges = await runScenario(`2026-04-09-evening-continued-crash.json`);
+    var nudges = await runScenario(`evening-dinner-nudge-ignored-continued-crash.json`);
     var bedtime = nudges.filter(n =>
         n.title === `Bedtime top-up` || n.title === `Looking good for bed` || n.title === `Low at bedtime`
     );
     assert.ok(bedtime.length >= 1, `bedtime nudge should fire during real data portion`);
 });
 
-test(`2026-04-09 evening recovery: zero nudges during rising BG after snack`, async () =>
+test(`evening-dinner-nudge-followed-recovery: zero nudges during rising BG after snack`, async () =>
 {
     // she ate the snack. BG recovers from 6.8 to 9.2 then settles to 8.0.
     // the engine should stay completely silent during the recovery — rising
     // in-target BG means the advice worked. nudging during recovery would
     // cause unnecessary concern.
-    var nudges = await runScenario(`2026-04-09-evening-recovery.json`);
+    var nudges = await runScenario(`evening-dinner-nudge-followed-recovery.json`);
     var recoveryNudges = nudges.filter(n => n.time >= `2026-04-09 21:10`);
     assert.equal(recoveryNudges.length, 0, `zero nudges during successful recovery`);
 });
 
-test(`2026-04-09 evening recovery: total nudge count bounded`, async () =>
+test(`evening-dinner-nudge-followed-recovery: total nudge count bounded`, async () =>
 {
     // full evening including real data preamble: bedtime nudge + 1-2 reactive
     // nudges during the drop. no more during recovery.
-    var nudges = await runScenario(`2026-04-09-evening-recovery.json`);
+    var nudges = await runScenario(`evening-dinner-nudge-followed-recovery.json`);
     assert.ok(nudges.length >= 1 && nudges.length <= 4, `expected 1-4 nudges for the evening, got ${nudges.length}`);
 });
 
-test(`2026-04-09 evening overnight crash: zero nudges during quiet hours despite hypo`, async () =>
+test(`evening-dinner-recovery-then-overnight-crash: zero nudges during quiet hours despite hypo`, async () =>
 {
     // BG recovers to 9.0 after the snack, then crashes from 22:00 UTC onwards
     // as the intermediate insulin peaks. by 23:00 UTC (midnight BST) BG is 5.5
     // and falling to 3.5 — but quiet hours have begun. the nudge channel must
     // stay silent. the alert channel handles overnight emergencies separately.
-    var nudges = await runScenario(`2026-04-09-evening-recovery-then-overnight-crash.json`);
+    var nudges = await runScenario(`evening-dinner-recovery-then-overnight-crash.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours despite overnight crash to 3.5`);
 });
 
-test(`2026-04-09 evening overnight crash: re-nudges during steep pre-quiet decline`, async () =>
+test(`evening-dinner-recovery-then-overnight-crash: re-nudges during steep pre-quiet decline`, async () =>
 {
     // after recovery to 9.0 at 21:30, BG crashes steeply (9.0 → 4.5 in 40 min)
     // as intermediate insulin overwhelms the insufficient snack. the steep
     // descent pushes the carb estimate above the 3g suppression threshold from
     // the earlier nudge (7g → 11g+ with "dropping fast" bonus), forcing the
     // engine to re-engage before quiet hours (23:00 UTC = midnight BST).
-    var nudges = await runScenario(`2026-04-09-evening-recovery-then-overnight-crash.json`);
+    var nudges = await runScenario(`evening-dinner-recovery-then-overnight-crash.json`);
     var preQuietLow = nudges.filter(n =>
         n.time >= `2026-04-09 21:40` && n.time < `2026-04-09 23:00` && n.reading < 6.0
     );
     assert.ok(preQuietLow.length >= 1, `steep crash should break suppression threshold before quiet hours`);
 });
 
-test(`2026-04-09 evening double dip: re-engages on second drop`, async () =>
+test(`evening-dinner-partial-recovery-second-dip: re-engages on second drop`, async () =>
 {
     // partial recovery from 6.8 to 8.0, then second drop as insulin overwhelms
     // the undersized snack: 8.0 → 5.0. the recovery above the expected reading
     // resets the suppression — the second dip is a new situation.
-    var nudges = await runScenario(`2026-04-09-evening-double-dip.json`);
+    var nudges = await runScenario(`evening-dinner-partial-recovery-second-dip.json`);
     var secondDip = nudges.filter(n => n.time >= `2026-04-09 21:30` && n.reading < 7.0);
     assert.ok(secondDip.length >= 1, `must nudge on the second dip after recovery`);
 });
 
-test(`2026-04-09 evening double dip: emergency foods on deep second dip`, async () =>
+test(`evening-dinner-partial-recovery-second-dip: emergency foods on deep second dip`, async () =>
 {
     // at 5.0 (hypoFloor) with active insulin and falling, the engine must
     // recommend fast-acting sugar. slow carbs failed on the first attempt.
-    var nudges = await runScenario(`2026-04-09-evening-double-dip.json`);
+    var nudges = await runScenario(`evening-dinner-partial-recovery-second-dip.json`);
     var deepLow = nudges.filter(n => n.time >= `2026-04-09 21:30` && n.reading <= 5.0);
     deepLow.forEach(function (n)
     {
