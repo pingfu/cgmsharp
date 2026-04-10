@@ -51,9 +51,33 @@ async function runScenario(scenario)
     // in tests, we apply it manually since the test process may not have TZ set.
     var tzOffset = scenario.timezoneOffsetMinutes || 0;
 
+    // build a date → notes lookup for files with per-day annotations (consolidated
+    // observation files). falls back to no-op for scenarios without days[].
+    var dayNotes = {};
+    if (Array.isArray(scenario.days))
+    {
+        for (var d = 0; d < scenario.days.length; d++)
+        {
+            dayNotes[scenario.days[d].date] = scenario.days[d].notes || ``;
+        }
+    }
+    var currentDate = null;
+
     for (var i = 0; i < scenario.readings.length; i++)
     {
         var entry = scenario.readings[i];
+
+        // print a day break with notes whenever the reading's date changes
+        var readingDate = entry.time.split(` `)[0];
+        if (readingDate !== currentDate)
+        {
+            currentDate = readingDate;
+            if (dayNotes[currentDate])
+            {
+                console.log(`\n--- ${currentDate}: ${dayNotes[currentDate]} ---`);
+            }
+        }
+
         var now = moment(entry.time).add(tzOffset, `minutes`);
         var nudgeCountBefore = nudges.length;
 
