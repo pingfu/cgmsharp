@@ -292,20 +292,20 @@ const CARB_SUGGESTIONS = [
 const EMERGENCY_SUGGESTIONS = [
     { grams: 5, ideas: [
         `1 jelly baby`,
-        `1 teaspoon of honey`,
-        `1 teaspoon of jam`,
-        `1 teaspoon of sugar dissolved in water`
+        `1 level teaspoon of honey`,
+        `1 level teaspoon of jam`,
+        `1 level teaspoon of sugar dissolved in water`
     ]},
     { grams: 10, ideas: [
         `2 jelly babies`,
-        `2 teaspoons of honey`,
-        `1 tablespoon of jam`,
-        `2 teaspoons of sugar dissolved in water`
+        `2 level teaspoons of honey`,
+        `1 level tablespoon of jam`,
+        `2 level teaspoons of sugar dissolved in water`
     ]},
     { grams: 15, ideas: [
         `3 jelly babies`,
-        `1 tablespoon of honey`,
-        `3 teaspoons of sugar dissolved in water`
+        `1 level tablespoon of honey`,
+        `3 level teaspoons of sugar dissolved in water`
     ]}
     // no 20g tier — rule of 15: treat with 15g fast-acting, wait 15 min, repeat if still low.
     // overtreating hypos causes rebound spikes. let the engine re-evaluate after absorption.
