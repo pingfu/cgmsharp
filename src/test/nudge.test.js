@@ -639,7 +639,7 @@ test(`acceleration: gradual steepening nudges early via projection`, async () =>
     // isn't fast enough to change the trend description.
     var result = await feedReadings([8.0, 7.8, 7.5, 7.1, 6.6, 6.0]);
     assert.ok(result.nudges.length >= 1, `steepening drop should trigger a nudge`);
-    assert.ok(result.nudges[0].message.includes(`might dip`) || result.nudges[0].message.includes(`drift`),
+    assert.ok(result.nudges[0].message.includes(`heading below target`) || result.nudges[0].message.includes(`drift`),
         `early nudge from steepening drop should be projection-based, got: ${result.nudges[0].message}`);
 });
 
@@ -771,15 +771,16 @@ test(`dinner-zero-carbs: reactive nudge is clearly actionable`, async () =>
     // is the standard format and tells her exactly what to do in seconds.
     // at 90 min post-injection under the Humulin M3 curve, combined activity
     // is ~0.20 — above the 0.18 insulinActiveThreshold — so the engine's
-    // "insulin is still working" message path fires and the nudge must
-    // explicitly warn that insulin is still active.
+    // active-insulin message path fires and the nudge must explicitly warn
+    // that insulin is still active (via the "bridge your active insulin"
+    // or "insulin is still working" phrasing).
     var nudges = await runScenario(`dinner-zero-carbs-post-injection-hypo.json`);
     var reactiveNudges = nudges.filter(n => n.title !== `Dinner time`);
     assert.ok(reactiveNudges.length >= 1, `expected reactive nudge`);
     var firstReactive = reactiveNudges[0];
     assert.ok(/fast.acting sugar/.test(firstReactive.message), `reactive nudge should tell user to have fast-acting sugar, got: ${firstReactive.message}`);
     assert.ok(/\d+g/.test(firstReactive.message), `reactive nudge should specify a gram amount, got: ${firstReactive.message}`);
-    assert.ok(/insulin is still working/.test(firstReactive.message), `reactive nudge should mention active insulin at 90 min post-injection, got: ${firstReactive.message}`);
+    assert.ok(/active insulin|insulin is still working/.test(firstReactive.message), `reactive nudge should mention active insulin at 90 min post-injection, got: ${firstReactive.message}`);
 });
 
 // ---------------------------------------------------------------------------

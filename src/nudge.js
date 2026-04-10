@@ -1040,7 +1040,7 @@ function createNudgeEngine(config)
         if (gap <= 0)
         {
             title = `Looking good for bed`;
-            message = `Your sugar is ${reading} heading towards bed (11pm). That should see you through comfortably — no snack needed. Sleep well.`;
+            message = `Your sugar is ${reading} heading towards bed (11pm). That should be enough to see you through the night — no snack needed.`;
         }
         else
         {
@@ -1054,7 +1054,7 @@ function createNudgeEngine(config)
                 var emergency = getEmergencySuggestion(15);
                 var starchy = getBedtimeSuggestion(carbs);
                 title = `Low at bedtime`;
-                message = `Your sugar is ${reading} — too low for bed (11pm). Have ${emergency.grams}g of fast sugar first (${emergency.suggestion}), then once it comes up, have about ${starchy.grams}g of something starchy like ${starchy.suggestion} to keep you going overnight.`;
+                message = `Your sugar is ${reading} — too low for bed (11pm). Have ${emergency.grams}g of fast sugar now — ${emergency.suggestion}. Give it 15 minutes to work, then have about ${starchy.grams}g of something starchy like ${starchy.suggestion} to carry you through overnight. If your sugar hasn't come up in 15 minutes, have another ${emergency.grams}g of fast sugar before the starchy food.`;
             }
             else if (reading < p.targetLow && trend.direction === `falling`)
             {
@@ -1062,7 +1062,7 @@ function createNudgeEngine(config)
                 var emergency = getEmergencySuggestion(10);
                 var starchy = getBedtimeSuggestion(carbs);
                 title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} and ${trend.description} heading towards bed (11pm). Have ${emergency.grams}g of fast sugar (${emergency.suggestion}) to stop the drop, then have about ${starchy.grams}g of something starchy like ${starchy.suggestion} for overnight.`;
+                message = `Your sugar is ${reading} and ${trend.description} heading towards bed (11pm). Have ${emergency.grams}g of fast sugar now — ${emergency.suggestion} — to stop the drop. Give it 15 minutes to work, then have about ${starchy.grams}g of something starchy like ${starchy.suggestion} for overnight. If your sugar hasn't come up in 15 minutes, have another ${emergency.grams}g of fast sugar before the starchy food.`;
             }
             else if (reading < p.targetLow)
             {
@@ -1138,11 +1138,11 @@ function createNudgeEngine(config)
                 if (insulinActive)
                 {
                     var followUp = getBedtimeSuggestion(10);
-                    message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}. Once it comes back up, follow with about 10g of something starchy like ${followUp.suggestion} — your insulin is still working and will pull it back down.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar now — ${food.suggestion}. Give it 15 minutes to work, then have ${followUp.suggestion} (about 10g) to bridge your active insulin. If your sugar hasn't come up in 15 minutes, have another ${food.grams}g of fast sugar first.`;
                 }
                 else
                 {
-                    message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Have ${food.grams}g of fast-acting sugar now — ${food.suggestion}. Give it 15 minutes to work, then check again — if your sugar hasn't come up, have another ${food.grams}g of fast sugar.`;
                 }
             }
             // below target with insulin actively pulling — use fast-acting food
@@ -1152,7 +1152,7 @@ function createNudgeEngine(config)
                 food = getEmergencySuggestion(carbs);
                 title = `Time for some fast sugar`;
                 var followUp = getBedtimeSuggestion(10);
-                message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. Have ${food.grams}g of fast-acting sugar — ${food.suggestion}. Follow with about 10g of something starchy like ${followUp.suggestion} to stop it dropping again.`;
+                message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may keep dropping. Have ${food.grams}g of fast-acting sugar now — ${food.suggestion}. Give it 15 minutes to work, then have ${followUp.suggestion} (about 10g) to stop it dropping again. If your sugar hasn't come up in 15 minutes, have another ${food.grams}g of fast sugar first.`;
             }
             else
             {
@@ -1161,12 +1161,12 @@ function createNudgeEngine(config)
                 if (trend.direction === `falling`)
                 {
                     title = `A little top-up might help`;
-                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of slower-acting carbs (low GI) should help steady things — for example, ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Have about ${food.grams}g of slower-acting carbs (low GI) to steady it — try ${food.suggestion}.`;
                 }
                 else
                 {
                     title = `Sugar update`;
-                    message = `Your sugar is ${reading} and ${trend.description}, sitting just below target. A small top-up of about ${food.grams}g of slower-acting carbs (low GI) would give it a nudge — try ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}, just below target. Have about ${food.grams}g of slower-acting carbs (low GI) to steady it — try ${food.suggestion}.`;
                 }
             }
         }
@@ -1200,19 +1200,19 @@ function createNudgeEngine(config)
                 {
                     category = `in-target-falling`;
                     title = `Thinking ahead`;
-                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may drift lower. About ${food.grams}g of slower-acting carbs (low GI) would help — something like ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Your insulin is still working so it may drift lower. Have about ${food.grams}g of slower-acting carbs (low GI) to steady it — try ${food.suggestion}.`;
                 }
                 else if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating` || trend.description === `falling and picking up pace`)
                 {
                     category = `in-target-falling`;
                     title = `Worth a small snack`;
-                    message = `Your sugar is ${reading} and ${trend.description}. About ${food.grams}g of slower-acting carbs (low GI) would help it level off — try ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description}. Have about ${food.grams}g of slower-acting carbs (low GI) to level it off — try ${food.suggestion}.`;
                 }
                 else if (projected !== null && projected < p.targetLow)
                 {
                     category = `in-target-falling`;
                     title = `Gentle heads-up`;
-                    message = `Your sugar is ${reading} and ${trend.description}. At this pace it might dip a little below target over the next half hour. About ${food.grams}g of slower-acting carbs (low GI) would keep things steady — try ${food.suggestion}.`;
+                    message = `Your sugar is ${reading} and ${trend.description} — heading below target within half an hour. Have about ${food.grams}g of slower-acting carbs (low GI) to keep it steady — try ${food.suggestion}.`;
                 }
                 else
                 {
