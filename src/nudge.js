@@ -643,11 +643,18 @@ function createNudgeEngine(config)
             }
         }
 
-        // urgent only when falling AND already close to or below target.
-        // a rapid drop from 13 to 9 is not urgent — she's still in range.
+        // urgent stays true when a fast fall is clinically dangerous. two cases qualify:
+        //   (a) reading is already near or below target (targetLow + 1.0) — no projection
+        //       needed, the current BG is the concern
+        //   (b) the 30-min projection crosses hypoFloor — even if current BG is comfortably
+        //       above target, a rapid accelerating drop heading to hypo is urgent
+        // a rapid drop from 13 to 9 with stable BG projection stays non-urgent (still in range).
         if (urgent && direction === `falling`)
         {
-            if (reading > p.targetLow + 1.0) urgent = false;
+            var projectedBG = reading + (shortRate * p.projectionMinutes);
+            var nearTarget = reading <= p.targetLow + 1.0;
+            var projectedHypo = projectedBG <= p.hypoFloor;
+            if (!nearTarget && !projectedHypo) urgent = false;
         }
 
         return {
@@ -735,7 +742,14 @@ function createNudgeEngine(config)
 
     function estimateCarbsNeeded(reading, trend, insulinActivity)
     {
-        var gap = p.targetLow - reading;
+        // size the correction to where BG is HEADING in 30 min, not where it currently is.
+        // a rapid drop at 7.3 means the user will be at ~3.5 in 30 min — the carb need is
+        // sized against that future state. if no projection is available (insufficient
+        // history), fall back to the current reading.
+        var projected = projectGlucose(reading, trend);
+        var effectiveBG = projected !== null ? projected : reading;
+
+        var gap = p.targetLow - effectiveBG;
         if (gap < 0) gap = 0;
 
         var targetGap = gap + 0.5;
@@ -755,7 +769,7 @@ function createNudgeEngine(config)
         else if (trend.direction === `rising`) base = Math.max(base - Math.round(p.carbsPerMmol * 0.5), 2);
 
         base = Math.max(base, 5); // minimum useful correction — below 5g has no measurable BG effect
-        base = Math.min(base, 20);
+        base = Math.min(base, 20); // max per dose; Rule of 15 + next-tick re-evaluation handles escalation
 
         return base;
     }
@@ -799,39 +813,37 @@ function createNudgeEngine(config)
         return getSuggestionFromTable(BREAKFAST_SUGGESTIONS, grams);
     }
 
-    // expected-response suppression: when we send a carb suggestion, we calculate where BG
-    // should be once the food absorbs. suppress further nudges until either:
-    // a) the reading has reached or exceeded the expected level (advice worked — stay quiet)
-    // b) enough time has passed AND the reading is below expected (advice wasn't enough — escalate)
+    // post-nudge suppression: after we send a carb suggestion, silence further nudges
+    // unless the situation has clearly worsened. two phases:
     //
-    // within the absorption window: always suppress. the food is still being digested —
-    // sending another nudge risks double-dosing because we can't know if the user
-    // actioned the first message. alerts handle clinical emergencies separately.
+    // 1. absorption window (hard silence): food is still being digested, can't know
+    //    if the user actioned the first message. alerts handle clinical emergencies.
     //
-    // after the absorption window: re-nudge only if the carb estimate has jumped
-    // meaningfully (3g+), indicating the original advice wasn't enough.
+    // 2. post-absorption: re-nudge only if BG has meaningfully dropped since the
+    //    nudge fired (> 0.5 mmol worse). small fluctuations or stability count as
+    //    "status quo" — the food is probably balancing insulin. a real escalation
+    //    (situation deteriorating) shows up as a materially lower reading.
+    //
+    // NOTE: the old logic compared the current reading to lastNudgeExpectedReading
+    // (reading + carbs/carbsPerMmol) and escalated on carb-delta >= 3. both were
+    // broken under the projection-based formula: expected was unreachable because
+    // insulin pulls against food, and carbs clamps at 20g so delta can't grow. the
+    // BG-delta check works in both directions and doesn't depend on dose sizing.
     function shouldSuppressNudge(reading, carbs, category, now)
     {
-        if (state.lastNudgeSent === null || state.lastNudgeCarbs === null) return false;
+        if (state.lastNudgeSent === null || state.lastNudgeReading === null) return false;
 
         var minutesSinceLastNudge = (now.valueOf() - state.lastNudgeSent) / 60000;
-        var absorptionWindow = state.lastNudgeCarbs <= 7 ? p.absorptionSmall : p.absorptionLarge;
+        var absorptionWindow = state.lastNudgeCarbs !== null && state.lastNudgeCarbs <= 7 ? p.absorptionSmall : p.absorptionLarge;
 
         // still within absorption window — food hasn't had time to work yet
         if (minutesSinceLastNudge < absorptionWindow) return true;
 
-        // absorption window has passed — check if the advice worked
-        if (state.lastNudgeExpectedReading !== null)
-        {
-            // reading has reached or exceeded expected level — advice worked, stay quiet
-            if (reading >= state.lastNudgeExpectedReading) return true;
+        // post-absorption: re-nudge only if BG is materially worse than when we nudged.
+        // "materially worse" = dropped more than 0.5 mmol below the nudge-time reading.
+        if (reading < state.lastNudgeReading - 0.5) return false;
 
-            // only re-nudge on a meaningful jump (3g+). increases of 5→6→7 are
-            // estimation noise, not a materially worse situation.
-            if (carbs < state.lastNudgeCarbs + 3) return true;
-        }
-
-        return false;
+        return true;
     }
 
     // return-to-range detection: if any reading in the buffer was above target,
@@ -1347,21 +1359,26 @@ function createNudgeEngine(config)
 
         if (isQuietHours(now)) return;
 
-        // state reset after recovery: if BG has reached or exceeded the expected
-        // level from the last nudge, the previous episode is resolved — the advice
-        // worked (or was irrelevant) and BG is back in a safe zone. clearing the
-        // state here means any future dip is evaluated fresh, not suppressed by
-        // the old carb estimate. without this reset, the engine silently carries
-        // the old nudge context forever and can suppress a legitimate new dip
-        // hours later just because the carb estimate hasn't jumped enough from
-        // the original.
-        if (state.lastNudgeExpectedReading !== null && reading >= state.lastNudgeExpectedReading)
+        // state reset after recovery: clear the "last nudge" context once BG has
+        // comfortably returned to a safe zone. without a reset, the engine carries
+        // the old nudge context forever and can suppress a legitimate new dip hours
+        // later. two conditions qualify as "recovered":
+        //   (a) BG has risen at least 1.0 mmol/L since the nudge fired, OR
+        //   (b) BG is comfortably above targetLow (>= targetLow + 2.0, i.e. ≥ 8.0)
+        // the 8.0 threshold ensures a brief bounce above 7.0 during oscillation
+        // doesn't falsely reset state; only a real return to mid-target range does.
+        if (state.lastNudgeSent !== null && state.lastNudgeReading !== null)
         {
-            state.lastNudgeSent = null;
-            state.lastNudgeCategory = null;
-            state.lastNudgeCarbs = null;
-            state.lastNudgeReading = null;
-            state.lastNudgeExpectedReading = null;
+            var recoveredFromNudge = reading >= state.lastNudgeReading + 1.0;
+            var comfortablyInTarget = reading >= p.targetLow + 2.0;
+            if (recoveredFromNudge || comfortablyInTarget)
+            {
+                state.lastNudgeSent = null;
+                state.lastNudgeCategory = null;
+                state.lastNudgeCarbs = null;
+                state.lastNudgeReading = null;
+                state.lastNudgeExpectedReading = null;
+            }
         }
 
         var trend = getTrend(reading);

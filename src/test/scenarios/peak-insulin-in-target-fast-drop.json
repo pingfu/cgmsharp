@@ -1,0 +1,14 @@
+{
+    "name": "Peak insulin + in-target fast drop",
+    "description": "Mirrors 2026-04-09 20:50 observation. BG is in-target (7.3) but dropping fast and accelerating (-0.125 mmol/min) at ~110 min post-evening-injection — soluble near peak plateau. The 30-min projection crosses hypoFloor (5.0), so the engine must (1) keep trend.urgent=true despite BG being >7.0, (2) size the correction against the projected 3.55 (not the current 7.3), and (3) route to emergency fast sugar, NOT slow carbs.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 19:00", "reading": 7.7 },
+        { "time": "2026-04-10 19:10", "reading": 8.2 },
+        { "time": "2026-04-10 19:20", "reading": 9.6 },
+        { "time": "2026-04-10 19:30", "reading": 9.9 },
+        { "time": "2026-04-10 19:40", "reading": 9.8 },
+        { "time": "2026-04-10 19:50", "reading": 9.0 },
+        { "time": "2026-04-10 20:00", "reading": 7.3 }
+    ]
+}

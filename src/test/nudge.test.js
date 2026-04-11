@@ -225,15 +225,19 @@ test(`sharp post-snack recovery: no nudges during rising BG after hypo`, async (
 // the formula: (gap to target + 0.5 buffer + insulin counter-effect) × 4.4g/mmol
 // ===========================================================================
 
-test(`midday crash: carbs escalate as BG drops further from target`, async () =>
+test(`midday crash: escalates from slow carbs to emergency foods as BG drops below hypoFloor`, async () =>
 {
-    // stable at 8.5, then crashes to 4.5. first nudge (near target) should
-    // suggest less than the later nudges (deep below target).
+    // stable at 8.5, then crashes to 4.5. first nudge (near target, falling)
+    // should recommend slow carbs for stabilisation. later nudges (below hypoFloor)
+    // must escalate to emergency fast-acting sugar per the Rule of 15 — the food
+    // TYPE changes, not necessarily the gram amount (both cap at the 15g emergency
+    // tier under the new projection-based formula).
     var nudges = await runScenario(`midday-plateau-then-crash.json`);
     assert.ok(nudges.length >= 2, `should nudge more than once as crash deepens past absorption window`);
-    var firstCarbs = extractCarbs(nudges[0].message);
-    var lastCarbs = extractCarbs(nudges[nudges.length - 1].message);
-    assert.ok(lastCarbs > firstCarbs, `deeper deficit should recommend more carbs: first=${firstCarbs}g, last=${lastCarbs}g`);
+    var first = nudges[0];
+    var last = nudges[nudges.length - 1];
+    assert.ok(!isEmergencyFood(first.message), `first nudge near target should use slow carbs, got: ${first.message}`);
+    assert.ok(isEmergencyFood(last.message), `last nudge below hypoFloor must use emergency foods, got: ${last.message}`);
 });
 
 test(`double dip: second dip gets its own carb recommendation`, async () =>
@@ -887,6 +891,36 @@ test(`dinner above-target rising: skips carbs, protein-heavy meal only`, async (
     assert.ok(/egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
 });
 
+// ---------------------------------------------------------------------------
+// REACTIVE FORMULA: projected-gap + urgent-gate regression
+//
+// concern #2 observation: 2026-04-09 20:50 BG 7.3 dropping fast and accelerating
+// at ~110 min post-evening-injection (soluble near peak). the old engine
+// recommended 5g slow carbs ("level it off"); BG dropped to 5.5 by 21:20 and
+// needed a full rescue. the formula was sizing against current BG instead of
+// projected BG, and the urgent flag was being unset because reading > 7.0.
+//
+// fix: (a) estimateCarbsNeeded uses projectGlucose output as the gap source;
+// (b) urgent stays true when projected BG crosses hypoFloor even if current
+// reading is above targetLow + 1.0. together these route in-target fast drops
+// at peak insulin to the emergency fast-sugar branch instead of slow carbs.
+// ---------------------------------------------------------------------------
+
+test(`peak-insulin fast drop in-target: routes to emergency fast sugar`, async () =>
+{
+    // BG 7.3 dropping at -0.125 mmol/min with projected BG ~3.55 (below hypoFloor).
+    // must fire the emergency fast-sugar branch, NOT the slow-carbs "level it off" branch.
+    var nudges = await runScenario(`peak-insulin-in-target-fast-drop.json`);
+    var reactiveNudges = nudges.filter(n => n.title !== `Dinner` && n.title !== `Breakfast` && !n.title.toLowerCase().includes(`bed`));
+    assert.ok(reactiveNudges.length >= 1, `expected reactive nudge, got ${reactiveNudges.length}`);
+    var firstReactive = reactiveNudges[0];
+    assert.equal(firstReactive.title, `Fast sugar now`, `expected Fast sugar now title, got: ${firstReactive.title}`);
+    assert.ok(/fast.acting sugar/.test(firstReactive.message), `should recommend fast-acting sugar, got: ${firstReactive.message}`);
+    assert.ok(!/slower.acting|low GI/.test(firstReactive.message), `should NOT fall through to slow-carbs branch, got: ${firstReactive.message}`);
+    // rule-of-15 retry cue should be present
+    assert.ok(/15 minutes/.test(firstReactive.message), `should include rule-of-15 wait cue, got: ${firstReactive.message}`);
+});
+
 test(`dinner while dropping fast: nudge waits for stable trend`, async () =>
 {
     // BG is crashing entering the dinner window. a "here's your dinner
@@ -1168,10 +1202,15 @@ test(`day-with-afternoon-hypo: regression — afternoon hypo to 3.2`, async () =
 
 test(`day-with-overnight-and-morning-hypo: regression — overnight drop to 5.3 and late morning hypo`, async () =>
 {
+    // 12 nudges track multiple real events across a ~40h scenario: dinner, bedtime,
+    // evening drops, post-quiet-hours recovery, breakfast, mid-morning instability,
+    // a 4.4 hypo, and a late morning rebound dip. 15 is a soft cap — under the
+    // projection-based reactive formula the engine is more responsive and fires
+    // earlier on each event, which is clinically preferable to delayed rescue.
     var nudges = await runScenario(`day-with-overnight-and-morning-hypo.json`);
     var quietNudges = nudges.filter(n => isInQuietHours(n.time, 60));
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours`);
-    assert.ok(nudges.length <= 10, `expected at most 10 nudges, got ${nudges.length}`);
+    assert.ok(nudges.length <= 15, `expected at most 15 nudges, got ${nudges.length}`);
     var reactiveAboveTarget = nudges.filter(n =>
         n.reading > 10.0 && n.title !== `Breakfast` && n.title !== `Dinner` && n.title !== `Bedtime top-up` && n.title !== `Bedtime` && n.title !== `Low at bedtime`
     );
