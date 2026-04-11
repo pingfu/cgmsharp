@@ -1,0 +1,13 @@
+{
+    "name": "Dinner at in-target BG (7.8) falling",
+    "description": "BG is in-target (7.8) but falling at a meaningful rate (-0.06 mmol/min) entering the dinner window. The engine should bump the base 20g up by 5g to 25g because the insulin will pull harder than food absorbs if dinner is undersized. Evening injection 19:00 local.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 17:20", "reading": 9.6 },
+        { "time": "2026-04-10 17:30", "reading": 9.0 },
+        { "time": "2026-04-10 17:40", "reading": 8.4 },
+        { "time": "2026-04-10 17:50", "reading": 7.8 },
+        { "time": "2026-04-10 18:00", "reading": 7.8 },
+        { "time": "2026-04-10 18:10", "reading": 7.8 }
+    ]
+}

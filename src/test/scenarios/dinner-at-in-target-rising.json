@@ -1,0 +1,14 @@
+{
+    "name": "Dinner at in-target BG (8.2) rising",
+    "description": "BG is in-target (8.2) but rising at a meaningful rate entering the dinner window (maybe she snacked in the afternoon). The engine should reduce the base 20g down to 15g — something is already driving BG up and stacking a full dinner on top would overshoot. Evening injection 19:00 local.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 17:10", "reading": 5.8 },
+        { "time": "2026-04-10 17:20", "reading": 6.4 },
+        { "time": "2026-04-10 17:30", "reading": 7.0 },
+        { "time": "2026-04-10 17:40", "reading": 7.6 },
+        { "time": "2026-04-10 17:50", "reading": 8.2 },
+        { "time": "2026-04-10 18:00", "reading": 8.2 },
+        { "time": "2026-04-10 18:10", "reading": 8.2 }
+    ]
+}

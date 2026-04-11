@@ -848,6 +848,45 @@ test(`dinner at very high BG (15.0): recommends skipping carbs entirely`, async 
     assert.ok(/egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
 });
 
+test(`dinner in-target falling: bumps base up by 5g (25g)`, async () =>
+{
+    // BG in-target (7.8) but falling at a meaningful rate (-0.06 mmol/min).
+    // the insulin will pull harder than food absorbs; base 20g is insufficient.
+    // trend-aware formula adds +5g → 25g.
+    var nudges = await runScenario(`dinner-at-in-target-falling.json`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
+    assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge, got ${dinnerNudges.length}`);
+    var carbs = extractCarbs(dinnerNudges[0].message);
+    assert.ok(carbs >= 23 && carbs <= 27, `in-target falling dinner should suggest ~25g, got ${carbs}g`);
+    assert.ok(/falling/.test(dinnerNudges[0].message), `message should reference the falling trend, got: ${dinnerNudges[0].message}`);
+});
+
+test(`dinner in-target rising: reduces base by 5g (15g)`, async () =>
+{
+    // BG in-target (8.2) and rising at a meaningful rate — something is already
+    // driving BG up (afternoon snack, dawn aftermath). stacking a full dinner
+    // on top would overshoot. trend-aware formula reduces -5g → 15g.
+    var nudges = await runScenario(`dinner-at-in-target-rising.json`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
+    assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge, got ${dinnerNudges.length}`);
+    var carbs = extractCarbs(dinnerNudges[0].message);
+    assert.ok(carbs >= 13 && carbs <= 17, `in-target rising dinner should suggest ~15g, got ${carbs}g`);
+    assert.ok(/rising/.test(dinnerNudges[0].message), `message should reference the rising trend, got: ${dinnerNudges[0].message}`);
+});
+
+test(`dinner above-target rising: skips carbs, protein-heavy meal only`, async () =>
+{
+    // BG above targetHigh (11.5) and still climbing. adding carbs on top of a
+    // rising above-target reading stacks onto the rise. trend-aware formula
+    // routes to the no-carb branch — let the evening insulin do the correcting.
+    var nudges = await runScenario(`dinner-at-above-target-rising.json`);
+    var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
+    assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge, got ${dinnerNudges.length}`);
+    var message = dinnerNudges[0].message;
+    assert.ok(/skip dinner carbs|no need for carbs|protein.heavy/i.test(message), `above-target rising dinner should skip carbs, got: ${message}`);
+    assert.ok(/egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
+});
+
 test(`dinner while dropping fast: nudge waits for stable trend`, async () =>
 {
     // BG is crashing entering the dinner window. a "here's your dinner
@@ -1273,6 +1312,21 @@ test(`bedtime at 11.0 above target: conservative starchy with insulin explanatio
     var bedtime = nudges.find(n => n.title === `Bedtime top-up`);
     assert.ok(bedtime, `expected bedtime nudge — above target but overnight drop will cause hypo`);
     assert.ok(bedtime.message.includes(`insulin`), `should explain that insulin will bring BG down`);
+});
+
+test(`bedtime at 11.0 rising: no snack, let insulin do its work`, async () =>
+{
+    // BG 11.0 and still climbing into the bedtime window. adding carbs on top
+    // of a rising above-target reading would stack onto the rise and blow past
+    // the overnight NPH drop. concern #3 fix: above-target + rising trend routes
+    // to the no-snack branch. mirrors the 2026-04-10 21:40 observation.
+    var nudges = await runScenario(`bedtime-bg-11-rising.json`);
+    var bedtime = nudges.find(n => n.title === `Bedtime`);
+    assert.ok(bedtime, `expected bedtime nudge with 'Bedtime' title (no-snack branch)`);
+    assert.ok(/no snack needed|let your overnight insulin/i.test(bedtime.message), `should say no snack needed, got: ${bedtime.message}`);
+    // ensure this branch fired instead of the conservative starchy branch
+    var starchyBedtime = nudges.find(n => n.title === `Bedtime top-up`);
+    assert.ok(!starchyBedtime, `Bedtime top-up should NOT fire when BG is above target and rising, got: ${starchyBedtime ? starchyBedtime.message : ''}`);
 });
 
 test(`bedtime at 19.0: looking good, no food needed`, async () =>

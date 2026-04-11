@@ -1009,35 +1009,87 @@ function createNudgeEngine(config)
         var title = null;
         var message = null;
 
-        if (reading > 14.0)
+        // trend helpers for cleaner branching below.
+        // dinner operates on a 3-4 hour horizon (until the next soluble peak ends),
+        // so slow drift (<=0.05 mmol/min, i.e. 'slowly rising'/'slowly falling') is noise
+        // and shouldn't move the base carb target — only meaningful rates get adjustments.
+        var trendMeaningful = trend.shortRate !== null && Math.abs(trend.shortRate) >= p.trendSlowThreshold;
+        var trendRising = trendMeaningful && trend.direction === `rising`;
+        var trendFalling = trendMeaningful && trend.direction === `falling`;
+
+        if (reading > 14.0 || (reading > p.targetHigh && trendRising))
         {
-            // well above target — skip dinner carbs entirely, insulin has plenty to do
+            // well above target, OR above target and still climbing — skip carbs entirely.
+            // insulin has plenty to do without stacking more glucose on top.
             var lowCarbFood = getLowCarbBreakfastSuggestion();
             title = `Dinner`;
-            message = `Your sugar is ${reading} — no need for carbs at dinner tonight, your insulin will bring it down. Have a protein-heavy meal — ${lowCarbFood}.`;
+            if (reading > 14.0)
+            {
+                message = `Your sugar is ${reading} — no need for carbs at dinner tonight, your insulin will bring it down. Have a protein-heavy meal — ${lowCarbFood}.`;
+            }
+            else
+            {
+                message = `Your sugar is ${reading} and ${trend.description}, already above target and climbing. Skip dinner carbs and let your evening insulin bring it down. Have a protein-heavy meal — ${lowCarbFood}.`;
+            }
         }
         else if (reading > p.targetHigh)
         {
-            // above target — smaller dinner carbs
+            // above target, stable or falling: small starchy portion
             carbs = Math.max(10, carbs - 10);
             var food = getDinnerSuggestion(carbs);
             title = `Dinner`;
-            message = `Your sugar is ${reading} — above target. Alongside your protein and veg, about ${food.grams}g of starchy carbs will cover your insulin without pushing the spike too high — try ${food.suggestion}.`;
+            if (trendFalling)
+            {
+                message = `Your sugar is ${reading} and ${trend.description}, above target heading into dinner. Alongside your protein and veg, about ${food.grams}g of starchy carbs will cover your insulin without stacking onto the descent — try ${food.suggestion}.`;
+            }
+            else
+            {
+                message = `Your sugar is ${reading} — above target. Alongside your protein and veg, about ${food.grams}g of starchy carbs will cover your insulin without pushing the spike too high — try ${food.suggestion}.`;
+            }
         }
         else if (reading >= p.targetLow)
         {
-            // in target — standard dinner carbs
+            // in target — base 20g, adjust for trend direction.
+            // falling: +5 (insulin will pull harder than food absorbs). rising: -5 (something's already driving BG up).
+            if (trendFalling) carbs = carbs + 5;
+            else if (trendRising) carbs = Math.max(carbs - 5, 10);
+
             var food = getDinnerSuggestion(carbs);
             title = `Dinner`;
-            message = `Your sugar is ${reading}. Alongside your protein and veg, your evening insulin needs about ${food.grams}g of starchy carbs to keep your sugar steady through the evening — try ${food.suggestion}. Protein and veg alone won't cover the insulin.`;
+            if (trendFalling)
+            {
+                message = `Your sugar is ${reading} and ${trend.description}. Alongside your protein and veg, your evening insulin needs about ${food.grams}g of starchy carbs to keep your sugar steady — try ${food.suggestion}. Protein and veg alone won't cover the insulin.`;
+            }
+            else if (trendRising)
+            {
+                message = `Your sugar is ${reading} and ${trend.description}. Alongside your protein and veg, about ${food.grams}g of starchy carbs covers your evening insulin without stacking onto the rise — try ${food.suggestion}.`;
+            }
+            else
+            {
+                message = `Your sugar is ${reading}. Alongside your protein and veg, your evening insulin needs about ${food.grams}g of starchy carbs to keep your sugar steady through the evening — try ${food.suggestion}. Protein and veg alone won't cover the insulin.`;
+            }
         }
         else
         {
-            // below target — larger dinner carbs to recover and cover insulin
+            // below target — bump carbs to recover and cover insulin.
+            // falling: already at the 25g max of the dinner tiers, no further increase possible.
+            // rising: she's recovering on her own, stay at +5 (don't subtract — still below target).
             carbs = carbs + 5;
+
             var food = getDinnerSuggestion(carbs);
             title = `Dinner`;
-            message = `Your sugar is ${reading} — below target heading into dinner. Alongside your protein and veg, about ${food.grams}g of starchy carbs will lift it back to target and cover your evening insulin — try ${food.suggestion}.`;
+            if (trendFalling)
+            {
+                message = `Your sugar is ${reading} and ${trend.description}, below target heading into dinner. Alongside your protein and veg, about ${food.grams}g of starchy carbs will lift it back to target and stop the drop — try ${food.suggestion}.`;
+            }
+            else if (trendRising)
+            {
+                message = `Your sugar is ${reading} and ${trend.description}, below target but recovering. Alongside your protein and veg, about ${food.grams}g of starchy carbs will lift it back to target and cover your evening insulin — try ${food.suggestion}.`;
+            }
+            else
+            {
+                message = `Your sugar is ${reading} — below target heading into dinner. Alongside your protein and veg, about ${food.grams}g of starchy carbs will lift it back to target and cover your evening insulin — try ${food.suggestion}.`;
+            }
         }
 
         await sendNudge(title, message);
@@ -1101,12 +1153,24 @@ function createNudgeEngine(config)
             }
             else if (reading > p.targetHigh)
             {
-                // above target but overnight drop will still pull her low — conservative suggestion
-                // with explanation of why she needs food despite being high now
-                var conservativeCarbs = Math.min(carbs, 15);
-                var food = getBedtimeSuggestion(conservativeCarbs);
-                title = `Bedtime top-up`;
-                message = `Your sugar is ${reading} heading towards bed. That's above target now but your overnight insulin will bring it down. Have about ${food.grams}g of something starchy around 10:30pm to carry you through to morning — ${food.suggestion}.`;
+                // above target: the default logic is "overnight insulin will pull her low, so
+                // add a conservative starchy snack to hedge". but if BG is still RISING at
+                // bedtime, something is actively pushing it up (late snack, stress, illness) —
+                // adding more carbs would stack onto the rise and blow past the overnight drop.
+                // mirror `isDescendingFromHigh` pattern from the reactive branch: let the insulin
+                // do its job without interference.
+                if (trend.description !== `stable` && trend.direction === `rising`)
+                {
+                    title = `Bedtime`;
+                    message = `Your sugar is ${reading} and ${trend.description}, above target heading towards bed. Let your overnight insulin bring it down — no snack needed tonight.`;
+                }
+                else
+                {
+                    var conservativeCarbs = Math.min(carbs, 15);
+                    var food = getBedtimeSuggestion(conservativeCarbs);
+                    title = `Bedtime top-up`;
+                    message = `Your sugar is ${reading} heading towards bed. That's above target now but your overnight insulin will bring it down. Have about ${food.grams}g of something starchy around 10:30pm to carry you through to morning — ${food.suggestion}.`;
+                }
             }
             else
             {

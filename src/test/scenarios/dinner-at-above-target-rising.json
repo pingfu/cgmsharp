@@ -1,0 +1,13 @@
+{
+    "name": "Dinner at above-target BG (11.5) rising",
+    "description": "BG is above targetHigh (11.5) and still climbing into the dinner window. Adding carbs on top of a rising above-target reading stacks onto the rise. The engine should skip dinner carbs entirely and recommend a protein-heavy meal — let the evening insulin do the correcting. Evening injection 19:00 local.",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 17:20", "reading": 9.9 },
+        { "time": "2026-04-10 17:30", "reading": 10.5 },
+        { "time": "2026-04-10 17:40", "reading": 11.1 },
+        { "time": "2026-04-10 17:50", "reading": 11.5 },
+        { "time": "2026-04-10 18:00", "reading": 11.5 },
+        { "time": "2026-04-10 18:10", "reading": 11.5 }
+    ]
+}

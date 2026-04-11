@@ -1,0 +1,15 @@
+{
+    "name": "Bedtime BG 11.0 and rising",
+    "description": "BG at 11.0 and still climbing when the bedtime window opens (past the meal window). Mirrors 2026-04-10 21:40 observation where BG was 11.1 slowly rising after a dinner rescue. The engine must NOT add more carbs on top of a rising above-target BG — overnight insulin should be left to do its job. Tests concern #3 fix: above-target rising bedtime → no-snack branch. Evening injection 19:00 local, meal window expires at 21:30 local (150 min).",
+    "timezoneOffsetMinutes": 60,
+    "readings": [
+        { "time": "2026-04-10 19:40", "reading": 9.8 },
+        { "time": "2026-04-10 19:50", "reading": 10.0 },
+        { "time": "2026-04-10 20:00", "reading": 10.2 },
+        { "time": "2026-04-10 20:10", "reading": 10.4 },
+        { "time": "2026-04-10 20:20", "reading": 10.6 },
+        { "time": "2026-04-10 20:30", "reading": 10.8 },
+        { "time": "2026-04-10 20:40", "reading": 11.0 },
+        { "time": "2026-04-10 20:50", "reading": 11.2 }
+    ]
+}
