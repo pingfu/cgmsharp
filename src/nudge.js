@@ -223,6 +223,13 @@ const DEFAULTS = {
     breakfastWindowStart: 7, // 07:00 local
     breakfastWindowEnd: 7.5, // 07:30 local
 
+    // breakfast carb target: minimum grams of carbs needed to cover the soluble
+    // component of the morning dose (12u Humulin M3 → 3.6u soluble). at 1u:~5g
+    // acute coverage this lands around 18g, but dawn phenomenon provides some
+    // endogenous glucose so the base is tuned slightly lower. adjusted in
+    // evaluateBreakfast() for starting BG and current trend direction.
+    breakfastCarbTarget: 15,
+
     // dinner nudge window — one proactive nudge to guide carb intake at the
     // evening injection. the soluble component of Humulin M3 is committed at
     // injection time and will pull BG down over the next 2-4 hours — without
@@ -921,9 +928,6 @@ function createNudgeEngine(config)
         // wait until BG is stable — don't send while still bouncing from overnight
         if (trend.description === `dropping fast` || trend.description === `dropping fast and accelerating`) return false;
 
-        var availableRoom = p.targetHigh - reading;
-        var breakfastCarbs = Math.max(0, Math.round(availableRoom * p.carbsPerMmol));
-
         var title = null;
         var message = null;
 
@@ -936,24 +940,48 @@ function createNudgeEngine(config)
         }
         else if (reading > p.targetHigh)
         {
-            // above target — low-carb breakfast
+            // above target — low-carb breakfast (insulin has work to do already)
             var lowCarbFood = getLowCarbBreakfastSuggestion();
             title = `Breakfast`;
             message = `Your sugar is ${reading} — already high from the morning rise. Have a low-carb breakfast today — ${lowCarbFood}. Save the porridge for a morning when your sugar is lower.`;
         }
-        else if (reading >= p.targetLow)
-        {
-            // in target — reduced carbs with explanation
-            var food = getBreakfastSuggestion(breakfastCarbs);
-            title = `Breakfast`;
-            message = `Your sugar is ${reading}. Have about ${food.grams}g of carbs at breakfast — ${food.suggestion}. Your morning rise is already underway so a smaller portion helps keep the spike down.`;
-        }
         else
         {
-            // below target — full carb room
-            var food = getBreakfastSuggestion(breakfastCarbs);
+            // in-target or below-target: anchor to insulin cover, adjust for BG and trend.
+            // base target = breakfastCarbTarget (cover the morning soluble dose).
+            // below targetLow: add recovery carbs.
+            // falling trend (rare pre-breakfast): increase — need more to prevent post-injection hypo.
+            // rising trend (dawn phenomenon): NO reduction. dawn contributes minor glucose over
+            // short term, but the multi-hour soluble peak still needs full cover. under-sizing
+            // for dawn caused the observed 2026-04-10 mid-morning hypo (BG 7.7 → 10g → 6.9 @ 10:30).
+            var carbs = p.breakfastCarbTarget;
+
+            if (reading < p.targetLow) carbs = carbs + 5;
+
+            if (trend.description !== `stable` && trend.direction === `falling`)
+            {
+                carbs = carbs + 5;
+            }
+
+            var food = getBreakfastSuggestion(carbs);
             title = `Breakfast`;
-            message = `Your sugar is ${reading}. You've got room for about ${food.grams}g of carbs at breakfast — ${food.suggestion}.`;
+
+            if (reading < p.targetLow)
+            {
+                message = `Your sugar is ${reading} — below target heading into breakfast. Have about ${food.grams}g of carbs to lift it back up and cover your morning insulin — try ${food.suggestion}.`;
+            }
+            else if (trend.direction === `rising`)
+            {
+                message = `Your sugar is ${reading} and ${trend.description} — your morning rise is underway. Have about ${food.grams}g of carbs at breakfast to cover your insulin — try ${food.suggestion}.`;
+            }
+            else if (trend.direction === `falling`)
+            {
+                message = `Your sugar is ${reading} and ${trend.description}. Have about ${food.grams}g of carbs at breakfast to cover your morning insulin and stop the drop — try ${food.suggestion}.`;
+            }
+            else
+            {
+                message = `Your sugar is ${reading}. Have about ${food.grams}g of carbs at breakfast to cover your morning insulin — try ${food.suggestion}.`;
+            }
         }
 
         await sendNudge(title, message);

@@ -89,37 +89,43 @@ function isBedtimeFood(message)
 // dangerous post-breakfast spikes that take hours to come down.
 // ===========================================================================
 
-test(`breakfast at 6.5: recommends ~15g — full room to targetHigh`, async () =>
+test(`breakfast at 6.5 stable: recommends ~15g — base target anchored to insulin cover`, async () =>
 {
-    // BG 6.5, room = 10.0 - 6.5 = 3.5 mmol/L × 4.4 = 15.4g → 15g
-    // at this level there's headroom for a proper breakfast (porridge, toast)
+    // BG 6.5, in-target, stable trend. Under the insulin-cover formula the base
+    // is breakfastCarbTarget (15g) with no adjustment — covers the 12u morning
+    // Humulin M3 dose's soluble component.
     var nudges = await runScenario(`breakfast-low-starting-bg.json`);
     var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     var carbs = extractCarbs(breakfast.message);
-    assert.ok(carbs >= 13 && carbs <= 17, `BG 6.5 should suggest 13-17g (room for 3.5 mmol/L rise), got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `BG 6.5 stable should suggest 13-17g, got ${carbs}g`);
 });
 
-test(`breakfast at 8.0: recommends ~9g — limited room, smaller portion`, async () =>
+test(`breakfast at 8.0 slowly rising: recommends ~15g — full insulin cover, no dawn discount`, async () =>
 {
-    // BG 8.0, room = 10.0 - 8.0 = 2.0 mmol/L × 4.4 = 8.8g → 9g
-    // only room for a small portion — half a crumpet, not a full bowl of porridge
+    // BG 8.0, in-target, slowly rising (dawn active). base 15g with no reduction —
+    // dawn provides minor short-term glucose but the 2-4h soluble peak needs full cover.
+    // under-sizing for dawn was the root cause of the observed 2026-04-10 mid-morning
+    // hypo (7.7 → 10g → 6.9 at 10:30).
     var nudges = await runScenario(`breakfast-mid-target.json`);
     var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     var carbs = extractCarbs(breakfast.message);
-    assert.ok(carbs >= 7 && carbs <= 10, `BG 8.0 should suggest 7-10g (room for 2.0 mmol/L rise), got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `BG 8.0 slowly rising should suggest 13-17g, got ${carbs}g`);
 });
 
-test(`breakfast at 9.2: recommends ~4g — very little room, just a taste`, async () =>
+test(`breakfast at 9.2 near-stable: recommends ~15g — sub-threshold drift, no adjustment`, async () =>
 {
-    // BG 9.2, room = 10.0 - 9.2 = 0.8 mmol/L × 4.4 = 3.5g → 4g
-    // barely any room — even a small banana would overshoot
+    // BG 9.2 with only 0.005/min rate (below trendFlatThreshold 0.01) → description 'stable'.
+    // no trend adjustment applies — base 15g.
+    // this pushes the post-breakfast peak to ~12.6, briefly above target, but avoids
+    // the mid-morning hypo risk that under-sizing creates (observed 2026-04-10: 7.7 → 10g
+    // → hypo rescue at 10:30). clinical trade-off favors brief above-target over hypo.
     var nudges = await runScenario(`breakfast-high-starting-bg.json`);
     var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     var carbs = extractCarbs(breakfast.message);
-    assert.ok(carbs >= 3 && carbs <= 7, `BG 9.2 should suggest 3-7g (room for 0.8 mmol/L rise), got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `BG 9.2 stable should suggest 13-17g, got ${carbs}g`);
 });
 
 test(`breakfast at 12.0: no carb number — low-carb food only`, async () =>
