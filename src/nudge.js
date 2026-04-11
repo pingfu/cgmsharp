@@ -272,8 +272,14 @@ const DEFAULTS = {
     overnightDrop: 3.5, // mmol/L
 
     // overnight quiet hours — fully silent. alerts handle emergencies separately.
-    quietStartHour: 0, // midnight
-    quietEndHour: 6, // 6 AM
+    // window runs 23:00-07:00 local, which wraps across midnight. chosen to match
+    // the user's actual sleep window (late bedtime snack around 22:30, wake-up
+    // ~07:00-07:30 for morning injection). the engine still updates its readings
+    // buffer through this window so trend/state is correct when nudges resume.
+    // the alert channel (alarms.js) is independent and still fires at clinical
+    // thresholds (≤3.5, ≥22.0) through the quiet window.
+    quietStartHour: 23, // 11 PM
+    quietEndHour: 7, // 7 AM
 
     // absorption suppression — after recommending carbs, suppress further carb nudges
     // until the food has had time to show in BG. tied to physiology, not arbitrary.
@@ -719,7 +725,14 @@ function createNudgeEngine(config)
     function isQuietHours(now)
     {
         var hour = now.hour();
-        return hour >= p.quietStartHour && hour < p.quietEndHour;
+        // quiet window can wrap across midnight (e.g. 23-7). handle both forms:
+        //   start < end  → simple range (e.g. 0-6): hour is in [start, end)
+        //   start >= end → wrap-around (e.g. 23-7): hour is >= start OR < end
+        if (p.quietStartHour < p.quietEndHour)
+        {
+            return hour >= p.quietStartHour && hour < p.quietEndHour;
+        }
+        return hour >= p.quietStartHour || hour < p.quietEndHour;
     }
 
     function isDawnPhenomenonWindow(now)

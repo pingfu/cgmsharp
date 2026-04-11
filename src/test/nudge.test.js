@@ -367,16 +367,14 @@ test(`overnight-quiet: zero nudges during midnight-6am`, async () =>
     assert.equal(nudges.length, 0);
 });
 
-test(`slow hypo crossing midnight: nudges before quiet hours, silent after`, async () =>
+test(`slow hypo crossing midnight: silent throughout (entirely in quiet hours)`, async () =>
 {
     // BG falls from 6.5 (23:00) through to 3.5 (01:10), crossing midnight.
-    // the engine should nudge while she's awake (before midnight) and go
-    // silent at midnight — even though BG continues to drop. the alert
-    // channel handles the overnight emergency; nudge noise won't help.
+    // under the extended quiet hours window (23:00-07:00 local), this entire
+    // scenario falls in quiet hours — the engine must stay silent. the alert
+    // channel handles the overnight emergency separately.
     var nudges = await runScenario(`slow-hypo-overnight-boundary.json`);
-    assert.ok(nudges.length >= 1, `should nudge before midnight`);
-    var afterMidnight = nudges.filter(n => n.time >= `2026-04-08 00:00`);
-    assert.equal(afterMidnight.length, 0, `zero nudges after midnight (quiet hours)`);
+    assert.equal(nudges.length, 0, `zero nudges — entire scenario is in quiet hours`);
 });
 
 test(`post-breakfast-spike: zero nudges during meal window`, async () =>
@@ -962,12 +960,13 @@ test(`dinner nudge: food suggestion is a dinner side, not a snack`, async () =>
 // clinically-grounded assertion to catch regressions.
 // ===========================================================================
 
-// helper: check if a reading time falls within quiet hours (midnight-6am local)
+// helper: check if a reading time falls within quiet hours (23:00-07:00 local,
+// wraps across midnight). must match the engine's isQuietHours logic in nudge.js.
 function isInQuietHours(time, tzOffset)
 {
     var local = moment(time).add(tzOffset || 0, `minutes`);
     var hour = local.hour();
-    return hour >= 0 && hour < 6;
+    return hour >= 23 || hour < 7;
 }
 
 test(`post-injection hypo risk: meal window allows urgent nudges through (safety override)`, async () =>
@@ -1510,15 +1509,14 @@ test(`data gap: inflated rate does not cause excessive nudging`, async () =>
 // verifies that quiet hours work correctly with offset 0 (GMT, winter).
 // ===========================================================================
 
-test(`overnight quiet GMT: nudges before midnight, silent after`, async () =>
+test(`overnight quiet GMT: silent throughout (entirely in quiet hours)`, async () =>
 {
-    // BG drops from 7.0 to 4.0 crossing midnight in GMT (offset 0).
-    // quiet hours (midnight-6am local) should engage at exactly 00:00.
+    // BG drops from 7.0 (23:00) to 4.0 (00:30) in GMT (offset 0). under the
+    // extended quiet hours window (23:00-07:00 local), this entire scenario
+    // falls in quiet hours. verifies the wrap-across-midnight quiet window
+    // works correctly with offset 0 (no BST adjustment).
     var nudges = await runScenario(`overnight-quiet-gmt.json`);
-    var beforeMidnight = nudges.filter(n => n.time < `2025-12-16 00:00`);
-    var afterMidnight = nudges.filter(n => n.time >= `2025-12-16 00:00`);
-    assert.ok(beforeMidnight.length >= 1, `should nudge before midnight`);
-    assert.equal(afterMidnight.length, 0, `zero nudges after midnight (quiet hours)`);
+    assert.equal(nudges.length, 0, `zero nudges — entire scenario is in quiet hours`);
 });
 
 // ===========================================================================
@@ -1594,18 +1592,19 @@ test(`evening-dinner-recovery-then-overnight-crash: zero nudges during quiet hou
     assert.equal(quietNudges.length, 0, `zero nudges during quiet hours despite overnight crash to 3.5`);
 });
 
-test(`evening-dinner-recovery-then-overnight-crash: re-nudges during steep pre-quiet decline`, async () =>
+test(`evening-dinner-recovery-then-overnight-crash: re-nudges during pre-quiet decline`, async () =>
 {
-    // after recovery to 9.0 at 21:30, BG crashes steeply (9.0 → 4.5 in 40 min)
-    // as intermediate insulin overwhelms the insufficient snack. the steep
-    // descent pushes the carb estimate above the 3g suppression threshold from
-    // the earlier nudge (7g → 11g+ with "dropping fast" bonus), forcing the
-    // engine to re-engage before quiet hours (23:00 UTC = midnight BST).
+    // after recovery to 9.0 at 21:30 UTC (22:30 BST), BG starts falling again
+    // at 21:40 UTC (8.5 → 7.5 → 6.5 over 20 min). under the extended quiet hours
+    // window (23:00-07:00 BST = 22:00-06:00 UTC), the engine has only the
+    // 21:30-22:00 UTC window to re-engage before quiet begins. the falling trend
+    // at 21:50 UTC (7.5, "dropping fast") should break the earlier absorption
+    // suppression and fire a nudge in the pre-quiet window.
     var nudges = await runScenario(`evening-dinner-recovery-then-overnight-crash.json`);
-    var preQuietLow = nudges.filter(n =>
-        n.time >= `2026-04-09 21:40` && n.time < `2026-04-09 23:00` && n.reading < 6.0
+    var preQuiet = nudges.filter(n =>
+        n.time >= `2026-04-09 21:40` && n.time < `2026-04-09 22:00`
     );
-    assert.ok(preQuietLow.length >= 1, `steep crash should break suppression threshold before quiet hours`);
+    assert.ok(preQuiet.length >= 1, `steep crash should break suppression and fire a nudge in pre-quiet window (21:40-22:00 UTC)`);
 });
 
 test(`evening-dinner-partial-recovery-second-dip: re-engages on second drop`, async () =>
