@@ -69,22 +69,31 @@
     pendingTo = null;
   }
 
-  // Reset tracked state when user changes time range via Grafana UI
-  var observer = new MutationObserver(function () {
+  // Sync tracked state when Grafana changes the URL (x-axis pan, time picker, etc.)
+  function syncFromUrl() {
     var params = new URLSearchParams(window.location.search);
     var urlFrom = parseTime(params.get('from'));
     var urlTo = parseTime(params.get('to'));
-    if (urlFrom && urlTo && lastFrom !== null) {
+    if (urlFrom && urlTo) {
       if (urlFrom !== lastFrom || urlTo !== lastTo) {
-        console.log('[scroll-zoom] time range changed externally, resetting');
+        console.log('[scroll-zoom] synced from URL: from=' + urlFrom + ' to=' + urlTo);
         lastFrom = urlFrom;
         lastTo = urlTo;
       }
     }
-  });
-  observer.observe(document.querySelector('head > title') || document.head, {
-    childList: true, subtree: true, characterData: true
-  });
+  }
+
+  var origPushState = history.pushState.bind(history);
+  var origReplaceState = history.replaceState.bind(history);
+  history.pushState = function () {
+    origPushState.apply(history, arguments);
+    syncFromUrl();
+  };
+  history.replaceState = function () {
+    origReplaceState.apply(history, arguments);
+    syncFromUrl();
+  };
+  window.addEventListener('popstate', syncFromUrl);
 
   document.addEventListener('wheel', function (e) {
     var uplotEl = e.target.closest('.uplot');
