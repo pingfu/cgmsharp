@@ -5,7 +5,8 @@ services:
     container_name: cgmsharp
     restart: unless-stopped
     depends_on:
-      - influxdb
+      influxdb:
+        condition: service_healthy
     environment:
       # LibreLinkUp
       - LIBRE_USERNAME=${LIBRE_USERNAME}
@@ -34,6 +35,11 @@ services:
     image: influxdb:2.7
     container_name: influxdb
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - influxdb-data:/var/lib/influxdb2
       - influxdb-config:/etc/influxdb2
@@ -53,9 +59,10 @@ services:
     container_name: cgmsharp-grafana
     restart: unless-stopped
     ports:
-      - "8070:3000"
+      - "${DASHBOARD_PORT}:3000"
     depends_on:
-      - influxdb
+      influxdb:
+        condition: service_healthy
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
