@@ -70,13 +70,7 @@
         "defaults": {
           "unit": "percent",
           "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "value": null, "color": "green" },
-              { "value": 4, "color": "red" }
-            ]
-          }
+          "color": { "mode": "fixed", "fixedColor": "red" }
         }
       },
       "options": {
@@ -101,13 +95,7 @@
         "defaults": {
           "unit": "percent",
           "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "value": null, "color": "red" },
-              { "value": 70, "color": "green" }
-            ]
-          }
+          "color": { "mode": "fixed", "fixedColor": "green" }
         }
       },
       "options": {
@@ -132,13 +120,7 @@
         "defaults": {
           "unit": "percent",
           "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "value": null, "color": "green" },
-              { "value": 25, "color": "orange" }
-            ]
-          }
+          "color": { "mode": "fixed", "fixedColor": "orange" }
         }
       },
       "options": {
@@ -163,13 +145,7 @@
         "defaults": {
           "unit": "percent",
           "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "value": null, "color": "green" },
-              { "value": 5, "color": "red" }
-            ]
-          }
+          "color": { "mode": "fixed", "fixedColor": "red" }
         }
       },
       "options": {
