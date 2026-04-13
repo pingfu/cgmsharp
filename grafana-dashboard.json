@@ -170,7 +170,7 @@
           "min": 0,
           "max": 21,
           "custom": {
-            "show": "lines+points",
+            "show": "points",
             "lineWidth": 2,
             "pointSize": { "fixed": 3 }
           },
