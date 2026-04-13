@@ -25,6 +25,8 @@
       var mult = { s: 1e3, m: 6e4, h: 36e5, d: 864e5, w: 6048e5, M: 2592e6, y: 31536e6 };
       return now - parseInt(m[1], 10) * (mult[m[2]] || 864e5);
     }
+    var d = Date.parse(str);
+    if (!isNaN(d)) return d;
     var n = Number(str);
     return isNaN(n) ? null : n;
   }
