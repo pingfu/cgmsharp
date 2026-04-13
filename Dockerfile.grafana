@@ -2,3 +2,10 @@ FROM grafana/grafana-oss:latest
 COPY grafana-datasource.yml /etc/grafana/provisioning/datasources/datasource.yml
 COPY grafana-dashboard.yml /etc/grafana/provisioning/dashboards/dashboard.yml
 COPY grafana-dashboard.json /etc/grafana/provisioning/dashboards/grafana-dashboard.json
+COPY grafana-scroll-zoom.js /usr/share/grafana/public/grafana-scroll-zoom.js
+
+# Inject scroll-zoom script into the Grafana index.html template
+USER root
+RUN sed -i 's|</body>|<script nonce="[[.Nonce]]" src="public/grafana-scroll-zoom.js" type="text/javascript"></script>\n</body>|' \
+    /usr/share/grafana/public/views/index.html
+USER grafana

@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  console.log('[scroll-zoom] loaded');
+
   var ZOOM_FACTOR = 0.15;
   var DEBOUNCE_MS = 50;
   var MIN_SPAN = 60000;      // 1 minute
@@ -28,6 +30,7 @@
     var url = new URL(window.location);
     url.searchParams.set('from', pendingFrom.toString());
     url.searchParams.set('to', pendingTo.toString());
+    console.log('[scroll-zoom] applying zoom: from=' + pendingFrom + ' to=' + pendingTo);
     window.history.pushState({}, '', url.pathname + url.search + url.hash);
     window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
     pendingFrom = null;
@@ -41,6 +44,7 @@
     if (!uplotEl) return;
 
     e.preventDefault();
+    console.log('[scroll-zoom] wheel event on uplot, deltaY=' + e.deltaY);
 
     // Use pending values if mid-debounce, otherwise read from URL
     var from, to;
@@ -52,7 +56,10 @@
       from = parseTime(params.get('from'));
       to = parseTime(params.get('to'));
     }
-    if (!from || !to) return;
+    if (!from || !to) {
+      console.log('[scroll-zoom] no from/to in URL params');
+      return;
+    }
 
     // Cursor position as fraction of the plot area width
     var plotArea = uplotEl.querySelector('.u-over');
