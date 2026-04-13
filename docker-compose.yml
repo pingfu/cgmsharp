@@ -36,7 +36,7 @@ services:
     container_name: cgmsharp-influxdb
     restart: unless-stopped
     ports:
-      - "${INFLUXDB_PORT:-8086}:8086"
+      - "8087:8086"
     healthcheck:
       test: ["CMD", "influx", "ping"]
       interval: 10s
