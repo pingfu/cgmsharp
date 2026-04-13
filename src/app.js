@@ -2,7 +2,7 @@ require(`dotenv`).config();
 
 const cron = require(`node-cron`);
 const moment = require(`moment`);
-const { SendAlert, SendCanary, SendNudge, isPushoverEnabled } = require(`./notifications`);
+const { SendAlert, SendCanary, SendNudge, SendStartup, isPushoverEnabled } = require(`./notifications`);
 const { createAlarmEngine } = require(`./alarms`);
 const { createNudgeEngine } = require(`./nudge`);
 const { createLibreLinkUpClient } = require(`./librelinkup`);
@@ -87,6 +87,13 @@ async function Tick()
 async function main()
 {
     log(`init`);
+
+    if (!process.env.LIBRE_USERNAME || !process.env.LIBRE_PASSWORD || !process.env.LIBRE_AGENT_VERSION)
+    {
+        log(`missing required environment variables: LIBRE_USERNAME, LIBRE_PASSWORD, and LIBRE_AGENT_VERSION must all be set`);
+        process.exit(1);
+    }
+
     log(`using librelinkup username: ${process.env.LIBRE_USERNAME}`);
     log(`using librelinkup password: ********* (${process.env.LIBRE_PASSWORD.length})`);
     log(`using librelinkup agent version: ${process.env.LIBRE_AGENT_VERSION}`);
@@ -138,7 +145,7 @@ async function main()
         await Tick();
 
         var readingStr = lastReading !== null ? `${lastReading} mmol/L` : `no reading available`;
-        await SendCanary(`Heartbeat`, `Scheduler started. Current reading: ${readingStr}`);
+        await SendStartup(`Heartbeat`, `Scheduler started. Current reading: ${readingStr}`);
     }
     catch (error)
     {

@@ -1,95 +1,61 @@
 # cgmsharp
 
-## Install dependencies
+Continuous glucose monitoring application that polls the LibreLinkUp API on a 10-minute cron schedule, stores readings in InfluxDB, and sends push notifications via ntfy.sh and Pushover when glucose levels require attention.
 
-```
-npm install
-```
+Designed for a type 1 diabetic on twice-daily premixed insulin (Humulin M3).
 
-Or
+## Deployment
 
-```
-npm i github:marcbarry/libre-link-up-api-client
-npm i @influxdata/influxdb-client
-npm i @babel/runtime
-npm i dotenv
-```
+The application image is built and pushed to `ghcr.io/pingfu/cgmsharp/cgmsharp:latest` automatically on every push to `main`.
 
-## Configure environment variables
+The full stack (cgmsharp + InfluxDB + Grafana) is deployed as a single unit via Portainer. Set the reference to `refs/heads/main` and the compose path to `stack/docker-compose.yml`.
 
-```
-$ touch .env
-NODE_ENV=production
+`stack/stack.env` is committed with default values. Portainer reads it automatically via "Load variables from .env file". Fill in the credentials in Portainer's UI.
 
-LIBRE_USERNAME=your_libre_username
-LIBRE_PASSWORD=your_libre_password
-LIBRE_AGENT_VERSION=4.16.0
+### Environment Variables
 
-PUSHOVER_USER=your_pushover_user
-PUSHOVER_TOKEN=your_pushover_token
+Set via `stack/stack.env` in Portainer:
 
-NTFY_TOPIC_ALERT=your_ntfy_alert_topic
-NTFY_TOPIC_CANARY=your_ntfy_canary_topic
-NTFY_TOPIC_NUDGE=your_ntfy_nudge_topic
-INSULIN_TIME_MORNING=07:30
-INSULIN_TIME_EVENING=19:00
+| Variable | Purpose |
+|---|---|
+| `LIBRE_USERNAME` | LibreLinkUp account email |
+| `LIBRE_PASSWORD` | LibreLinkUp account password |
+| `LIBRE_AGENT_VERSION` | LibreLinkUp API client version (default: `4.16.0`) |
+| `PUSHOVER_USER` | Pushover user ID |
+| `PUSHOVER_TOKEN` | Pushover API token |
+| `NTFY_TOPIC_ALERT` | ntfy topic for critical alarms |
+| `NTFY_TOPIC_CANARY` | ntfy topic for daily heartbeat |
+| `NTFY_TOPIC_NUDGE` | ntfy topic for nudge messages |
 
-INFLUX_DB_URL=your_INFLUX_DB_url
-INFLUX_DB_TOKEN=your_INFLUX_DB_token
-INFLUX_DB_ORG=your_INFLUX_DB_org
-INFLUX_DB_BUCKET=your_INFLUX_DB_bucket
-```
 
-## Run gcm-monitor
+## Notification Channels
 
-### Node.js
+Three channels via ntfy.sh, each mapped to a separate topic. Alert and canary also fan out to Pushover when configured.
 
-```
-$ cd ./src
-$ node app.js
-```
+| Channel | ntfy | Pushover | Purpose |
+|---|---|---|---|
+| **Alert** | Priority 5 (max) | Priority 2 (emergency, retry 30s / expire 5min) | Critical glucose alarms, API disruptions, fatal errors |
+| **Canary** | Priority 2 (low) | Priority -1 (silent) | Daily heartbeat at 09:00 |
+| **Nudge** | Priority 3 (default) | — | Proactive carb guidance based on glucose trend, insulin activity, and time of day |
 
-### Run tests
+On startup, a one-off notification is sent to Pushover only (if configured).
+
+## Visualisation
+
+Grafana is included in the stack on port 3001 with a provisioned glucose dashboard. Anonymous viewer access, no login required.
+
+## Tests
 
 ```bash
-docker build -t cgmsharp-test .
-docker run --rm -e TZ=Europe/London cgmsharp-test node test/run-nudge.js
+docker build --no-cache -t cgmsharp-test .
+docker run --rm -e TZ=Europe/London cgmsharp-test node --test test/nudge.test.js
 ```
-
-### Docker Compose
-
-With environment variables
-
-```
-version: '3.8'
-services:
-  app:
-    image: ghcr.io/pingfu/cgmsharp/cgmsharp:latest
-    container_name: cgmsharp
-    environment:
-      - NODE_ENV=production
-      - LIBRE_USERNAME=your_libre_username
-      - LIBRE_PASSWORD=your_libre_password
-      - LIBRE_AGENT_VERSION=4.16.0
-      - PUSHOVER_USER=your_pushover_user
-      - PUSHOVER_TOKEN=your_pushover_token
-      - NTFY_TOPIC_ALERT=your_ntfy_alert_topic
-      - NTFY_TOPIC_CANARY=your_ntfy_canary_topic
-      - NTFY_TOPIC_NUDGE=your_ntfy_nudge_topic
-      - INFLUX_DB_URL=your_INFLUX_DB_url
-      - INFLUX_DB_TOKEN=your_INFLUX_DB_token
-      - INFLUX_DB_ORG=your_INFLUX_DB_org
-      - INFLUX_DB_BUCKET=your_INFLUX_DB_bucket
-```
-
-## See also
-
-- https://github.com/timoschlueter/nightscout-librelink-up
-- https://github.com/DiaKEM/libre-link-up-api-client
-- https://gist.github.com/khskekec/6c13ba01b10d3018d816706a32ae8ab2
-- https://github.com/creepymonster/GlucoseDirect
-- https://httptoolkit.com/
 
 ## Troubleshooting
 
-Occasionally Abbott update their [End User License Agreement](https://api.libreview.io/document/toullu?lang=en-gb), which until accepted (using the LibreLinkUp app) can cause the API to mysteriously start returning HTTP `401` error codes. If this happens you'll need to logout of all of devices and then log back in again using the LibreLinkUp mobile app in order for you to be presented with an option to accept the latest terms. Once accepted, the `401` responses from the API should go away.
+Occasionally Abbott update their [End User License Agreement](https://api.libreview.io/document/toullu?lang=en-gb), which until accepted can cause the API to return HTTP `401` errors. Log out of all devices and log back in using the LibreLinkUp mobile app to accept the latest terms.
+
+## See also
+
+- https://github.com/DiaKEM/libre-link-up-api-client
+- https://github.com/timoschlueter/nightscout-librelink-up

@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+  app:
+    image: ghcr.io/pingfu/cgmsharp/cgmsharp:latest
+    container_name: cgmsharp
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    environment:
+      # LibreLinkUp
+      - LIBRE_USERNAME=${LIBRE_USERNAME}
+      - LIBRE_PASSWORD=${LIBRE_PASSWORD}
+      - LIBRE_AGENT_VERSION=${LIBRE_AGENT_VERSION}
+      # Pushover
+      - PUSHOVER_USER=${PUSHOVER_USER}
+      - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
+      # ntfy topics
+      - NTFY_TOPIC_ALERT=${NTFY_TOPIC_ALERT}
+      - NTFY_TOPIC_CANARY=${NTFY_TOPIC_CANARY}
+      - NTFY_TOPIC_NUDGE=${NTFY_TOPIC_NUDGE}
+      # Insulin schedule
+      - INSULIN_TIME_MORNING=07:30
+      - INSULIN_TIME_EVENING=19:00
+      # Environment
+      - NODE_ENV=production
+      - TZ=Europe/London
+      # InfluxDB
+      - INFLUX_DB_URL=http://influxdb:8086
+      - INFLUX_DB_TOKEN=password
+      - INFLUX_DB_ORG=Homenet
+      - INFLUX_DB_BUCKET=cgmsharp
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: Homenet
+      DOCKER_INFLUXDB_INIT_BUCKET: cgmsharp
+      DOCKER_INFLUXDB_INIT_RETENTION: 0
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: password
+
+  grafana:
+    image: grafana/grafana-oss:11.5.3
+    container_name: cgmsharp-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    depends_on:
+      - influxdb
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ./dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
+      - ./cgmsharp-dashboard.json:/etc/grafana/provisioning/dashboards/cgmsharp-dashboard.json:ro
+
+volumes:
+  influxdb-data:
+  influxdb-config:
+  grafana-data:

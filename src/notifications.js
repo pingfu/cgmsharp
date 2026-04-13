@@ -87,9 +87,19 @@ function SendNudge(title, message)
     return ntfySend(process.env.NTFY_TOPIC_NUDGE, title, message, 3, `thought_balloon`);
 }
 
+async function SendStartup(title, message)
+{
+    log(`pushing startup '${title}': '${message}'`);
+
+    if (pusher)
+    {
+        await pushoverSend(title, message, -1);
+    }
+}
+
 function isPushoverEnabled()
 {
     return pusher !== null;
 }
 
-module.exports = { SendAlert, SendCanary, SendNudge, isPushoverEnabled };
+module.exports = { SendAlert, SendCanary, SendNudge, SendStartup, isPushoverEnabled };
