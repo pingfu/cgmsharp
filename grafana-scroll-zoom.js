@@ -7,10 +7,14 @@
   var DEBOUNCE_MS = 50;
   var MIN_SPAN = 60000;      // 1 minute
   var MAX_SPAN = 31536000000; // 1 year
+  var DEFAULT_FROM = 'now-24h';
+  var DEFAULT_TO = 'now';
 
   var debounceTimer = null;
   var pendingFrom = null;
   var pendingTo = null;
+  var lastFrom = null; // persists after applyZoom
+  var lastTo = null;
 
   function parseTime(str) {
     if (!str) return null;
@@ -25,11 +29,39 @@
     return isNaN(n) ? null : n;
   }
 
+  function getTimeRange() {
+    // 1. Mid-debounce pending values
+    if (pendingFrom !== null) {
+      return { from: pendingFrom, to: pendingTo };
+    }
+
+    // 2. URL params
+    var params = new URLSearchParams(window.location.search);
+    var from = parseTime(params.get('from'));
+    var to = parseTime(params.get('to'));
+    if (from && to) {
+      console.log('[scroll-zoom] time range from URL params');
+      return { from: from, to: to };
+    }
+
+    // 3. Last applied values (Grafana may have stripped URL params)
+    if (lastFrom !== null) {
+      console.log('[scroll-zoom] time range from last applied');
+      return { from: lastFrom, to: lastTo };
+    }
+
+    // 4. Dashboard default
+    console.log('[scroll-zoom] time range from dashboard default');
+    return { from: parseTime(DEFAULT_FROM), to: parseTime(DEFAULT_TO) };
+  }
+
   function applyZoom() {
     if (pendingFrom === null) return;
     var url = new URL(window.location);
     url.searchParams.set('from', pendingFrom.toString());
     url.searchParams.set('to', pendingTo.toString());
+    lastFrom = pendingFrom;
+    lastTo = pendingTo;
     console.log('[scroll-zoom] applying zoom: from=' + pendingFrom + ' to=' + pendingTo);
     window.history.pushState({}, '', url.pathname + url.search + url.hash);
     window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
@@ -37,29 +69,33 @@
     pendingTo = null;
   }
 
-  document.addEventListener('wheel', function (e) {
-    if (!e.ctrlKey) return;
+  // Reset tracked state when user changes time range via Grafana UI
+  var observer = new MutationObserver(function () {
+    var params = new URLSearchParams(window.location.search);
+    var urlFrom = parseTime(params.get('from'));
+    var urlTo = parseTime(params.get('to'));
+    if (urlFrom && urlTo && lastFrom !== null) {
+      if (urlFrom !== lastFrom || urlTo !== lastTo) {
+        console.log('[scroll-zoom] time range changed externally, resetting');
+        lastFrom = urlFrom;
+        lastTo = urlTo;
+      }
+    }
+  });
+  observer.observe(document.querySelector('head > title') || document.head, {
+    childList: true, subtree: true, characterData: true
+  });
 
+  document.addEventListener('wheel', function (e) {
     var uplotEl = e.target.closest('.uplot');
     if (!uplotEl) return;
 
     e.preventDefault();
-    console.log('[scroll-zoom] wheel event on uplot, deltaY=' + e.deltaY);
+    console.log('[scroll-zoom] wheel on uplot, deltaY=' + e.deltaY);
 
-    // Use pending values if mid-debounce, otherwise read from URL
-    var from, to;
-    if (pendingFrom !== null) {
-      from = pendingFrom;
-      to = pendingTo;
-    } else {
-      var params = new URLSearchParams(window.location.search);
-      from = parseTime(params.get('from'));
-      to = parseTime(params.get('to'));
-    }
-    if (!from || !to) {
-      console.log('[scroll-zoom] no from/to in URL params');
-      return;
-    }
+    var range = getTimeRange();
+    var from = range.from;
+    var to = range.to;
 
     // Cursor position as fraction of the plot area width
     var plotArea = uplotEl.querySelector('.u-over');
