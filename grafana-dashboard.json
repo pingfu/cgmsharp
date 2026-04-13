@@ -63,7 +63,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value < 3.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value < 3.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -94,7 +94,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value >= 3.9 and r._value <= 10.0 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value >= 3.9 and r._value <= 10.0 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -125,7 +125,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 10.0 and r._value <= 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 10.0 and r._value <= 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -156,7 +156,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
