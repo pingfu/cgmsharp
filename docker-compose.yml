@@ -61,9 +61,9 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
-      - ./dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
-      - ./cgmsharp-dashboard.json:/etc/grafana/provisioning/dashboards/cgmsharp-dashboard.json:ro
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ./grafana-dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
+      - ./grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json:ro
 
 volumes:
   influxdb-data:

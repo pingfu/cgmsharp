@@ -8,13 +8,11 @@ Designed for a type 1 diabetic on twice-daily premixed insulin (Humulin M3).
 
 The application image is built and pushed to `ghcr.io/pingfu/cgmsharp/cgmsharp:latest` automatically on every push to `main`.
 
-The full stack (cgmsharp + InfluxDB + Grafana) is deployed as a single unit via Portainer. Set the reference to `refs/heads/main` and the compose path to `stack/docker-compose.yml`.
+The full stack (cgmsharp + InfluxDB + Grafana) is deployed as a single unit via Portainer. Set the reference to `refs/heads/main`.
 
-`stack/stack.env` is committed with default values. Portainer reads it automatically via "Load variables from .env file". Fill in the credentials in Portainer's UI.
+`stack.env` is committed with default values. Portainer reads it automatically via "Load variables from .env file". Fill in the credentials in Portainer's UI.
 
 ### Environment Variables
-
-Set via `stack/stack.env` in Portainer:
 
 | Variable | Purpose |
 |---|---|
