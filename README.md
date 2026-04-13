@@ -40,7 +40,7 @@ On startup, a one-off notification is sent to Pushover only (if configured).
 
 ## Visualisation
 
-Grafana is included in the stack on port 3001 with a provisioned glucose dashboard. Anonymous viewer access, no login required.
+Grafana is included in the stack on port 8070 with a provisioned glucose dashboard. Anonymous viewer access, no login required.
 
 ## Tests
 
