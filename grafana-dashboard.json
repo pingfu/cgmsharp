@@ -24,6 +24,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "displayName": "mmol/L",
           "min": 0,
           "max": 25,
           "custom": {
