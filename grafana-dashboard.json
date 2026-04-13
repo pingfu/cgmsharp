@@ -34,7 +34,7 @@
             "showPoints": "always",
             "axisGridShow": false,
             "thresholdsStyle": {
-              "mode": "area"
+              "mode": "line+area"
             }
           },
           "thresholds": {
@@ -51,6 +51,164 @@
             "mode": "fixed",
             "fixedColor": "blue"
           }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Below Range (<3.9)",
+      "description": "Target: <4%",
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value < 3.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 4, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "In Range (3.9–10.0)",
+      "description": "Target: >70%",
+      "gridPos": { "x": 6, "y": 12, "w": 6, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value >= 3.9 and r._value <= 10.0 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 70, "color": "green" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Above Range (10.0–13.9)",
+      "description": "Target: <25%",
+      "gridPos": { "x": 12, "y": 12, "w": 6, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 10.0 and r._value <= 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 25, "color": "orange" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Very High (>13.9)",
+      "description": "Target: <5%",
+      "gridPos": { "x": 18, "y": 12, "w": 6, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Daily Overlay",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 12 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "import \"date\"\n\nfrom(bucket: \"cgmsharp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\")\n  |> map(fn: (r) => ({\n    _value: r._value,\n    _field: string(v: date.monthDay(t: r._time)) + \"/\" + string(v: int(v: date.month(t: r._time))),\n    _time: time(v: int(v: r._time) - int(v: date.truncate(t: r._time, unit: 1d)))\n  }))\n  |> group(columns: [\"_field\"])"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 21,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "pointSize": 3,
+            "showPoints": "always",
+            "axisGridShow": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right"
         }
       }
     }
