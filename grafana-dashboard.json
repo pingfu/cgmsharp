@@ -177,7 +177,16 @@
           "color": {
             "mode": "palette-classic"
           }
-        }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "hour" },
+            "properties": [
+              { "id": "min", "value": 0 },
+              { "id": "max", "value": 24 }
+            ]
+          }
+        ]
       },
       "options": {
         "seriesMapping": "auto",
