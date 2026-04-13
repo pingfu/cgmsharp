@@ -63,7 +63,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value < 3.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value < 3.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({_value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -94,7 +94,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value >= 3.9 and r._value <= 10.0 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value >= 3.9 and r._value <= 10.0 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({_value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -125,7 +125,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 10.0 and r._value <= 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 10.0 and r._value <= 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({_value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -156,7 +156,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({r with _value: r.count / r.total * 100.0}))"
+          "query": "from(bucket: \"cgmsharp\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\") |> group() |> reduce(fn: (r, accumulator) => ({total: accumulator.total + 1.0, count: accumulator.count + (if r._value > 13.9 then 1.0 else 0.0)}), identity: {total: 0.0, count: 0.0}) |> map(fn: (r) => ({_value: r.count / r.total * 100.0}))"
         }
       ],
       "fieldConfig": {
@@ -179,15 +179,14 @@
       }
     },
     {
-      "type": "timeseries",
-      "title": "Daily Overlay",
+      "type": "xychart",
+      "title": "Daily Overlay (last 7 days)",
       "gridPos": { "x": 0, "y": 16, "w": 24, "h": 12 },
       "datasource": { "type": "influxdb", "uid": "influxdb" },
-      "timeFrom": "2d",
       "targets": [
         {
           "refId": "A",
-          "query": "import \"date\"\n\nyesterday = int(v: date.truncate(t: now(), unit: 1d)) - 86400000000000\n\nfrom(bucket: \"cgmsharp\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\")\n  |> map(fn: (r) => ({\n    _value: r._value,\n    _field: string(v: date.monthDay(t: r._time)) + \"/\" + string(v: int(v: date.month(t: r._time))),\n    _time: time(v: yesterday + (int(v: r._time) - int(v: date.truncate(t: r._time, unit: 1d))))\n  }))\n  |> group(columns: [\"_field\"])"
+          "query": "import \"date\"\n\nfrom(bucket: \"cgmsharp\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"glucose\" and r._field == \"value\")\n  |> map(fn: (r) => ({\n    _time: r._time,\n    _value: r._value,\n    _field: (if date.monthDay(t: r._time) < 10 then \"0\" else \"\") + string(v: date.monthDay(t: r._time)) + \"/\" + (if int(v: date.month(t: r._time)) < 10 then \"0\" else \"\") + string(v: int(v: date.month(t: r._time))),\n    hour: float(v: date.hour(t: r._time)) + float(v: date.minute(t: r._time)) / 60.0\n  }))\n  |> group(columns: [\"_field\"])"
         }
       ],
       "fieldConfig": {
@@ -195,11 +194,9 @@
           "min": 0,
           "max": 21,
           "custom": {
+            "show": "lines+points",
             "lineWidth": 2,
-            "fillOpacity": 0,
-            "pointSize": 3,
-            "showPoints": "always",
-            "axisGridShow": false
+            "pointSize": { "fixed": 3 }
           },
           "color": {
             "mode": "palette-classic"
@@ -207,6 +204,10 @@
         }
       },
       "options": {
+        "seriesMapping": "auto",
+        "dims": {
+          "x": "hour"
+        },
         "legend": {
           "displayMode": "list",
           "placement": "right"
