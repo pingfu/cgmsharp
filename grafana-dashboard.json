@@ -26,7 +26,7 @@
         "defaults": {
           "displayName": "mmol/L",
           "min": 0,
-          "max": 25,
+          "max": 21,
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 5,
@@ -40,10 +40,9 @@
             "mode": "absolute",
             "steps": [
               { "value": null, "color": "red" },
-              { "value": 3.5, "color": "orange" },
-              { "value": 6.0, "color": "green" },
+              { "value": 3.9, "color": "green" },
               { "value": 10.0, "color": "orange" },
-              { "value": 22.0, "color": "red" }
+              { "value": 13.9, "color": "red" }
             ]
           },
           "color": {
