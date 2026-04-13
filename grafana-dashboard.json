@@ -32,6 +32,7 @@
             "fillOpacity": 5,
             "pointSize": 4,
             "showPoints": "always",
+            "axisGridShow": false,
             "thresholdsStyle": {
               "mode": "area"
             }
