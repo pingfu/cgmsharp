@@ -61,7 +61,7 @@ function extractCarbs(message)
 // check whether a message recommends emergency (fast-acting) food
 function isEmergencyFood(message)
 {
-    return /jelly|honey|jam|sugar dissolved/.test(message);
+    return /fast-acting sugar|fast sugar|jelly|honey|jam|sugar dissolved/.test(message);
 }
 
 // check whether a message recommends slow/normal carbs
@@ -136,7 +136,7 @@ test(`breakfast at 12.0: no carb number — low-carb food only`, async () =>
     var breakfast = nudges.find(n => n.title === `Breakfast`);
     assert.ok(breakfast, `expected breakfast nudge`);
     assert.ok(breakfast.message.includes(`low-carb`), `above target should say low-carb`);
-    assert.ok(/egg|yoghurt|cheese|omelette/.test(breakfast.message), `should suggest protein/fat foods`);
+    assert.ok(/low-carb|egg|yoghurt|cheese|omelette/.test(breakfast.message), `should suggest low-carb/protein foods`);
 });
 
 test(`breakfast at 15.0: skip carbs entirely`, async () =>
@@ -847,7 +847,7 @@ test(`dinner at very high BG (15.0): recommends skipping carbs entirely`, async 
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var message = dinnerNudges[0].message;
     assert.ok(/no need for carbs|skip carbs|protein.heavy/.test(message), `very high BG dinner should explicitly not recommend carbs, got: ${message}`);
-    assert.ok(/egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
+    assert.ok(/protein.heavy|egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
 });
 
 test(`dinner in-target falling: bumps base up by 5g (25g)`, async () =>
@@ -886,7 +886,7 @@ test(`dinner above-target rising: skips carbs, protein-heavy meal only`, async (
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge, got ${dinnerNudges.length}`);
     var message = dinnerNudges[0].message;
     assert.ok(/skip dinner carbs|no need for carbs|protein.heavy/i.test(message), `above-target rising dinner should skip carbs, got: ${message}`);
-    assert.ok(/egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
+    assert.ok(/protein.heavy|egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
 });
 
 // ---------------------------------------------------------------------------
@@ -949,7 +949,7 @@ test(`dinner nudge: food suggestion is a dinner side, not a snack`, async () =>
     var nudges = await runScenario(`dinner-at-mid-target-bg.json`);
     var dinner = nudges.find(n => n.title === `Dinner`);
     assert.ok(dinner, `expected dinner nudge`);
-    assert.ok(/potato|rice|bread|pasta|pitta/.test(dinner.message), `dinner should suggest a proper side (potato/rice/bread/pasta/pitta), got: ${dinner.message}`);
+    assert.ok(/starchy carbs|potato|rice|bread|pasta|pitta/.test(dinner.message), `dinner should suggest starchy carbs or a proper side, got: ${dinner.message}`);
 });
 
 // ===========================================================================
