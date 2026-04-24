@@ -61,6 +61,15 @@ docker run --rm -e TZ=Europe/London cgmsharp-test node inspect-scenario.js high-
 
 Both tools expect JSON files with a name, description, optional `timezoneOffsetMinutes` (for converting stored UTC timestamps to local time), and an array of `{ time, reading }` pairs. They create a fresh nudge engine per scenario with the individual's profile and feed each reading sequentially.
 
+**Observation sync** (`src/sync-observations.js`) — pulls glucose readings from InfluxDB since the latest entry in `src/observations/2026.json`, appends them, and adds placeholder day entries (with empty notes) for any new dates. Deduplicates against existing timestamps. Requires `src/.env` with `INFLUX_DB_URL` and `INFLUX_DB_TOKEN` set. Build the test image first.
+
+```bash
+# Sync latest readings from InfluxDB into observations/2026.json
+docker run --rm --env-file src/.env \
+  -v "$(pwd)/src/observations:/usr/src/app/observations" \
+  cgmsharp-test node sync-observations.js
+```
+
 **If a test needs to use a pattern that comes from real data**, extract the relevant portion into a new synthetic scenario in `src/test/scenarios/` with a descriptive non-dated name. Tests must never reference files in `src/observations/` directly — that would couple test outcomes to raw evidence and make the split meaningless.
 
 ## Manual Notification Tests

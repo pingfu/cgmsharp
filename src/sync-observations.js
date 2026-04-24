@@ -206,6 +206,20 @@ async function main()
 
     console.log(`Appending ${newEntries.length} new reading${newEntries.length === 1 ? `` : `s`}: ${newEntries[0].time} -> ${newEntries[newEntries.length - 1].time}`);
 
+    // ---- placeholder day entries ----
+    // find dates in the new readings that don't have a days[] entry yet
+    var existingDates = new Set(parsed.days.map(function (d) { return d.date; }));
+    var newDates = [];
+    for (var i = 0; i < newEntries.length; i++)
+    {
+        var date = newEntries[i].time.substring(0, 10);
+        if (!existingDates.has(date))
+        {
+            existingDates.add(date);
+            newDates.push(date);
+        }
+    }
+
     // ---- surgical text insertion ----
     // preserve the hand-formatted layout by editing the text, not round-tripping
     // through JSON.stringify. the file's readings array ends like:
@@ -222,6 +236,49 @@ async function main()
     // detect line ending
     var lineEnding = fileText.indexOf(`\r\n`) !== -1 ? `\r\n` : `\n`;
     var lines = fileText.split(lineEnding);
+
+    // insert placeholder day entries if needed. the days array ends with:
+    //         }
+    //     ],
+    // find the closing `    ],` that ends the days array (before "readings":)
+    if (newDates.length > 0)
+    {
+        var daysCloseIdx = -1;
+        for (var i = 0; i < lines.length; i++)
+        {
+            if (/^\s*\],\s*$/.test(lines[i]) && i + 1 < lines.length && /^\s*"readings"/.test(lines[i + 1]))
+            {
+                daysCloseIdx = i;
+                break;
+            }
+        }
+        if (daysCloseIdx === -1)
+        {
+            console.error(`Error: could not locate the days array closing bracket in ${OBSERVATIONS_FILE}`);
+            process.exit(1);
+        }
+
+        // the line before daysCloseIdx should be the last day entry's closing `}`
+        // add a comma to it if it doesn't have one
+        var lastDayLine = lines[daysCloseIdx - 1];
+        if (/^\s*\}\s*$/.test(lastDayLine))
+        {
+            lines[daysCloseIdx - 1] = lastDayLine.replace(/\}\s*$/, `},`);
+        }
+
+        var dayLines = newDates.map(function (date)
+        {
+            return `        {"date":"${date}","notes":""}`;
+        });
+        // add commas to all but the last
+        for (var i = 0; i < dayLines.length - 1; i++) dayLines[i] += `,`;
+
+        var beforeDays = lines.slice(0, daysCloseIdx);
+        var afterDays = lines.slice(daysCloseIdx);
+        lines = beforeDays.concat(dayLines).concat(afterDays);
+
+        console.log(`Added ${newDates.length} placeholder day${newDates.length === 1 ? `` : `s`}: ${newDates[0]} -> ${newDates[newDates.length - 1]}`);
+    }
 
     // find the last reading line (matches the {"time":..."reading":...} pattern AND has no trailing comma)
     var lastReadingLineIdx = -1;
