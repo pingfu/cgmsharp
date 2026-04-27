@@ -972,7 +972,7 @@ function createNudgeEngine(config)
             // above target — low-carb breakfast (insulin has work to do already)
             var lowCarbFood = getLowCarbBreakfastSuggestion();
             title = `Breakfast`;
-            message = `Your sugar is ${reading} — already high from the morning rise. Have a low-carb breakfast today${hint(` — ${lowCarbFood}`)}. Save the porridge for a morning when your sugar is lower.`;
+            message = `Your sugar is ${reading} — already high from the morning rise. Have a low-carb breakfast today${hint(` — ${lowCarbFood}`)}.${hint(` Save the porridge for a morning when your sugar is lower.`)}`;
         }
         else
         {
