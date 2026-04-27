@@ -431,20 +431,23 @@ const BEDTIME_SUGGESTIONS = [
         { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
         { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
         { food: `3 oatcakes with a tablespoon of peanut butter`, carbs: 20 }
-    ]},
-    { grams: 25, ideas: [
-        { food: `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 26 },
-        { food: `3 tablespoons (30g dry) of porridge oats made with 100ml semi-skimmed milk`, carbs: 23 },
-        { food: `4 tablespoons (40g dry) of porridge oats made with water`, carbs: 24 },
-        { food: `1 Weetabix and 1 slice of wholemeal toast with butter`, carbs: 27 },
-        { food: `half a wholemeal bagel with butter`, carbs: 24 }
-    ]},
-    { grams: 30, ideas: [
-        { food: `3 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 31 },
-        { food: `2 slices of wholemeal toast with cheddar`, carbs: 28 },
-        { food: `4 tablespoons (40g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 29 },
-        { food: `1 slice of wholemeal toast and 1 Weetabix with 100ml semi-skimmed milk`, carbs: 32 }
     ]}
+    // 25g and 30g tiers disabled — 14-day observational data showed 30g bedtime
+    // recommendations consistently producing 14-22 mmol/L overnight. kept here
+    // for reference if/when the calibration gap (overnightPullRate) is recalibrated.
+    // ,{ grams: 25, ideas: [
+    //     { food: `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 26 },
+    //     { food: `3 tablespoons (30g dry) of porridge oats made with 100ml semi-skimmed milk`, carbs: 23 },
+    //     { food: `4 tablespoons (40g dry) of porridge oats made with water`, carbs: 24 },
+    //     { food: `1 Weetabix and 1 slice of wholemeal toast with butter`, carbs: 27 },
+    //     { food: `half a wholemeal bagel with butter`, carbs: 24 }
+    // ]},
+    // { grams: 30, ideas: [
+    //     { food: `3 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 31 },
+    //     { food: `2 slices of wholemeal toast with cheddar`, carbs: 28 },
+    //     { food: `4 tablespoons (40g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 29 },
+    //     { food: `1 slice of wholemeal toast and 1 Weetabix with 100ml semi-skimmed milk`, carbs: 32 }
+    // ]}
 ];
 
 // breakfast carb suggestions — breakfast-appropriate foods with specific portions.
@@ -524,13 +527,14 @@ const DINNER_SUGGESTIONS = [
         { food: `4 boiled new potatoes`, carbs: 21 },
         { food: `a small portion of pasta (30g dry weight)`, carbs: 22 },
         { food: `half a medium jacket potato with butter`, carbs: 18 }
-    ]},
-    { grams: 25, ideas: [
-        { food: `1 small jacket potato with butter`, carbs: 25 },
-        { food: `1 wholemeal pitta`, carbs: 27 },
-        { food: `6 tablespoons of cooked rice`, carbs: 27 },
-        { food: `a small portion of pasta (35g dry weight)`, carbs: 25 }
     ]}
+    // 25g tier disabled in line with bedtime cap. kept here for reference.
+    // ,{ grams: 25, ideas: [
+    //     { food: `1 small jacket potato with butter`, carbs: 25 },
+    //     { food: `1 wholemeal pitta`, carbs: 27 },
+    //     { food: `6 tablespoons of cooked rice`, carbs: 27 },
+    //     { food: `a small portion of pasta (35g dry weight)`, carbs: 25 }
+    // ]}
 ];
 
 const INCLUDE_FOOD_EXAMPLES = false;
@@ -1155,7 +1159,7 @@ function createNudgeEngine(config)
         {
             var carbs = Math.round(gap * p.carbsPerMmol);
             carbs = Math.max(carbs, 5);
-            carbs = Math.min(carbs, 30);
+            carbs = Math.min(carbs, 20);
 
             if (reading <= p.hypoFloor)
             {
