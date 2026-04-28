@@ -349,15 +349,16 @@ const CARB_SUGGESTIONS = [
         { food: `2 plain rice cakes with butter`, carbs: 14 },
         { food: `1 small pear`, carbs: 15 },
         { food: `a 20g bowl of bran flakes with 100ml semi-skimmed milk`, carbs: 17 }
-    ]},
-    { grams: 20, ideas: [
-        { food: `1 crumpet with butter`, carbs: 20 },
-        { food: `half a cheese and pickle sandwich on wholemeal bread`, carbs: 20 },
-        { food: `1 small banana (about 15cm long)`, carbs: 18 },
-        { food: `1 medium apple with a teaspoon of peanut butter`, carbs: 21 },
-        { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
-        { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 }
     ]}
+    // 20g tier disabled to align with the bedtime/dinner cap reduction. kept here for reference.
+    // ,{ grams: 20, ideas: [
+    //     { food: `1 crumpet with butter`, carbs: 20 },
+    //     { food: `half a cheese and pickle sandwich on wholemeal bread`, carbs: 20 },
+    //     { food: `1 small banana (about 15cm long)`, carbs: 18 },
+    //     { food: `1 medium apple with a teaspoon of peanut butter`, carbs: 21 },
+    //     { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
+    //     { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 }
+    // ]}
 ];
 
 // emergency food suggestions — fast-acting carbs for rapid/accelerating drops.
@@ -425,16 +426,16 @@ const BEDTIME_SUGGESTIONS = [
         { food: `1 slice of wholemeal toast with a tablespoon of peanut butter`, carbs: 17 },
         { food: `2 tablespoons (20g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 17 },
         { food: `3 oatcakes with butter`, carbs: 17 }
-    ]},
-    { grams: 20, ideas: [
-        { food: `1 crumpet with butter`, carbs: 20 },
-        { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
-        { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
-        { food: `3 oatcakes with a tablespoon of peanut butter`, carbs: 20 }
     ]}
-    // 25g and 30g tiers disabled — 14-day observational data showed 30g bedtime
+    // 20g, 25g and 30g tiers disabled — 14-day observational data showed 30g bedtime
     // recommendations consistently producing 14-22 mmol/L overnight. kept here
     // for reference if/when the calibration gap (overnightPullRate) is recalibrated.
+    // ,{ grams: 20, ideas: [
+    //     { food: `1 crumpet with butter`, carbs: 20 },
+    //     { food: `1 Weetabix with 100ml of semi-skimmed milk`, carbs: 18 },
+    //     { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
+    //     { food: `3 oatcakes with a tablespoon of peanut butter`, carbs: 20 }
+    // ]}
     // ,{ grams: 25, ideas: [
     //     { food: `2 oatcakes with cheddar and 1 slice of wholemeal toast with butter`, carbs: 26 },
     //     { food: `3 tablespoons (30g dry) of porridge oats made with 100ml semi-skimmed milk`, carbs: 23 },
@@ -476,14 +477,15 @@ const BREAKFAST_SUGGESTIONS = [
         { food: `1 slice of wholemeal toast with a teaspoon of peanut butter`, carbs: 15 },
         { food: `2 tablespoons (20g dry) porridge oats with 100ml semi-skimmed milk`, carbs: 17 },
         { food: `2 plain rice cakes with peanut butter`, carbs: 17 }
-    ]},
-    { grams: 20, ideas: [
-        { food: `1 crumpet with butter`, carbs: 20 },
-        { food: `1 small banana (about 15cm long)`, carbs: 18 },
-        { food: `1 Weetabix with 100ml semi-skimmed milk`, carbs: 18 },
-        { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
-        { food: `a 20g bowl of bran flakes with 100ml semi-skimmed milk`, carbs: 19 }
     ]}
+    // 20g tier disabled to align with the bedtime/dinner cap reduction. kept here for reference.
+    // ,{ grams: 20, ideas: [
+    //     { food: `1 crumpet with butter`, carbs: 20 },
+    //     { food: `1 small banana (about 15cm long)`, carbs: 18 },
+    //     { food: `1 Weetabix with 100ml semi-skimmed milk`, carbs: 18 },
+    //     { food: `3 tablespoons (30g dry) of porridge oats made with water`, carbs: 18 },
+    //     { food: `a 20g bowl of bran flakes with 100ml semi-skimmed milk`, carbs: 19 }
+    // ]}
 ];
 
 // low-carb breakfast suggestions — for mornings when BG is already above target.
@@ -521,14 +523,14 @@ const DINNER_SUGGESTIONS = [
         { food: `3 tablespoons of cooked rice`, carbs: 13 },
         { food: `3 boiled new potatoes`, carbs: 15 },
         { food: `half a small jacket potato`, carbs: 15 }
-    ]},
-    { grams: 20, ideas: [
-        { food: `4 tablespoons of cooked rice`, carbs: 18 },
-        { food: `4 boiled new potatoes`, carbs: 21 },
-        { food: `a small portion of pasta (30g dry weight)`, carbs: 22 },
-        { food: `half a medium jacket potato with butter`, carbs: 18 }
     ]}
-    // 25g tier disabled in line with bedtime cap. kept here for reference.
+    // 20g and 25g tiers disabled in line with bedtime cap. kept here for reference.
+    // ,{ grams: 20, ideas: [
+    //     { food: `4 tablespoons of cooked rice`, carbs: 18 },
+    //     { food: `4 boiled new potatoes`, carbs: 21 },
+    //     { food: `a small portion of pasta (30g dry weight)`, carbs: 22 },
+    //     { food: `half a medium jacket potato with butter`, carbs: 18 }
+    // ]}
     // ,{ grams: 25, ideas: [
     //     { food: `1 small jacket potato with butter`, carbs: 25 },
     //     { food: `1 wholemeal pitta`, carbs: 27 },
@@ -790,7 +792,7 @@ function createNudgeEngine(config)
         else if (trend.direction === `rising`) base = Math.max(base - Math.round(p.carbsPerMmol * 0.5), 2);
 
         base = Math.max(base, 5); // minimum useful correction — below 5g has no measurable BG effect
-        base = Math.min(base, 20); // max per dose; Rule of 15 + next-tick re-evaluation handles escalation
+        base = Math.min(base, 15); // max per dose; Rule of 15 + next-tick re-evaluation handles escalation
 
         return base;
     }
@@ -1159,7 +1161,7 @@ function createNudgeEngine(config)
         {
             var carbs = Math.round(gap * p.carbsPerMmol);
             carbs = Math.max(carbs, 5);
-            carbs = Math.min(carbs, 20);
+            carbs = Math.min(carbs, 15);
 
             if (reading <= p.hypoFloor)
             {

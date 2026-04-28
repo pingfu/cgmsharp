@@ -800,30 +800,30 @@ test(`dinner-zero-carbs: reactive nudge is clearly actionable`, async () =>
 // adjusted for starting BG: lower if already high, higher if starting low,
 // skip entirely if very high.
 
-test(`dinner at low BG (5.8): recommends larger portion, capped at 20g`, async () =>
+test(`dinner at low BG (5.8): recommends larger portion, capped at 15g`, async () =>
 {
     // BG below target going into dinner. the user needs to both recover from
     // the low AND cover the evening insulin. the dinner nudge bumps base 20g
-    // by +5g, but the suggestion table tops out at 20g so the displayed value
-    // snaps to 20g.
+    // by +5g, but the suggestion table tops out at 15g so the displayed value
+    // snaps to 15g.
     var nudges = await runScenario(`dinner-at-low-bg.json`);
     var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var carbs = extractCarbs(dinnerNudges[0].message);
-    assert.ok(carbs >= 18 && carbs <= 22, `low-BG dinner should suggest ~20g (capped), got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `low-BG dinner should suggest ~15g (capped), got ${carbs}g`);
     assert.ok(dinnerNudges[0].message.includes(`low`) || dinnerNudges[0].message.includes(`lift`), `message should reference the low starting state, got: ${dinnerNudges[0].message}`);
 });
 
-test(`dinner at mid-target BG (8.2): recommends base 20g`, async () =>
+test(`dinner at mid-target BG (8.2): base 20g snaps to 15g table cap`, async () =>
 {
     // the canonical dinner nudge case: BG in the middle of target range,
-    // stable. the engine should recommend the base dinnerCarbTarget (20g)
-    // to cover the evening insulin.
+    // stable. the engine computes the base dinnerCarbTarget (20g) but the
+    // suggestion table tops out at 15g so the displayed value snaps to 15g.
     var nudges = await runScenario(`dinner-at-mid-target-bg.json`);
     var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge`);
     var carbs = extractCarbs(dinnerNudges[0].message);
-    assert.ok(carbs >= 18 && carbs <= 22, `mid-target dinner should suggest ~20g, got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `mid-target dinner should snap to ~15g, got ${carbs}g`);
     assert.ok(/insulin/.test(dinnerNudges[0].message), `message should explain the insulin-coverage reasoning`);
 });
 
@@ -851,17 +851,17 @@ test(`dinner at very high BG (15.0): recommends skipping carbs entirely`, async 
     assert.ok(/protein.heavy|egg|yoghurt|cheese|omelette/.test(message), `should suggest low-carb protein food, got: ${message}`);
 });
 
-test(`dinner in-target falling: bumps base up by 5g, capped at 20g`, async () =>
+test(`dinner in-target falling: bumps base up by 5g, capped at 15g`, async () =>
 {
     // BG in-target (7.8) but falling at a meaningful rate (-0.06 mmol/min).
     // the insulin will pull harder than food absorbs; trend-aware formula adds
-    // +5g to the base 20g, but the suggestion table tops out at 20g so the
-    // displayed value snaps to 20g.
+    // +5g to the base 20g, but the suggestion table tops out at 15g so the
+    // displayed value snaps to 15g.
     var nudges = await runScenario(`dinner-at-in-target-falling.json`);
     var dinnerNudges = nudges.filter(n => n.title === `Dinner`);
     assert.equal(dinnerNudges.length, 1, `expected 1 dinner nudge, got ${dinnerNudges.length}`);
     var carbs = extractCarbs(dinnerNudges[0].message);
-    assert.ok(carbs >= 18 && carbs <= 22, `in-target falling dinner should suggest ~20g (capped), got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `in-target falling dinner should suggest ~15g (capped), got ${carbs}g`);
     assert.ok(/falling/.test(dinnerNudges[0].message), `message should reference the falling trend, got: ${dinnerNudges[0].message}`);
 });
 
@@ -1334,12 +1334,12 @@ test(`bedtime at 8.0 stable: substantial starchy carbs for overnight`, async () 
 {
     // BG 8.0, in-target, stable. the overnight insulin drop is ~12-13 mmol/L.
     // without food, BG would crash to dangerous levels by 3am. the bedtime
-    // nudge should recommend the maximum starchy portion (capped at 20g).
+    // nudge should recommend the maximum starchy portion (capped at 15g).
     var nudges = await runScenario(`bedtime-bg-8-stable.json`);
     var bedtime = nudges.find(n => n.title === `Bedtime top-up`);
     assert.ok(bedtime, `expected bedtime nudge`);
     var carbs = extractCarbs(bedtime.message);
-    assert.ok(carbs >= 18 && carbs <= 22, `BG 8.0 with ~12 mmol/L overnight drop should suggest ~20g (capped), got ${carbs}g`);
+    assert.ok(carbs >= 13 && carbs <= 17, `BG 8.0 with ~12 mmol/L overnight drop should suggest ~15g (capped), got ${carbs}g`);
     assert.ok(isBedtimeFood(bedtime.message), `should use starchy bedtime food`);
 });
 
